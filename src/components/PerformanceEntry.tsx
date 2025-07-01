@@ -1,0 +1,334 @@
+import React, { useState } from 'react';
+import { Player, Performance } from '../types';
+import { Save, Calendar, Clock, Target, Users, AlertTriangle } from 'lucide-react';
+
+interface PerformanceEntryProps {
+  players: Player[];
+  onSavePerformance: (playerId: string, performance: Performance) => void;
+}
+
+export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onSavePerformance }) => {
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [performanceData, setPerformanceData] = useState({
+    date: new Date().toISOString().split('T')[0],
+    type: 'match' as 'match' | 'training',
+    opponent: '',
+    minutesPlayed: {} as Record<string, number>,
+    goals: {} as Record<string, number>,
+    assists: {} as Record<string, number>,
+    yellowCards: {} as Record<string, number>,
+    redCards: {} as Record<string, number>,
+    cleanSheets: {} as Record<string, boolean>,
+    present: {} as Record<string, boolean>
+  });
+
+  const handlePlayerSelection = (playerId: string, selected: boolean) => {
+    if (selected) {
+      setSelectedPlayers([...selectedPlayers, playerId]);
+      setPerformanceData(prev => ({
+        ...prev,
+        present: { ...prev.present, [playerId]: true }
+      }));
+    } else {
+      setSelectedPlayers(selectedPlayers.filter(id => id !== playerId));
+      // Clean up performance data for deselected player
+      const newData = { ...performanceData };
+      delete newData.present[playerId];
+      delete newData.minutesPlayed[playerId];
+      delete newData.goals[playerId];
+      delete newData.assists[playerId];
+      delete newData.yellowCards[playerId];
+      delete newData.redCards[playerId];
+      delete newData.cleanSheets[playerId];
+      setPerformanceData(newData);
+    }
+  };
+
+  const updatePlayerData = (playerId: string, field: string, value: any) => {
+    setPerformanceData(prev => ({
+      ...prev,
+      [field]: { ...prev[field as keyof typeof prev], [playerId]: value }
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    selectedPlayers.forEach(playerId => {
+      const performance: Performance = {
+        id: Date.now().toString() + playerId,
+        date: performanceData.date,
+        type: performanceData.type,
+        present: performanceData.present[playerId] || false,
+        opponent: performanceData.type === 'match' ? performanceData.opponent : undefined,
+        minutesPlayed: performanceData.minutesPlayed[playerId] || 0,
+        goals: performanceData.goals[playerId] || 0,
+        assists: performanceData.assists[playerId] || 0,
+        yellowCards: performanceData.yellowCards[playerId] || 0,
+        redCards: performanceData.redCards[playerId] || 0,
+        cleanSheet: performanceData.cleanSheets[playerId] || false
+      };
+      
+      onSavePerformance(playerId, performance);
+    });
+
+    // Reset form
+    setSelectedPlayers([]);
+    setPerformanceData({
+      date: new Date().toISOString().split('T')[0],
+      type: 'match',
+      opponent: '',
+      minutesPlayed: {},
+      goals: {},
+      assists: {},
+      yellowCards: {},
+      redCards: {},
+      cleanSheets: {},
+      present: {}
+    });
+
+    alert('Performances enregistrées avec succès !');
+  };
+
+  const selectedPlayersList = players.filter(p => selectedPlayers.includes(p.id));
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-orange-600 to-red-600 rounded-xl p-8 text-white">
+        <h1 className="text-3xl font-bold mb-2">Saisie des Performances</h1>
+        <p className="text-orange-100">Enregistrez les performances de vos joueurs</p>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-md p-8">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Event Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+              <Calendar size={20} />
+              <span>Informations de l'événement</span>
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Date *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={performanceData.date}
+                  onChange={(e) => setPerformanceData({ ...performanceData, date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Type *
+                </label>
+                <select
+                  required
+                  value={performanceData.type}
+                  onChange={(e) => setPerformanceData({ ...performanceData, type: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="match">Match</option>
+                  <option value="training">Entraînement</option>
+                </select>
+              </div>
+              
+              {performanceData.type === 'match' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Adversaire
+                  </label>
+                  <input
+                    type="text"
+                    value={performanceData.opponent}
+                    onChange={(e) => setPerformanceData({ ...performanceData, opponent: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Nom de l'équipe adverse"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Player Selection */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+              <Users size={20} />
+              <span>Sélection des joueurs</span>
+            </h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {players.map(player => (
+                <label key={player.id} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedPlayers.includes(player.id)}
+                    onChange={(e) => handlePlayerSelection(player.id, e.target.checked)}
+                    className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                  />
+                  <div className="ml-3">
+                    <p className="font-medium text-gray-900">{player.firstName} {player.lastName}</p>
+                    <p className="text-sm text-gray-600">{player.position} - {player.teams.join(', ')}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Performance Details */}
+          {selectedPlayersList.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                <Target size={20} />
+                <span>Détails des performances</span>
+              </h3>
+              
+              <div className="overflow-x-auto">
+                <table className="min-w-full table-auto">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Joueur</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Présent</th>
+                      {performanceData.type === 'match' && (
+                        <>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Minutes</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Buts</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Passes</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Cartons J</th>
+                          <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Cartons R</th>
+                        </>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {selectedPlayersList.map(player => (
+                      <tr key={player.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3">
+                          <div>
+                            <p className="font-medium text-gray-900">{player.firstName} {player.lastName}</p>
+                            <p className="text-sm text-gray-600">{player.position}</p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={performanceData.present[player.id] || false}
+                            onChange={(e) => updatePlayerData(player.id, 'present', e.target.checked)}
+                            className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                          />
+                        </td>
+                        {performanceData.type === 'match' && performanceData.present[player.id] && (
+                          <>
+                            <td className="px-4 py-3">
+                              <input
+                                type="number"
+                                min="0"
+                                max="120"
+                                value={performanceData.minutesPlayed[player.id] || ''}
+                                onChange={(e) => updatePlayerData(player.id, 'minutesPlayed', parseInt(e.target.value) || 0)}
+                                className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <input
+                                type="number"
+                                min="0"
+                                value={performanceData.goals[player.id] || ''}
+                                onChange={(e) => updatePlayerData(player.id, 'goals', parseInt(e.target.value) || 0)}
+                                className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <input
+                                type="number"
+                                min="0"
+                                value={performanceData.assists[player.id] || ''}
+                                onChange={(e) => updatePlayerData(player.id, 'assists', parseInt(e.target.value) || 0)}
+                                className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <input
+                                type="number"
+                                min="0"
+                                value={performanceData.yellowCards[player.id] || ''}
+                                onChange={(e) => updatePlayerData(player.id, 'yellowCards', parseInt(e.target.value) || 0)}
+                                className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <input
+                                type="number"
+                                min="0"
+                                value={performanceData.redCards[player.id] || ''}
+                                onChange={(e) => updatePlayerData(player.id, 'redCards', parseInt(e.target.value) || 0)}
+                                className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                              />
+                            </td>
+                          </>
+                        )}
+                        {performanceData.type === 'match' && !performanceData.present[player.id] && (
+                          <td colSpan={5} className="px-4 py-3 text-sm text-gray-500 italic">
+                            Joueur absent
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Clean Sheets for Goalkeepers */}
+              {performanceData.type === 'match' && selectedPlayersList.some(p => p.position === 'Gardien' && performanceData.present[p.id]) && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h4 className="font-medium text-yellow-800 mb-3">Clean Sheets (Gardiens)</h4>
+                  <div className="space-y-2">
+                    {selectedPlayersList
+                      .filter(p => p.position === 'Gardien' && performanceData.present[p.id])
+                      .map(player => (
+                        <label key={player.id} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={performanceData.cleanSheets[player.id] || false}
+                            onChange={(e) => updatePlayerData(player.id, 'cleanSheets', e.target.checked)}
+                            className="rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+                          />
+                          <span className="ml-2 text-sm font-medium text-yellow-800">
+                            {player.firstName} {player.lastName} - Clean Sheet
+                          </span>
+                        </label>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Submit Button */}
+          {selectedPlayersList.length > 0 && (
+            <div className="flex justify-end pt-6 border-t">
+              <button
+                type="submit"
+                className="flex items-center space-x-2 bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-orange-700 transition-colors duration-200"
+              >
+                <Save size={20} />
+                <span>Enregistrer les performances</span>
+              </button>
+            </div>
+          )}
+
+          {selectedPlayersList.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <AlertTriangle size={48} className="mx-auto mb-4 text-gray-300" />
+              <p>Sélectionnez au moins un joueur pour commencer la saisie</p>
+            </div>
+          )}
+        </form>
+      </div>
+    </div>
+  );
+};
