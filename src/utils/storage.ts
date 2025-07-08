@@ -45,7 +45,7 @@ export const storage = {
     const player = players.find(p => p.id === playerId);
     if (player) {
       player.unavailabilities.push(unavailability);
-      storage.recalculateAttendanceRates(player);
+      storage.recalculateAttendanceRates(player, players); // Pass allPlayers
       storage.savePlayers(players);
     }
   },
@@ -57,7 +57,7 @@ export const storage = {
       const index = player.unavailabilities.findIndex(u => u.id === unavailability.id);
       if (index !== -1) {
         player.unavailabilities[index] = unavailability;
-        storage.recalculateAttendanceRates(player);
+        storage.recalculateAttendanceRates(player, players); // Pass allPlayers
         storage.savePlayers(players);
       }
     }
@@ -68,7 +68,7 @@ export const storage = {
     const player = players.find(p => p.id === playerId);
     if (player) {
       player.unavailabilities = player.unavailabilities.filter(u => u.id !== unavailabilityId);
-      storage.recalculateAttendanceRates(player);
+      storage.recalculateAttendanceRates(player, players); // Pass allPlayers
       storage.savePlayers(players);
     }
   },
@@ -83,57 +83,113 @@ export const storage = {
     });
   },
 
+  // Get all unique team events (trainings or matches)
+  getTotalTeamEvents: (
+    allPlayers: Player[],
+    type: 'training' | 'match',
+    teamName?: 'Seniors 1' | 'Seniors 2',
+    season?: string // Optional season filter
+  ): { date: string, opponent?: string, season: string }[] => {
+    const uniqueEvents = new Map<string, { date: string, opponent?: string, season: string }>();
+
+    for (const player of allPlayers) {
+      if (teamName && !player.teams.includes(teamName)) {
+        continue;
+      }
+      for (const perf of player.performances) {
+        if (perf.type === type && (!season || perf.season === season)) { // Filter by season if provided
+          // For matches, an event is unique by date and opponent for that season. For trainings, by date for that season.
+          const key = type === 'match'
+            ? `${perf.season}-${perf.date}-${perf.opponent || 'unknown'}`
+            : `${perf.season}-${perf.date}`;
+          if (!uniqueEvents.has(key)) {
+            uniqueEvents.set(key, { date: perf.date, opponent: perf.opponent, season: perf.season });
+          }
+        }
+      }
+    }
+    return Array.from(uniqueEvents.values());
+  },
+
   // Recalculate attendance rates excluding unavailability periods
-  recalculateAttendanceRates: (player: Player) => {
-    const trainingPerformances = player.performances.filter(p => p.type === 'training');
-    const matchPerformances = player.performances.filter(p => p.type === 'match');
+  recalculateAttendanceRates: (player: Player, allPlayers: Player[]) => {
+    const playerTrainingPerformances = player.performances.filter(p => p.type === 'training');
+    const playerMatchPerformances = player.performances.filter(p => p.type === 'match');
     
-    // Filter out performances during unavailability periods
-    const validTrainingPerformances = trainingPerformances.filter(p => 
+    // Filter out player's performances during their unavailability periods
+    const validPlayerTrainingPerformances = playerTrainingPerformances.filter(p =>
       !storage.isDateInUnavailabilityPeriod(player, p.date)
     );
-    const validMatchPerformances = matchPerformances.filter(p => 
+    const validPlayerMatchPerformances = playerMatchPerformances.filter(p =>
       !storage.isDateInUnavailabilityPeriod(player, p.date)
     );
+
+    const playerPresentTrainings = validPlayerTrainingPerformances.filter(p => p.present).length;
+    const playerPresentMatches = validPlayerMatchPerformances.filter(p => p.present).length;
+
+    // Calculate total number of trainings for the team(s) the player might be part of
+    // Assuming trainings are common for all teams or player can attend any.
+    // If trainings were team-specific, this logic would need adjustment.
+    const totalTeamTrainings = storage.getTotalTeamEvents(allPlayers, 'training').length;
     
-    player.trainingAttendanceRate = validTrainingPerformances.length > 0 
-      ? (validTrainingPerformances.filter(p => p.present).length / validTrainingPerformances.length) * 100 
+    player.trainingAttendanceRate = totalTeamTrainings > 0
+      ? (playerPresentTrainings / totalTeamTrainings) * 100
       : 0;
     
-    player.matchAttendanceRate = validMatchPerformances.length > 0 
-      ? (validMatchPerformances.filter(p => p.present).length / validMatchPerformances.length) * 100 
+    // Calculate total number of matches for the specific team(s) of the player
+    let totalMatchesForPlayerTeams = 0;
+    const uniqueMatchEventsForPlayer = new Set<string>();
+
+    player.teams.forEach(team => {
+      const teamMatchEvents = storage.getTotalTeamEvents(allPlayers, 'match', team);
+      teamMatchEvents.forEach(event => {
+        uniqueMatchEventsForPlayer.add(`${event.date}-${event.opponent || 'unknown'}`);
+      });
+    });
+    totalMatchesForPlayerTeams = uniqueMatchEventsForPlayer.size;
+
+    player.matchAttendanceRate = totalMatchesForPlayerTeams > 0
+      ? (playerPresentMatches / totalMatchesForPlayerTeams) * 100
       : 0;
   },
 
   // Performance tracking
-  addPerformance: (playerId: string, performance: Performance) => {
+  addPerformance: (playerId: string, performanceData: Omit<Performance, 'id' | 'excused'>) => {
     const players = storage.getPlayers();
     const player = players.find(p => p.id === playerId);
     if (player) {
-      // Check if this performance is during an unavailability period
-      performance.excused = storage.isDateInUnavailabilityPeriod(player, performance.date);
+      const performance: Performance = {
+        ...performanceData,
+        id: `${Date.now().toString()}-${playerId}-${Math.random().toString(36).substr(2, 9)}`, // Unique ID
+        excused: storage.isDateInUnavailabilityPeriod(player, performanceData.date),
+      };
       
+      // Ensure performances array exists
+      if (!player.performances) {
+        player.performances = [];
+      }
       player.performances.push(performance);
       
-      // Update statistics
+      // Update global player statistics (these are all-time, not season-specific at this storage level)
       if (performance.present) {
         if (performance.type === 'match') {
-          player.totalMatches++;
-          player.totalMinutes += performance.minutesPlayed || 0;
-          player.goals += performance.goals || 0;
-          player.assists += performance.assists || 0;
-          player.yellowCards += performance.yellowCards || 0;
-          player.redCards += performance.redCards || 0;
+          player.totalMatches = (player.totalMatches || 0) + 1;
+          player.totalMinutes = (player.totalMinutes || 0) + (performance.minutesPlayed || 0);
+          player.goals = (player.goals || 0) + (performance.goals || 0);
+          player.assists = (player.assists || 0) + (performance.assists || 0);
+          player.yellowCards = (player.yellowCards || 0) + (performance.yellowCards || 0);
+          player.redCards = (player.redCards || 0) + (performance.redCards || 0);
           if (performance.cleanSheet && player.position === 'Gardien') {
-            player.cleanSheets++;
+            player.cleanSheets = (player.cleanSheets || 0) + 1;
           }
         } else if (performance.type === 'training') {
-          player.totalTrainings++;
+          player.totalTrainings = (player.totalTrainings || 0) + 1;
         }
       }
       
-      // Recalculate attendance rates
-      storage.recalculateAttendanceRates(player);
+      // Recalculate attendance rates for the affected player
+      // This requires all players to calculate team totals correctly.
+      storage.recalculateAttendanceRates(player, players);
       storage.savePlayers(players);
     }
   },

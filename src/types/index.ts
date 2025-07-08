@@ -60,6 +60,7 @@ export interface Performance {
   date: string;
   type: 'training' | 'match';
   present: boolean;
+  season: string; // e.g., "2024-2025"
   minutesPlayed?: number;
   goals?: number;
   assists?: number;

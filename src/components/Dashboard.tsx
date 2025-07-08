@@ -1,34 +1,127 @@
-import React from 'react';
-import { Player, TeamStats } from '../types';
-import { Users, Trophy, Target, Calendar, AlertCircle, CheckCircle, Activity, Download } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Player, TeamStats, Performance } from '../types';
+import { Users, Trophy, Target, Calendar, AlertCircle, CheckCircle, Activity, Download, Filter } from 'lucide-react';
 import { exportToPDF } from '../utils/export';
+import { storage } from '../utils/storage'; // For getTotalTeamEvents
 
-interface DashboardProps {
-  players: Player[];
+interface PlayerSeasonStats {
+  totalMatches: number;
+  totalMinutes: number;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+  cleanSheets: number;
+  presentTrainings: number;
+  presentMatches: number;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ players }) => {
+interface DashboardProps {
+  players: Player[]; // All players, potentially for non-season specific data like admin issues
+  allPlayers: Player[]; // Required for calculating total team events for attendance rates
+  selectedSeason: string;
+  onSeasonChange: (season: string) => void;
+}
+
+// Helper function to get all unique seasons from player performances
+const getAvailableSeasons = (players: Player[]): string[] => {
+  const seasons = new Set<string>();
+  players.forEach(p => {
+    (p.performances || []).forEach(perf => seasons.add(perf.season));
+  });
+  if (seasons.size === 0) return [new Date().getFullYear() + "-" + (new Date().getFullYear() + 1)]; // Default if no seasons
+  return Array.from(seasons).sort((a, b) => b.localeCompare(a)); // Sort descending
+};
+
+
+// Helper function to calculate individual player stats for a given season
+const getPlayerStatsForSeason = (player: Player, season: string): PlayerSeasonStats => {
+  const seasonPerformances = (player.performances || []).filter(p => p.season === season);
+
+  let stats: PlayerSeasonStats = {
+    totalMatches: 0, totalMinutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, cleanSheets: 0, presentTrainings: 0, presentMatches: 0
+  };
+
+  seasonPerformances.forEach(p => {
+    if (p.present) {
+      if (p.type === 'match') {
+        stats.totalMatches++;
+        stats.presentMatches++;
+        stats.totalMinutes += p.minutesPlayed || 0;
+        stats.goals += p.goals || 0;
+        stats.assists += p.assists || 0;
+        stats.yellowCards += p.yellowCards || 0;
+        stats.redCards += p.redCards || 0;
+        if (p.cleanSheet && player.position === 'Gardien') {
+          stats.cleanSheets++;
+        }
+      } else if (p.type === 'training') {
+        stats.presentTrainings++;
+      }
+    }
+  });
+  return stats;
+};
+
+
+export const Dashboard: React.FC<DashboardProps> = ({ players, selectedSeason, onSeasonChange, allPlayers }) => {
+
+  const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
+
+  const playersWithSeasonStats = useMemo(() => {
+    return players.map(p => {
+      const seasonStats = getPlayerStatsForSeason(p, selectedSeason);
+      // Calculate season-specific attendance rates
+      const allTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
+
+      let allTeamMatchesForPlayerForSeason = 0;
+      const uniqueMatchEventsForPlayerSeason = new Set<string>();
+      p.teams.forEach(team => {
+        const teamMatchEvents = storage.getTotalTeamEvents(allPlayers, 'match', team, selectedSeason);
+        teamMatchEvents.forEach(event => uniqueMatchEventsForPlayerSeason.add(`${event.date}-${event.opponent || 'unknown'}`));
+      });
+      allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
+
+      // Calculate season-specific attendance rates
+      const trainingAttendanceRate = allTeamTrainingsForSeason > 0
+        ? (seasonStats.presentTrainings / allTeamTrainingsForSeason) * 100
+        : p.trainingAttendanceRate; // Fallback or 0
+      const matchAttendanceRate = allTeamMatchesForPlayerForSeason > 0
+        ? (seasonStats.presentMatches / allTeamMatchesForPlayerForSeason) * 100
+        : p.matchAttendanceRate; // Fallback or 0
+
+      return {
+        ...p,
+        seasonStats,
+        trainingAttendanceRateSeason: trainingAttendanceRate,
+        matchAttendanceRateSeason: matchAttendanceRate,
+      };
+    });
+  }, [players, selectedSeason, allPlayers]);
+
+
   const calculateTeamStats = (): TeamStats => {
-    const totalPlayers = players.length;
-    const seniors1Count = players.filter(p => p.teams.includes('Seniors 1')).length;
-    const seniors2Count = players.filter(p => p.teams.includes('Seniors 2')).length;
+    const totalPlayers = playersWithSeasonStats.length; // Should this be filtered by players active in the season?
+    const seniors1Count = playersWithSeasonStats.filter(p => p.teams.includes('Seniors 1')).length;
+    const seniors2Count = playersWithSeasonStats.filter(p => p.teams.includes('Seniors 2')).length;
     
-    const totalAge = players.reduce((sum, player) => {
+    const totalAge = playersWithSeasonStats.reduce((sum, player) => {
       const age = new Date().getFullYear() - new Date(player.dateOfBirth).getFullYear();
       return sum + age;
     }, 0);
-    const averageAge = players.length > 0 ? totalAge / players.length : 0;
+    const averageAge = totalPlayers > 0 ? totalAge / totalPlayers : 0;
     
-    const totalGoals = players.reduce((sum, player) => sum + player.goals, 0);
-    const totalMatches = players.reduce((sum, player) => sum + player.totalMatches, 0);
-    const totalTrainings = players.reduce((sum, player) => sum + player.totalTrainings, 0);
-    
-    const averageMatchAttendance = players.length > 0 
-      ? players.reduce((sum, player) => sum + player.matchAttendanceRate, 0) / players.length 
+    const totalGoals = playersWithSeasonStats.reduce((sum, player) => sum + player.seasonStats.goals, 0);
+    // For totalMatches and totalTrainings, we should count unique team events for the season.
+    const uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
+    const uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
+
+    const averageMatchAttendance = totalPlayers > 0
+      ? playersWithSeasonStats.reduce((sum, player) => sum + player.matchAttendanceRateSeason, 0) / totalPlayers
       : 0;
 
-    const averageTrainingAttendance = players.length > 0 
-      ? players.reduce((sum, player) => sum + player.trainingAttendanceRate, 0) / players.length 
+    const averageTrainingAttendance = totalPlayers > 0
+      ? playersWithSeasonStats.reduce((sum, player) => sum + player.trainingAttendanceRateSeason, 0) / totalPlayers
       : 0;
 
     return {
@@ -37,19 +130,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ players }) => {
       seniors2Count,
       averageAge,
       totalGoals,
-      totalMatches,
-      totalTrainings,
+      totalMatches: uniqueTeamMatchesForSeason,
+      totalTrainings: uniqueTeamTrainingsForSeason,
       averageMatchAttendance,
       averageTrainingAttendance
     };
   };
 
-  const stats = calculateTeamStats();
+  const stats = useMemo(() => calculateTeamStats(), [playersWithSeasonStats, selectedSeason, allPlayers]);
   
+  // Admin issues are global, not season-specific
   const adminIssues = players.filter(p => !p.licenseValid || !p.paymentValid);
-  const topScorers = [...players].sort((a, b) => b.goals - a.goals).slice(0, 3);
-  const bestMatchAttendance = [...players].sort((a, b) => b.matchAttendanceRate - a.matchAttendanceRate).slice(0, 3);
-  const bestTrainingAttendance = [...players].sort((a, b) => b.trainingAttendanceRate - a.trainingAttendanceRate).slice(0, 3);
+
+  const topScorers = [...playersWithSeasonStats].sort((a, b) => b.seasonStats.goals - a.seasonStats.goals).slice(0, 3);
+  const bestMatchAttendance = [...playersWithSeasonStats].sort((a, b) => b.matchAttendanceRateSeason - a.matchAttendanceRateSeason).slice(0, 3);
+  const bestTrainingAttendance = [...playersWithSeasonStats].sort((a, b) => b.trainingAttendanceRateSeason - a.trainingAttendanceRateSeason).slice(0, 3);
 
   const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; color: string }> = 
     ({ title, value, icon, color }) => (
@@ -86,6 +181,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ players }) => {
         <div className="absolute -right-8 -bottom-8 opacity-10">
           <Users size={120} />
         </div>
+      </div>
+
+      {/* Season Filter */}
+      <div className="mb-6 bg-white p-4 rounded-lg shadow flex items-center space-x-3">
+        <Filter size={20} className="text-gray-600" />
+        <label htmlFor="season-select" className="text-sm font-medium text-gray-700">
+          Saison :
+        </label>
+        <select
+          id="season-select"
+          value={selectedSeason}
+          onChange={(e) => onSeasonChange(e.target.value)}
+          className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
+        >
+          {availableSeasons.map(season => (
+            <option key={season} value={season}>
+              {season}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Statistics Cards */}
