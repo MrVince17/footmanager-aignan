@@ -1,57 +1,176 @@
-import React, { useState } from 'react';
-import { Player } from '../types';
+import React, { useState, useMemo } from 'react';
+import { Player, Performance } from '../types'; // Added Performance
 import { BarChart3, TrendingUp, Download, Filter, Trophy, Target, Clock, Users, Activity } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../utils/export';
+import { storage } from '../utils/storage'; // For getTotalTeamEvents
+
+// Re-using types and helpers from Dashboard (consider moving to a shared utils file)
+interface PlayerSeasonStats {
+  totalMatches: number;
+  totalMinutes: number;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+  cleanSheets: number;
+  presentTrainings: number;
+  presentMatches: number;
+  // Specific for Statistics table
+  trainingAttendanceRateSeason: number;
+  matchAttendanceRateSeason: number;
+}
+
+const getAvailableSeasons = (players: Player[]): string[] => {
+  const seasons = new Set<string>();
+  players.forEach(p => {
+    (p.performances || []).forEach(perf => seasons.add(perf.season));
+  });
+  if (seasons.size === 0) return [new Date().getFullYear() + "-" + (new Date().getFullYear() + 1)];
+  return Array.from(seasons).sort((a, b) => b.localeCompare(a));
+};
+
+const getPlayerStatsForSeason = (player: Player, season: string, allPlayersForContext: Player[]): PlayerSeasonStats => {
+  const seasonPerformances = (player.performances || []).filter(p => p.season === season);
+
+  let stats: Omit<PlayerSeasonStats, 'trainingAttendanceRateSeason' | 'matchAttendanceRateSeason'> = {
+    totalMatches: 0, totalMinutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, cleanSheets: 0, presentTrainings: 0, presentMatches: 0
+  };
+
+  seasonPerformances.forEach(p => {
+    if (p.present) {
+      if (p.type === 'match') {
+        stats.totalMatches++;
+        stats.presentMatches++;
+        stats.totalMinutes += p.minutesPlayed || 0;
+        stats.goals += p.goals || 0;
+        stats.assists += p.assists || 0;
+        stats.yellowCards += p.yellowCards || 0;
+        stats.redCards += p.redCards || 0;
+        if (p.cleanSheet && player.position === 'Gardien') {
+          stats.cleanSheets++;
+        }
+      } else if (p.type === 'training') {
+        stats.presentTrainings++;
+      }
+    }
+  });
+
+  const allTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayersForContext, 'training', undefined, season).length;
+  let allTeamMatchesForPlayerForSeason = 0;
+  const uniqueMatchEventsForPlayerSeason = new Set<string>();
+  player.teams.forEach(team => {
+    const teamMatchEvents = storage.getTotalTeamEvents(allPlayersForContext, 'match', team, season);
+    teamMatchEvents.forEach(event => uniqueMatchEventsForPlayerSeason.add(`${event.date}-${event.opponent || 'unknown'}`));
+  });
+  allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
+
+  const trainingAttendanceRateSeason = allTeamTrainingsForSeason > 0
+    ? (stats.presentTrainings / allTeamTrainingsForSeason) * 100
+    : player.trainingAttendanceRate;
+  const matchAttendanceRateSeason = allTeamMatchesForPlayerForSeason > 0
+    ? (stats.presentMatches / allTeamMatchesForPlayerForSeason) * 100
+    : player.matchAttendanceRate;
+
+  return { ...stats, trainingAttendanceRateSeason, matchAttendanceRateSeason };
+};
+
 
 interface StatisticsProps {
   players: Player[];
+  allPlayers: Player[];
+  selectedSeason: string;
+  onSeasonChange: (season: string) => void;
 }
 
-export const Statistics: React.FC<StatisticsProps> = ({ players }) => {
+export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason, onSeasonChange, allPlayers }) => {
   const [filterTeam, setFilterTeam] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('goals');
+  const [sortBy, setSortBy] = useState<string>('goals'); // Default sort by season goals
 
-  const filteredPlayers = players.filter(player => 
+  const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
+
+  const playersWithSeasonStats = useMemo(() => {
+    return players.map(p => ({
+      ...p,
+      seasonStats: getPlayerStatsForSeason(p, selectedSeason, allPlayers),
+    }));
+  }, [players, selectedSeason, allPlayers]);
+
+  const filteredPlayersByTeam = playersWithSeasonStats.filter(player =>
     filterTeam === 'all' || player.teams.includes(filterTeam as any)
   );
 
-  const sortedPlayers = [...filteredPlayers].sort((a, b) => {
+  const sortedPlayers = [...filteredPlayersByTeam].sort((a, b) => {
+    // Sort using seasonStats
     switch (sortBy) {
-      case 'goals': return b.goals - a.goals;
-      case 'assists': return b.assists - a.assists;
-      case 'matches': return b.totalMatches - a.totalMatches;
-      case 'trainings': return b.totalTrainings - a.totalTrainings;
-      case 'minutes': return b.totalMinutes - a.totalMinutes;
-      case 'matchAttendance': return b.matchAttendanceRate - a.matchAttendanceRate;
-      case 'trainingAttendance': return b.trainingAttendanceRate - a.trainingAttendanceRate;
-      case 'cards': return (b.yellowCards + b.redCards * 2) - (a.yellowCards + a.redCards * 2);
+      case 'goals': return b.seasonStats.goals - a.seasonStats.goals;
+      case 'assists': return b.seasonStats.assists - a.seasonStats.assists;
+      case 'matches': return b.seasonStats.totalMatches - a.seasonStats.totalMatches;
+      // 'trainings' needs presentTrainings from seasonStats
+      case 'trainings': return b.seasonStats.presentTrainings - a.seasonStats.presentTrainings;
+      case 'minutes': return b.seasonStats.totalMinutes - a.seasonStats.totalMinutes;
+      case 'matchAttendance': return b.seasonStats.matchAttendanceRateSeason - a.seasonStats.matchAttendanceRateSeason;
+      case 'trainingAttendance': return b.seasonStats.trainingAttendanceRateSeason - a.seasonStats.trainingAttendanceRateSeason;
+      case 'cards': return (b.seasonStats.yellowCards + b.seasonStats.redCards * 2) - (a.seasonStats.yellowCards + a.seasonStats.redCards * 2);
       default: return 0;
     }
   });
 
-  const teamStats = {
-    totalPlayers: filteredPlayers.length,
-    totalGoals: filteredPlayers.reduce((sum, p) => sum + p.goals, 0),
-    totalAssists: filteredPlayers.reduce((sum, p) => sum + p.assists, 0),
-    totalMatches: filteredPlayers.reduce((sum, p) => sum + p.totalMatches, 0),
-    totalTrainings: filteredPlayers.reduce((sum, p) => sum + p.totalTrainings, 0),
-    totalMinutes: filteredPlayers.reduce((sum, p) => sum + p.totalMinutes, 0),
-    averageMatchAttendance: filteredPlayers.length > 0 
-      ? filteredPlayers.reduce((sum, p) => sum + p.matchAttendanceRate, 0) / filteredPlayers.length 
-      : 0,
-    averageTrainingAttendance: filteredPlayers.length > 0 
-      ? filteredPlayers.reduce((sum, p) => sum + p.trainingAttendanceRate, 0) / filteredPlayers.length 
-      : 0,
-    totalYellowCards: filteredPlayers.reduce((sum, p) => sum + p.yellowCards, 0),
-    totalRedCards: filteredPlayers.reduce((sum, p) => sum + p.redCards, 0),
-  };
+  const teamStats = useMemo(() => {
+    const currentTeamPlayers = filteredPlayersByTeam; // Already filtered by team, now use their season stats
+    const totalPlayers = currentTeamPlayers.length;
 
-  const positionStats = {
-    'Gardien': filteredPlayers.filter(p => p.position === 'Gardien').length,
-    'Défenseur': filteredPlayers.filter(p => p.position === 'Défenseur').length,
-    'Milieu': filteredPlayers.filter(p => p.position === 'Milieu').length,
-    'Attaquant': filteredPlayers.filter(p => p.position === 'Attaquant').length,
-  };
+    const totalGoals = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.goals, 0);
+    const totalAssists = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.assists, 0);
+
+    // Total matches and trainings for the selected team(s) and season
+    let uniqueTeamMatchesForSeason = 0;
+    let uniqueTeamTrainingsForSeason = 0;
+
+    if (filterTeam === 'all') {
+      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
+      uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
+    } else {
+      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', filterTeam as 'Seniors 1' | 'Seniors 2', selectedSeason).length;
+      uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', filterTeam as 'Seniors 1' | 'Seniors 2', selectedSeason).length; // Assuming trainings can be team specific for stats display
+    }
+
+    const totalMinutes = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.totalMinutes, 0);
+
+    const averageMatchAttendance = totalPlayers > 0
+      ? currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.matchAttendanceRateSeason, 0) / totalPlayers
+      : 0;
+    const averageTrainingAttendance = totalPlayers > 0
+      ? currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.trainingAttendanceRateSeason, 0) / totalPlayers
+      : 0;
+
+    const totalYellowCards = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.yellowCards, 0);
+    const totalRedCards = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.redCards, 0);
+
+    return {
+      totalPlayers,
+      totalGoals,
+      totalAssists,
+      totalMatches: uniqueTeamMatchesForSeason,
+      totalTrainings: uniqueTeamTrainingsForSeason,
+      totalMinutes,
+      averageMatchAttendance,
+      averageTrainingAttendance,
+      totalYellowCards,
+      totalRedCards,
+    };
+  }, [filteredPlayersByTeam, selectedSeason, filterTeam, allPlayers]);
+
+  const positionStats = useMemo(() => {
+    // Position stats should also be based on the filtered players for the season
+    const currentTeamPlayers = filteredPlayersByTeam;
+    return {
+      'Gardien': currentTeamPlayers.filter(p => p.position === 'Gardien').length,
+      'Défenseur': currentTeamPlayers.filter(p => p.position === 'Défenseur').length,
+      'Milieu': currentTeamPlayers.filter(p => p.position === 'Milieu').length,
+      'Attaquant': currentTeamPlayers.filter(p => p.position === 'Attaquant').length,
+    };
+  }, [filteredPlayersByTeam]);
+
 
   const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; color: string; subtitle?: string }> = 
     ({ title, value, icon, color, subtitle }) => (
@@ -99,29 +218,52 @@ export const Statistics: React.FC<StatisticsProps> = ({ players }) => {
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center">
           <div className="flex items-center space-x-2">
             <Filter size={20} className="text-gray-400" />
-            <span className="text-sm font-medium text-gray-700">Filtres:</span>
+            <span className="text-sm font-medium text-gray-700">Filtres :</span>
           </div>
           
-          <select
-            value={filterTeam}
-            onChange={(e) => setFilterTeam(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-          >
-            <option value="all">Toutes les équipes</option>
-            <option value="Seniors 1">Seniors 1</option>
-            <option value="Seniors 2">Seniors 2</option>
-          </select>
+          <div>
+            <label htmlFor="season-select-stats" className="sr-only">Saison</label>
+            <select
+              id="season-select-stats"
+              value={selectedSeason}
+              onChange={(e) => onSeasonChange(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            >
+              {availableSeasons.map(season => (
+                <option key={season} value={season}>
+                  {season}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="team-filter-stats" className="sr-only">Équipe</label>
+            <select
+              id="team-filter-stats"
+              value={filterTeam}
+              onChange={(e) => setFilterTeam(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            >
+              <option value="all">Toutes les équipes</option>
+              <option value="Seniors 1">Seniors 1</option>
+              <option value="Seniors 2">Seniors 2</option>
+            </select>
+          </div>
           
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-          >
-            <option value="goals">Trier par buts</option>
-            <option value="assists">Trier par passes</option>
+          <div>
+            <label htmlFor="sortby-stats" className="sr-only">Trier par</label>
+            <select
+              id="sortby-stats"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            >
+              <option value="goals">Trier par buts</option>
+              <option value="assists">Trier par passes</option>
             <option value="matches">Trier par matchs</option>
             <option value="trainings">Trier par entraînements</option>
             <option value="minutes">Trier par minutes</option>
@@ -242,6 +384,8 @@ export const Statistics: React.FC<StatisticsProps> = ({ players }) => {
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Minutes</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Buts</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Passes</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">CJ</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">CR</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Assiduité M</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Assiduité E</th>
               </tr>
@@ -275,20 +419,23 @@ export const Statistics: React.FC<StatisticsProps> = ({ players }) => {
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {player.teams.join(', ')}
                   </td>
-                  <td className="px-4 py-3 font-medium">{player.totalMatches}</td>
-                  <td className="px-4 py-3 font-medium">{player.totalTrainings}</td>
-                  <td className="px-4 py-3 font-medium">{player.totalMinutes}</td>
-                  <td className="px-4 py-3 font-medium text-red-600">{player.goals}</td>
-                  <td className="px-4 py-3 font-medium text-black">{player.assists}</td>
+                  {/* Display season-specific stats */}
+                  <td className="px-4 py-3 font-medium">{player.seasonStats.totalMatches}</td>
+                  <td className="px-4 py-3 font-medium">{player.seasonStats.presentTrainings}</td>
+                  <td className="px-4 py-3 font-medium">{player.seasonStats.totalMinutes}</td>
+                  <td className="px-4 py-3 font-medium text-red-600">{player.seasonStats.goals}</td>
+                  <td className="px-4 py-3 font-medium text-black">{player.seasonStats.assists}</td>
+                  <td className="px-4 py-3 font-medium text-yellow-600">{player.seasonStats.yellowCards}</td>
+                  <td className="px-4 py-3 font-medium text-red-700">{player.seasonStats.redCards}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center space-x-2">
                       <div className="w-12 bg-gray-200 rounded-full h-1">
                         <div 
                           className="bg-red-600 h-1 rounded-full"
-                          style={{ width: `${player.matchAttendanceRate}%` }}
+                          style={{ width: `${player.seasonStats.matchAttendanceRateSeason}%` }}
                         ></div>
                       </div>
-                      <span className="text-sm font-medium">{player.matchAttendanceRate.toFixed(0)}%</span>
+                      <span className="text-sm font-medium">{player.seasonStats.matchAttendanceRateSeason.toFixed(0)}%</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
@@ -296,10 +443,10 @@ export const Statistics: React.FC<StatisticsProps> = ({ players }) => {
                       <div className="w-12 bg-gray-200 rounded-full h-1">
                         <div 
                           className="bg-black h-1 rounded-full"
-                          style={{ width: `${player.trainingAttendanceRate}%` }}
+                          style={{ width: `${player.seasonStats.trainingAttendanceRateSeason}%` }}
                         ></div>
                       </div>
-                      <span className="text-sm font-medium">{player.trainingAttendanceRate.toFixed(0)}%</span>
+                      <span className="text-sm font-medium">{player.seasonStats.trainingAttendanceRateSeason.toFixed(0)}%</span>
                     </div>
                   </td>
                 </tr>

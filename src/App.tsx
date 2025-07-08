@@ -24,6 +24,8 @@ function App() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // TODO: Déterminer dynamiquement la saison actuelle (par ex., la plus récente dans les données ou basée sur la date)
+  const [selectedSeason, setSelectedSeason] = useState<string>('2024-2025');
 
   useEffect(() => {
     // Initialize sample data and load players
@@ -53,8 +55,12 @@ function App() {
     }
   };
 
-  const handleSavePerformance = (playerId: string, performance: any) => {
-    storage.addPerformance(playerId, performance);
+  const handleSavePerformance = (playerId: string, performanceData: Omit<Performance, 'id' | 'season' | 'excused'>) => {
+    const performanceWithSeason: Omit<Performance, 'id' | 'excused'> = {
+      ...performanceData,
+      season: selectedSeason,
+    };
+    storage.addPerformance(playerId, performanceWithSeason); // addPerformance will handle id and excused
     refreshPlayers();
   };
 
@@ -68,7 +74,7 @@ function App() {
   const renderContent = () => {
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard players={players} />;
+        return <Dashboard players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />;
       
       case 'players':
         return (
@@ -132,10 +138,10 @@ function App() {
         );
       
       case 'statistics':
-        return <Statistics players={players} />;
+        return <Statistics players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />;
       
       default:
-        return <Dashboard players={players} />;
+        return <Dashboard players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />;
     }
   };
 
@@ -183,11 +189,13 @@ function App() {
                   setCurrentView(item.id as View);
                   setSidebarOpen(false);
                 }}
-                className={`w-full flex items-center space-x-3 px-6 py-3 text-left hover:bg-gray-50 transition-colors duration-200 ${
-                  isActive ? 'bg-red-50 text-red-600 border-r-2 border-red-600' : 'text-gray-700'
+                className={`w-full flex items-center space-x-3 px-6 py-3 text-left transition-colors duration-200 ${
+                  isActive
+                    ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-secondary'
                 }`}
               >
-                <Icon size={20} />
+                <Icon size={20} className={isActive ? 'text-primary' : 'text-gray-500 group-hover:text-secondary'} />
                 <span className="font-medium">{item.label}</span>
               </button>
             );
@@ -202,7 +210,7 @@ function App() {
               setCurrentView('add-player');
               setSidebarOpen(false);
             }}
-            className="w-full flex items-center justify-center space-x-2 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors duration-200"
+            className="w-full flex items-center justify-center space-x-2 bg-primary text-white py-3 rounded-lg hover:bg-primary-hover transition-colors duration-200"
           >
             <Plus size={20} />
             <span>Nouveau joueur</span>

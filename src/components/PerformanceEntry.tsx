@@ -9,6 +9,7 @@ interface PerformanceEntryProps {
 
 export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onSavePerformance }) => {
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [filterTeamPerformance, setFilterTeamPerformance] = useState<string>('all');
   const [performanceData, setPerformanceData] = useState({
     date: new Date().toISOString().split('T')[0],
     type: 'match' as 'match' | 'training',
@@ -25,10 +26,18 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
   const handlePlayerSelection = (playerId: string, selected: boolean) => {
     if (selected) {
       setSelectedPlayers([...selectedPlayers, playerId]);
-      setPerformanceData(prev => ({
-        ...prev,
-        present: { ...prev.present, [playerId]: true }
-      }));
+      setPerformanceData(prev => {
+        const updatedPresent = { ...prev.present, [playerId]: true };
+        let updatedMinutes = { ...prev.minutesPlayed };
+        if (prev.type === 'match') {
+          updatedMinutes[playerId] = 90;
+        }
+        return {
+          ...prev,
+          present: updatedPresent,
+          minutesPlayed: updatedMinutes,
+        };
+      });
     } else {
       setSelectedPlayers(selectedPlayers.filter(id => id !== playerId));
       // Clean up performance data for deselected player
@@ -55,8 +64,8 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
     e.preventDefault();
     
     selectedPlayers.forEach(playerId => {
-      const performance: Performance = {
-        id: Date.now().toString() + playerId,
+      // Constructing without id, season, excused (handled by App.tsx and storage.ts)
+      const performanceDetails = {
         date: performanceData.date,
         type: performanceData.type,
         present: performanceData.present[playerId] || false,
@@ -69,7 +78,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
         cleanSheet: performanceData.cleanSheets[playerId] || false
       };
       
-      onSavePerformance(playerId, performance);
+      onSavePerformance(playerId, performanceDetails);
     });
 
     // Reset form
@@ -129,7 +138,30 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                 <select
                   required
                   value={performanceData.type}
-                  onChange={(e) => setPerformanceData({ ...performanceData, type: e.target.value as any })}
+                  onChange={(e) => {
+                    const newType = e.target.value as 'match' | 'training';
+                    setPerformanceData(prev => {
+                      let updatedMinutes = { ...prev.minutesPlayed };
+                      if (newType === 'match') {
+                        // Pre-fill minutes for already selected and present players
+                        selectedPlayers.forEach(playerId => {
+                          if (prev.present[playerId]) {
+                            updatedMinutes[playerId] = 90;
+                          }
+                        });
+                      } else {
+                        // Clear minutes if switching to training
+                        updatedMinutes = {};
+                      }
+                      return {
+                        ...prev,
+                        type: newType,
+                        minutesPlayed: updatedMinutes,
+                        // Reset opponent if switching to training
+                        opponent: newType === 'training' ? '' : prev.opponent
+                      };
+                    });
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
                   <option value="match">Match</option>
@@ -160,9 +192,77 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
               <Users size={20} />
               <span>Sélection des joueurs</span>
             </h3>
+
+            <div className="flex items-center space-x-4 mb-4">
+              <label htmlFor="team-filter-perf" className="text-sm font-medium text-gray-700">
+                Filtrer par équipe :
+              </label>
+              <select
+                id="team-filter-perf"
+                value={filterTeamPerformance}
+                onChange={(e) => {
+                  setFilterTeamPerformance(e.target.value);
+                  // Optionnel: déselectionner les joueurs qui ne sont plus visibles
+                  // setSelectedPlayers(prev => prev.filter(playerId => players.find(p=>p.id === playerId)?.teams.includes(e.target.value) || e.target.value === 'all'));
+                }}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              >
+                <option value="all">Toutes les équipes</option>
+                <option value="Seniors 1">Seniors 1</option>
+                <option value="Seniors 2">Seniors 2</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  const visiblePlayerIds = players
+                    .filter(p => filterTeamPerformance === 'all' || p.teams.includes(filterTeamPerformance as any))
+                    .map(p => p.id);
+
+                  const currentlyVisibleAndSelected = selectedPlayers.filter(id => visiblePlayerIds.includes(id));
+
+                  if (currentlyVisibleAndSelected.length === visiblePlayerIds.length && visiblePlayerIds.length > 0) {
+                    // All visible are selected, so deselect them
+                    setSelectedPlayers(prev => prev.filter(id => !visiblePlayerIds.includes(id)));
+                  } else {
+                    // Not all visible are selected (or none are), so select all visible
+                    const newSelectedIds = [...new Set([...selectedPlayers, ...visiblePlayerIds])];
+                    setSelectedPlayers(newSelectedIds);
+                    if (performanceData.type === 'match') {
+                      setPerformanceData(prev => {
+                        const updatedMinutes = { ...prev.minutesPlayed };
+                        const updatedPresent = { ...prev.present };
+                        visiblePlayerIds.forEach(id => {
+                          if (!selectedPlayers.includes(id)) { // only for newly selected
+                            updatedMinutes[id] = 90;
+                            updatedPresent[id] = true;
+                          }
+                        });
+                        return { ...prev, minutesPlayed: updatedMinutes, present: updatedPresent };
+                      });
+                    } else {
+                       // Ensure newly selected are marked present even for trainings
+                       setPerformanceData(prev => {
+                        const updatedPresent = { ...prev.present };
+                        visiblePlayerIds.forEach(id => {
+                           if (!selectedPlayers.includes(id)) {
+                            updatedPresent[id] = true;
+                           }
+                        });
+                        return { ...prev, present: updatedPresent };
+                      });
+                    }
+                  }
+                }}
+                className="px-4 py-2 border border-orange-500 text-orange-600 rounded-lg hover:bg-orange-50 text-sm"
+              >
+                Tout sélectionner / désélectionner (visibles)
+              </button>
+            </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {players.map(player => (
+              {players
+                .filter(player => filterTeamPerformance === 'all' || player.teams.includes(filterTeamPerformance as any))
+                .map(player => (
                 <label key={player.id} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                   <input
                     type="checkbox"
