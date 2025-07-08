@@ -181,21 +181,38 @@ export const exportToPDF = async (elementId: string, filename: string = 'export_
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
-    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-    const imgX = (pdfWidth - imgWidth * ratio) / 2;
-    const imgY = 10;
+    const pageRatio = pdfWidth / pdfHeight;
+    const imgRatio = imgWidth / imgHeight;
+
+    let finalImgWidth, finalImgHeight, imgX, imgY;
+
+    if (imgRatio > pageRatio) { // Image is wider than page
+      finalImgWidth = pdfWidth - 20; // 10mm margin on each side
+      finalImgHeight = finalImgWidth / imgRatio;
+      imgX = 10;
+      imgY = (pdfHeight - finalImgHeight) / 2;
+    } else { // Image is taller than page or same ratio
+      finalImgHeight = pdfHeight - 45; // Adjusted for header and footer
+      finalImgWidth = finalImgHeight * imgRatio;
+      imgX = (pdfWidth - finalImgWidth) / 2;
+      imgY = 30; // Space for header
+    }
+
+    // Ensure Y is not negative if image is very tall
+    if (imgY < 30) imgY = 30;
+
 
     // Add US Aignan header
-    pdf.setFontSize(20);
+    pdf.setFontSize(18);
     pdf.setTextColor(220, 38, 38); // Rouge US Aignan
-    pdf.text('US AIGNAN', pdfWidth / 2, 15, { align: 'center' });
+    pdf.text('US AIGNAN - Tableau de Bord', pdfWidth / 2, 15, { align: 'center' });
     
-    pdf.setFontSize(12);
+    pdf.setFontSize(10);
     pdf.setTextColor(0, 0, 0);
-    pdf.text('Plateforme de Gestion d\'Équipe', pdfWidth / 2, 22, { align: 'center' });
+    pdf.text(`Saison: ${element.querySelector('#season-select') ? (element.querySelector('#season-select') as HTMLSelectElement).value : 'N/A'}`, pdfWidth / 2, 22, { align: 'center' });
     
     // Add the captured content
-    pdf.addImage(imgData, 'PNG', imgX, imgY + 15, imgWidth * ratio, imgHeight * ratio);
+    pdf.addImage(imgData, 'PNG', imgX, imgY, finalImgWidth, finalImgHeight);
     
     // Add footer
     pdf.setFontSize(8);
