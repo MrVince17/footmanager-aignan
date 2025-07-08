@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Player, Performance } from '../types';
-import { Save, Calendar, Clock, Target, Users, AlertTriangle } from 'lucide-react';
+import { Save, Calendar, Target, Users, AlertTriangle } from 'lucide-react';
 
 interface PerformanceEntryProps {
   players: Player[];
-  onSavePerformance: (playerId: string, performance: Performance) => void;
+  onSavePerformance: (playerId: string, performance: Omit<Performance, 'id' | 'season'>) => void;
 }
 
 export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onSavePerformance }) => {
@@ -53,11 +53,16 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
     }
   };
 
-  const updatePlayerData = (playerId: string, field: string, value: any) => {
-    setPerformanceData(prev => ({
-      ...prev,
-      [field]: { ...prev[field as keyof typeof prev], [playerId]: value }
-    }));
+  const updatePlayerData = (playerId: string, field: keyof typeof performanceData, value: any) => {
+    setPerformanceData(prev => {
+      if (field === 'minutesPlayed' || field === 'goals' || field === 'assists' || field === 'yellowCards' || field === 'redCards' || field === 'cleanSheets' || field === 'present') {
+        return {
+          ...prev,
+          [field]: { ...(prev[field] as object), [playerId]: value }
+        };
+      }
+      return prev; // Should not happen with current usage
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
