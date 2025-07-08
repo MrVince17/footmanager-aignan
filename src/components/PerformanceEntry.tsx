@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Player, Performance } from '../types';
-import { Save, Calendar, Clock, Target, Users, AlertTriangle } from 'lucide-react';
+import { Save, Calendar, Target, Users, AlertTriangle } from 'lucide-react';
 
 interface PerformanceEntryProps {
   players: Player[];
-  onSavePerformance: (playerId: string, performance: Performance) => void;
+  onSavePerformance: (playerId: string, performance: Omit<Performance, 'id' | 'season'>) => void;
 }
 
 export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onSavePerformance }) => {
@@ -53,11 +53,16 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
     }
   };
 
-  const updatePlayerData = (playerId: string, field: string, value: any) => {
-    setPerformanceData(prev => ({
-      ...prev,
-      [field]: { ...prev[field as keyof typeof prev], [playerId]: value }
-    }));
+  const updatePlayerData = (playerId: string, field: keyof typeof performanceData, value: any) => {
+    setPerformanceData(prev => {
+      if (field === 'minutesPlayed' || field === 'goals' || field === 'assists' || field === 'yellowCards' || field === 'redCards' || field === 'cleanSheets' || field === 'present') {
+        return {
+          ...prev,
+          [field]: { ...(prev[field] as object), [playerId]: value }
+        };
+      }
+      return prev; // Should not happen with current usage
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -103,9 +108,9 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-orange-600 to-red-600 rounded-xl p-8 text-white">
+      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">
         <h1 className="text-3xl font-bold mb-2">Saisie des Performances</h1>
-        <p className="text-orange-100">Enregistrez les performances de vos joueurs</p>
+        <p className="text-red-100">Enregistrez les performances de vos joueurs</p>
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-8">
@@ -127,7 +132,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                   required
                   value={performanceData.date}
                   onChange={(e) => setPerformanceData({ ...performanceData, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 />
               </div>
               
@@ -162,7 +167,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                       };
                     });
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 >
                   <option value="match">Match</option>
                   <option value="training">Entraînement</option>
@@ -178,7 +183,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                     type="text"
                     value={performanceData.opponent}
                     onChange={(e) => setPerformanceData({ ...performanceData, opponent: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     placeholder="Nom de l'équipe adverse"
                   />
                 </div>
@@ -205,7 +210,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                   // Optionnel: déselectionner les joueurs qui ne sont plus visibles
                   // setSelectedPlayers(prev => prev.filter(playerId => players.find(p=>p.id === playerId)?.teams.includes(e.target.value) || e.target.value === 'all'));
                 }}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
               >
                 <option value="all">Toutes les équipes</option>
                 <option value="Seniors 1">Seniors 1</option>
@@ -253,7 +258,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                     }
                   }
                 }}
-                className="px-4 py-2 border border-orange-500 text-orange-600 rounded-lg hover:bg-orange-50 text-sm"
+                className="px-4 py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50 text-sm"
               >
                 Tout sélectionner / désélectionner (visibles)
               </button>
@@ -268,7 +273,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                     type="checkbox"
                     checked={selectedPlayers.includes(player.id)}
                     onChange={(e) => handlePlayerSelection(player.id, e.target.checked)}
-                    className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                    className="rounded border-gray-300 text-red-600 focus:ring-red-500"
                   />
                   <div className="ml-3">
                     <p className="font-medium text-gray-900">{player.firstName} {player.lastName}</p>
@@ -330,7 +335,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                                 max="120"
                                 value={performanceData.minutesPlayed[player.id] || ''}
                                 onChange={(e) => updatePlayerData(player.id, 'minutesPlayed', parseInt(e.target.value) || 0)}
-                                className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="w-20 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 focus:border-transparent"
                               />
                             </td>
                             <td className="px-4 py-3">
@@ -339,7 +344,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                                 min="0"
                                 value={performanceData.goals[player.id] || ''}
                                 onChange={(e) => updatePlayerData(player.id, 'goals', parseInt(e.target.value) || 0)}
-                                className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 focus:border-transparent"
                               />
                             </td>
                             <td className="px-4 py-3">
@@ -348,7 +353,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                                 min="0"
                                 value={performanceData.assists[player.id] || ''}
                                 onChange={(e) => updatePlayerData(player.id, 'assists', parseInt(e.target.value) || 0)}
-                                className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 focus:border-transparent"
                               />
                             </td>
                             <td className="px-4 py-3">
@@ -357,7 +362,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                                 min="0"
                                 value={performanceData.yellowCards[player.id] || ''}
                                 onChange={(e) => updatePlayerData(player.id, 'yellowCards', parseInt(e.target.value) || 0)}
-                                className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 focus:border-transparent"
                               />
                             </td>
                             <td className="px-4 py-3">
@@ -366,7 +371,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                                 min="0"
                                 value={performanceData.redCards[player.id] || ''}
                                 onChange={(e) => updatePlayerData(player.id, 'redCards', parseInt(e.target.value) || 0)}
-                                className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-red-500 focus:border-transparent"
                               />
                             </td>
                           </>
@@ -384,8 +389,8 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
 
               {/* Clean Sheets for Goalkeepers */}
               {performanceData.type === 'match' && selectedPlayersList.some(p => p.position === 'Gardien' && performanceData.present[p.id]) && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <h4 className="font-medium text-yellow-800 mb-3">Clean Sheets (Gardiens)</h4>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h4 className="font-medium text-red-800 mb-3">Clean Sheets (Gardiens)</h4>
                   <div className="space-y-2">
                     {selectedPlayersList
                       .filter(p => p.position === 'Gardien' && performanceData.present[p.id])
@@ -395,9 +400,9 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                             type="checkbox"
                             checked={performanceData.cleanSheets[player.id] || false}
                             onChange={(e) => updatePlayerData(player.id, 'cleanSheets', e.target.checked)}
-                            className="rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+                            className="rounded border-gray-300 text-red-600 focus:ring-red-500"
                           />
-                          <span className="ml-2 text-sm font-medium text-yellow-800">
+                          <span className="ml-2 text-sm font-medium text-red-800">
                             {player.firstName} {player.lastName} - Clean Sheet
                           </span>
                         </label>
@@ -413,7 +418,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
             <div className="flex justify-end pt-6 border-t">
               <button
                 type="submit"
-                className="flex items-center space-x-2 bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-orange-700 transition-colors duration-200"
+                className="flex items-center space-x-2 bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition-colors duration-200"
               >
                 <Save size={20} />
                 <span>Enregistrer les performances</span>

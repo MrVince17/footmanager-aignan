@@ -56,9 +56,9 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-xl p-8 text-white">
+      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">
         <h1 className="text-3xl font-bold mb-2">Gestion des Joueurs</h1>
-        <p className="text-blue-100">Gérez vos joueurs et consultez leurs statistiques</p>
+        <p className="text-red-100">Gérez vos joueurs et consultez leurs statistiques</p>
       </div>
 
       {/* Filters and Search */}
@@ -71,14 +71,14 @@ export const PlayerList: React.FC<PlayerListProps> = ({
               placeholder="Rechercher un joueur..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             />
           </div>
           
           <select
             value={filterTeam}
             onChange={(e) => setFilterTeam(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           >
             <option value="all">Toutes les équipes</option>
             <option value="Seniors 1">Seniors 1</option>
@@ -88,7 +88,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           <select
             value={filterPosition}
             onChange={(e) => setFilterPosition(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           >
             <option value="all">Tous les postes</option>
             <option value="Gardien">Gardien</option>
@@ -99,7 +99,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           
           <button
             onClick={onAddPlayer}
-            className="flex items-center space-x-2 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200"
+            className="flex items-center space-x-2 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"
           >
             <Plus size={20} />
             <span>Ajouter</span>
@@ -187,7 +187,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
               <button
                 onClick={() => onSelectPlayer(player)}
-                className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                className="w-full mt-4 bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200"
               >
                 Voir les détails
               </button>
@@ -208,7 +208,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           </p>
           <button
             onClick={onAddPlayer}
-            className="inline-flex items-center space-x-2 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200"
+            className="inline-flex items-center space-x-2 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"
           >
             <Plus size={20} />
             <span>Ajouter un joueur</span>
