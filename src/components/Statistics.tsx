@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Player, Performance } from '../types'; // Added Performance
-import { BarChart3, TrendingUp, Download, Filter, Trophy, Target, Clock, Users, Activity } from 'lucide-react';
+import { Player } from '../types';
+import { BarChart3, Download, Filter, Trophy, Target, Users, Activity } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../utils/export';
-import { storage } from '../utils/storage'; // For getTotalTeamEvents
+import { storage } from '../utils/storage';
 
-// Re-using types and helpers from Dashboard (consider moving to a shared utils file)
 interface PlayerSeasonStats {
   totalMatches: number;
   totalMinutes: number;
@@ -15,9 +14,24 @@ interface PlayerSeasonStats {
   cleanSheets: number;
   presentTrainings: number;
   presentMatches: number;
-  // Specific for Statistics table
   trainingAttendanceRateSeason: number;
   matchAttendanceRateSeason: number;
+}
+
+interface ExportPlayerData {
+  Nom: string;
+  Numéro: string;
+  Position: string;
+  Équipes: string;
+  Matchs: number;
+  Entraînements: number;
+  Minutes: number;
+  Buts: number;
+  Passes: number;
+  'Cartons Jaunes': number;
+  'Cartons Rouges': number;
+  'Assiduité Matchs (%)': string;
+  'Assiduité Entraînements (%)': string;
 }
 
 const getAvailableSeasons = (players: Player[]): string[] => {
@@ -74,7 +88,6 @@ const getPlayerStatsForSeason = (player: Player, season: string, allPlayersForCo
   return { ...stats, trainingAttendanceRateSeason, matchAttendanceRateSeason };
 };
 
-
 interface StatisticsProps {
   players: Player[];
   allPlayers: Player[];
@@ -83,8 +96,8 @@ interface StatisticsProps {
 }
 
 export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason, onSeasonChange, allPlayers }) => {
-  const [filterTeam, setFilterTeam] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('goals'); // Default sort by season goals
+  const [filterTeam, setFilterTeam] = useState<'all' | 'Seniors 1' | 'Seniors 2'>('all');
+  const [sortBy, setSortBy] = useState<string>('goals');
 
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
@@ -96,16 +109,14 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
   }, [players, selectedSeason, allPlayers]);
 
   const filteredPlayersByTeam = playersWithSeasonStats.filter(player =>
-    filterTeam === 'all' || player.teams.includes(filterTeam as any)
+    filterTeam === 'all' || player.teams.includes(filterTeam)
   );
 
   const sortedPlayers = [...filteredPlayersByTeam].sort((a, b) => {
-    // Sort using seasonStats
     switch (sortBy) {
       case 'goals': return b.seasonStats.goals - a.seasonStats.goals;
       case 'assists': return b.seasonStats.assists - a.seasonStats.assists;
       case 'matches': return b.seasonStats.totalMatches - a.seasonStats.totalMatches;
-      // 'trainings' needs presentTrainings from seasonStats
       case 'trainings': return b.seasonStats.presentTrainings - a.seasonStats.presentTrainings;
       case 'minutes': return b.seasonStats.totalMinutes - a.seasonStats.totalMinutes;
       case 'matchAttendance': return b.seasonStats.matchAttendanceRateSeason - a.seasonStats.matchAttendanceRateSeason;
@@ -116,13 +127,12 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
   });
 
   const teamStats = useMemo(() => {
-    const currentTeamPlayers = filteredPlayersByTeam; // Already filtered by team, now use their season stats
+    const currentTeamPlayers = filteredPlayersByTeam;
     const totalPlayers = currentTeamPlayers.length;
 
     const totalGoals = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.goals, 0);
     const totalAssists = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.assists, 0);
 
-    // Total matches and trainings for the selected team(s) and season
     let uniqueTeamMatchesForSeason = 0;
     let uniqueTeamTrainingsForSeason = 0;
 
@@ -130,8 +140,8 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
       uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
     } else {
-      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', filterTeam as 'Seniors 1' | 'Seniors 2', selectedSeason).length;
-      uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', filterTeam as 'Seniors 1' | 'Seniors 2', selectedSeason).length; // Assuming trainings can be team specific for stats display
+      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', filterTeam, selectedSeason).length;
+      uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', filterTeam, selectedSeason).length;
     }
 
     const totalMinutes = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.totalMinutes, 0);
@@ -161,7 +171,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
   }, [filteredPlayersByTeam, selectedSeason, filterTeam, allPlayers]);
 
   const positionStats = useMemo(() => {
-    // Position stats should also be based on the filtered players for the season
     const currentTeamPlayers = filteredPlayersByTeam;
     return {
       'Gardien': currentTeamPlayers.filter(p => p.position === 'Gardien').length,
@@ -171,6 +180,21 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     };
   }, [filteredPlayersByTeam]);
 
+  const exportData: ExportPlayerData[] = filteredPlayersByTeam.map(player => ({
+    Nom: `${player.firstName} ${player.lastName}`,
+    Numéro: player.licenseNumber,
+    Position: player.position,
+    Équipes: player.teams.join(', '),
+    Matchs: player.seasonStats.totalMatches,
+    Entraînements: player.seasonStats.presentTrainings,
+    Minutes: player.seasonStats.totalMinutes,
+    Buts: player.seasonStats.goals,
+    Passes: player.seasonStats.assists,
+    'Cartons Jaunes': player.seasonStats.yellowCards,
+    'Cartons Rouges': player.seasonStats.redCards,
+    'Assiduité Matchs (%)': player.seasonStats.matchAttendanceRateSeason.toFixed(0),
+    'Assiduité Entraînements (%)': player.seasonStats.trainingAttendanceRateSeason.toFixed(0),
+  }));
 
   const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; color: string; subtitle?: string }> = 
     ({ title, value, icon, color, subtitle }) => (
@@ -206,7 +230,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
               <span>PDF</span>
             </button>
             <button
-              onClick={() => exportToExcel(filteredPlayers)}
+              onClick={() => exportToExcel(filteredPlayersByTeam, 'statistiques_US_Aignan.xlsx')}
               className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors duration-200"
             >
               <Download size={20} />
@@ -215,8 +239,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
           </div>
         </div>
       </div>
-
-      {/* Filters */}
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center">
           <div className="flex items-center space-x-2">
@@ -245,7 +267,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
             <select
               id="team-filter-stats"
               value={filterTeam}
-              onChange={(e) => setFilterTeam(e.target.value)}
+              onChange={(e) => setFilterTeam(e.target.value as 'all' | 'Seniors 1' | 'Seniors 2')}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
               <option value="all">Toutes les équipes</option>
@@ -264,17 +286,16 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
             >
               <option value="goals">Trier par buts</option>
               <option value="assists">Trier par passes</option>
-            <option value="matches">Trier par matchs</option>
-            <option value="trainings">Trier par entraînements</option>
-            <option value="minutes">Trier par minutes</option>
-            <option value="matchAttendance">Trier par assiduité matchs</option>
-            <option value="trainingAttendance">Trier par assiduité entraînements</option>
-            <option value="cards">Trier par cartons</option>
-          </select>
+              <option value="matches">Trier par matchs</option>
+              <option value="trainings">Trier par entraînements</option>
+              <option value="minutes">Trier par minutes</option>
+              <option value="matchAttendance">Trier par assiduité matchs</option>
+              <option value="trainingAttendance">Trier par assiduité entraînements</option>
+              <option value="cards">Trier par cartons</option>
+            </select>
+          </div>
         </div>
       </div>
-
-      {/* Team Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Buts"
@@ -301,8 +322,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
           color="#000000"
         />
       </div>
-
-      {/* Attendance Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <StatCard
           title="Présence Matchs"
@@ -319,8 +338,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
           subtitle="Moyenne d'équipe"
         />
       </div>
-
-      {/* Position Distribution and Team Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Répartition par Position</h3>
@@ -341,7 +358,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
             ))}
           </div>
         </div>
-
         <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Statistiques d'Équipe</h3>
           <div className="space-y-3">
@@ -366,11 +382,8 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
           </div>
         </div>
       </div>
-
-      {/* Player Rankings */}
       <div className="bg-white rounded-xl shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">Classement des Joueurs</h3>
-        
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto">
             <thead>
@@ -419,7 +432,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {player.teams.join(', ')}
                   </td>
-                  {/* Display season-specific stats */}
                   <td className="px-4 py-3 font-medium">{player.seasonStats.totalMatches}</td>
                   <td className="px-4 py-3 font-medium">{player.seasonStats.presentTrainings}</td>
                   <td className="px-4 py-3 font-medium">{player.seasonStats.totalMinutes}</td>
@@ -454,7 +466,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
             </tbody>
           </table>
         </div>
-
         {sortedPlayers.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <BarChart3 size={48} className="mx-auto mb-4 text-gray-300" />
