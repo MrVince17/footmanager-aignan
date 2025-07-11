@@ -1,12 +1,30 @@
 import React from 'react';
 
-interface MatchCardProps {
-  // Define any props you expect MatchCard to receive
-  // For example:
-  // matchData: any;
+// Placeholder types - these should ideally be defined in a central types file (e.g., src/types/index.ts)
+interface Player {
+  id: string;
+  name: string;
+  // Add other player properties as needed
 }
 
-export const MatchCard: React.FC<MatchCardProps> = (/*props*/) => {
+interface MatchDisplayData {
+  id: string;
+  // Add other match properties as needed
+  // For example:
+  // date: string;
+  // opponent: string;
+  // score: string;
+  // players: Player[];
+}
+
+interface MatchCardProps {
+  match: MatchDisplayData;
+  allPlayers: Player[];
+  onEdit: (match: MatchDisplayData) => void;
+  // Define any other props you expect MatchCard to receive
+}
+
+export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit }) => {
   return (
     <div style={{ border: '1px solid #ccc', padding: '10px', margin: '10px' }}>
       <h4>Match Card</h4>
