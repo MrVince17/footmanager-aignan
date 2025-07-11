@@ -15,7 +15,9 @@ import {
   Activity,
   Plus,
   X,
-  Save
+  Save,
+  Home,
+  Bus
 } from 'lucide-react';
 import { exportPlayerStats, exportToPDF } from '../utils/export';
 import { storage } from '../utils/storage';
