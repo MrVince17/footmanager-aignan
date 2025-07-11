@@ -23,6 +23,9 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
   const [scoreHome, setScoreHome] = useState<string | number>(matchToEdit.originalPerformanceRef.scoreHome ?? '');
   const [scoreAway, setScoreAway] = useState<string | number>(matchToEdit.originalPerformanceRef.scoreAway ?? '');
   const [location, setLocation] = useState<'home' | 'away' | undefined>(matchToEdit.originalPerformanceRef.location);
+  const [localScorers, setLocalScorers] = useState(
+    matchToEdit.originalPerformanceRef.scorers?.map(s => ({ ...s, minute: String(s.minute) })) || []
+  );
 
   // Effect to update form state if matchToEdit changes (e.g., user opens form for a different match)
   useEffect(() => {
@@ -31,6 +34,9 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
     setScoreHome(matchToEdit.originalPerformanceRef.scoreHome ?? '');
     setScoreAway(matchToEdit.originalPerformanceRef.scoreAway ?? '');
     setLocation(matchToEdit.originalPerformanceRef.location);
+    setLocalScorers(
+      matchToEdit.originalPerformanceRef.scorers?.map(s => ({ ...s, minute: String(s.minute) })) || []
+    );
   }, [matchToEdit]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -42,6 +48,12 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
       scoreHome: scoreHome === '' ? undefined : Number(scoreHome),
       scoreAway: scoreAway === '' ? undefined : Number(scoreAway),
       location,
+      scorers: localScorers
+        .filter(s => s.playerId && s.minute !== '') // Ensure player is selected and minute is not empty
+        .map(s => ({
+          playerId: s.playerId,
+          minute: Number(s.minute), // Convert minute back to number
+        })),
       // season: matchToEdit.originalPerformanceRef.season, // Ensure season is preserved
       // type: 'match', // Ensure type is preserved
     };
@@ -134,8 +146,65 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
               <option value="away">Extérieur</option>
             </select>
           </div>
-          {/* Placeholder for more complex fields like scorers, assisters, cards */}
-          {/* These would require more complex UI (e.g., dynamic lists, player selectors) */}
+
+          {/* Scorers Section */}
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Buteurs</label>
+            {localScorers.map((scorer, index) => (
+              <div key={index} className="flex items-center space-x-2 p-2 border rounded-md">
+                <select
+                  value={scorer.playerId}
+                  onChange={(e) => {
+                    const newScorers = [...localScorers];
+                    newScorers[index].playerId = e.target.value;
+                    setLocalScorers(newScorers);
+                  }}
+                  className="flex-grow mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                >
+                  <option value="" disabled>Sélectionner joueur</option>
+                  {allPlayers.map(player => (
+                    <option key={player.id} value={player.id}>
+                      {player.firstName} {player.lastName}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  placeholder="Minute"
+                  value={scorer.minute}
+                  onChange={(e) => {
+                    const newScorers = [...localScorers];
+                    newScorers[index].minute = e.target.value; // Keep as string for input
+                    setLocalScorers(newScorers);
+                  }}
+                  className="mt-1 block w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  min="0"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newScorers = localScorers.filter((_, i) => i !== index);
+                    setLocalScorers(newScorers);
+                  }}
+                  className="p-2 text-red-500 hover:text-red-700"
+                  title="Supprimer buteur"
+                >
+                  &#x2716; {/* Cross mark */}
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setLocalScorers([...localScorers, { playerId: '', minute: '' }])}
+              className="mt-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-300 rounded-md shadow-sm"
+            >
+              + Ajouter Buteur
+            </button>
+          </div>
+          {/* End Scorers Section */}
+
+          {/* Placeholder for other event types (Assisters, Cards, Goals Conceded) */}
+
           <div className="pt-6 flex justify-end space-x-3">
             <button
               type="button"
