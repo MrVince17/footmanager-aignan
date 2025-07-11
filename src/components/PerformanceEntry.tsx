@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Player, Performance } from '../types';
-import { Save, Calendar, Target, Users, AlertTriangle } from 'lucide-react';
+import { Save, Calendar, Target, Users, AlertTriangle, Home, Bus } from 'lucide-react';
 
 interface PerformanceEntryProps {
   players: Player[];
@@ -14,6 +14,9 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
     date: new Date().toISOString().split('T')[0],
     type: 'match' as 'match' | 'training',
     opponent: '',
+    scoreHome: undefined as number | undefined,
+    scoreAway: undefined as number | undefined,
+    location: 'home' as 'home' | 'away',
     minutesPlayed: {} as Record<string, number>,
     goals: {} as Record<string, number>,
     assists: {} as Record<string, number>,
@@ -75,6 +78,9 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
         type: performanceData.type,
         present: performanceData.present[playerId] || false,
         opponent: performanceData.type === 'match' ? performanceData.opponent : undefined,
+        scoreHome: performanceData.type === 'match' ? performanceData.scoreHome : undefined,
+        scoreAway: performanceData.type === 'match' ? performanceData.scoreAway : undefined,
+        location: performanceData.type === 'match' ? performanceData.location : undefined,
         minutesPlayed: performanceData.minutesPlayed[playerId] || 0,
         goals: performanceData.goals[playerId] || 0,
         assists: performanceData.assists[playerId] || 0,
@@ -92,6 +98,9 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
       date: new Date().toISOString().split('T')[0],
       type: 'match',
       opponent: '',
+      scoreHome: undefined,
+      scoreAway: undefined,
+      location: 'home',
       minutesPlayed: {},
       goals: {},
       assists: {},
@@ -189,6 +198,61 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                 </div>
               )}
             </div>
+            {performanceData.type === 'match' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Score Domicile
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={performanceData.scoreHome === undefined ? '' : performanceData.scoreHome}
+                    onChange={(e) => setPerformanceData({ ...performanceData, scoreHome: e.target.value === '' ? undefined : parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    placeholder="Buts Domicile"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Score Extérieur
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={performanceData.scoreAway === undefined ? '' : performanceData.scoreAway}
+                    onChange={(e) => setPerformanceData({ ...performanceData, scoreAway: e.target.value === '' ? undefined : parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    placeholder="Buts Extérieur"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Lieu
+                  </label>
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setPerformanceData({ ...performanceData, location: 'home' })}
+                      className={`flex-1 flex items-center justify-center px-3 py-2 border rounded-lg transition-colors ${
+                        performanceData.location === 'home' ? 'bg-red-600 text-white border-red-600' : 'bg-gray-100 hover:bg-gray-200 border-gray-300'
+                      }`}
+                    >
+                      <Home size={18} className="mr-2" /> Domicile
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPerformanceData({ ...performanceData, location: 'away' })}
+                      className={`flex-1 flex items-center justify-center px-3 py-2 border rounded-lg transition-colors ${
+                        performanceData.location === 'away' ? 'bg-black text-white border-black' : 'bg-gray-100 hover:bg-gray-200 border-gray-300'
+                      }`}
+                    >
+                      <Bus size={18} className="mr-2" /> Extérieur
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Player Selection */}

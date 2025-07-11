@@ -68,6 +68,9 @@ export interface Performance {
   redCards?: number;
   cleanSheet?: boolean;
   opponent?: string;
+  scoreHome?: number;
+  scoreAway?: number;
+  location?: 'home' | 'away';
   excused?: boolean; // Si l'absence est couverte par une indisponibilité
 }
 

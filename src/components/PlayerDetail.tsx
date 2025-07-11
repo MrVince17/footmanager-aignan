@@ -474,8 +474,17 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
                   <p className={`font-medium ${performance.present ? 'text-green-600' : 'text-red-600'}`}>
                     {performance.present ? 'Présent' : 'Absent'}
                   </p>
-                  {performance.present && performance.minutesPlayed && performance.type === 'match' && (
-                    <p className="text-sm text-gray-600">{performance.minutesPlayed} min</p>
+                  {performance.present && performance.type === 'match' && (
+                    <div className="text-sm text-gray-600">
+                      {performance.minutesPlayed && <span>{performance.minutesPlayed} min</span>}
+                      {performance.scoreHome !== undefined && performance.scoreAway !== undefined && (
+                        <span className="ml-2">
+                          ({performance.location === 'home' ? <Home size={12} className="inline mr-1" /> : <Bus size={12} className="inline mr-1" />}
+                          {performance.scoreHome} - {performance.scoreAway}
+                          {performance.opponent && ` vs ${performance.opponent}`}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
