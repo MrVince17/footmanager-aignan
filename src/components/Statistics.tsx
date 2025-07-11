@@ -30,6 +30,7 @@ interface ExportPlayerData {
   Passes: number;
   'Cartons Jaunes': number;
   'Cartons Rouges': number;
+  'Clean Sheets': number | string;
   'Assiduité Matchs (%)': string;
   'Assiduité Entraînements (%)': string;
 }
@@ -122,6 +123,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       case 'matchAttendance': return b.seasonStats.matchAttendanceRateSeason - a.seasonStats.matchAttendanceRateSeason;
       case 'trainingAttendance': return b.seasonStats.trainingAttendanceRateSeason - a.seasonStats.trainingAttendanceRateSeason;
       case 'cards': return (b.seasonStats.yellowCards + b.seasonStats.redCards * 2) - (a.seasonStats.yellowCards + a.seasonStats.redCards * 2);
+      case 'cleanSheets': return b.seasonStats.cleanSheets - a.seasonStats.cleanSheets;
       default: return 0;
     }
   });
@@ -155,6 +157,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
 
     const totalYellowCards = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.yellowCards, 0);
     const totalRedCards = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.redCards, 0);
+    const totalCleanSheets = currentTeamPlayers.reduce((sum, p) => sum + (p.position === 'Gardien' ? p.seasonStats.cleanSheets : 0), 0);
 
     return {
       totalPlayers,
@@ -167,6 +170,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       averageTrainingAttendance,
       totalYellowCards,
       totalRedCards,
+      totalCleanSheets,
     };
   }, [filteredPlayersByTeam, selectedSeason, filterTeam, allPlayers]);
 
@@ -192,6 +196,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     Passes: player.seasonStats.assists,
     'Cartons Jaunes': player.seasonStats.yellowCards,
     'Cartons Rouges': player.seasonStats.redCards,
+    'Clean Sheets': player.position === 'Gardien' ? player.seasonStats.cleanSheets : '-',
     'Assiduité Matchs (%)': player.seasonStats.matchAttendanceRateSeason.toFixed(0),
     'Assiduité Entraînements (%)': player.seasonStats.trainingAttendanceRateSeason.toFixed(0),
   }));
@@ -292,6 +297,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
               <option value="matchAttendance">Trier par assiduité matchs</option>
               <option value="trainingAttendance">Trier par assiduité entraînements</option>
               <option value="cards">Trier par cartons</option>
+              <option value="cleanSheets">Trier par clean sheets</option>
             </select>
           </div>
         </div>
@@ -379,6 +385,10 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
                 {teamStats.totalAssists > 0 ? (teamStats.totalGoals / teamStats.totalAssists).toFixed(2) : 'N/A'}
               </span>
             </div>
+            <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <span className="text-gray-600">Clean Sheets (Gardiens)</span>
+              <span className="font-semibold">{teamStats.totalCleanSheets}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -399,6 +409,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Passes</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">CJ</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">CR</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">CS</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Assiduité M</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Assiduité E</th>
               </tr>
@@ -439,6 +450,9 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
                   <td className="px-4 py-3 font-medium text-black">{player.seasonStats.assists}</td>
                   <td className="px-4 py-3 font-medium text-yellow-600">{player.seasonStats.yellowCards}</td>
                   <td className="px-4 py-3 font-medium text-red-700">{player.seasonStats.redCards}</td>
+                  <td className="px-4 py-3 font-medium">
+                    {player.position === 'Gardien' ? player.seasonStats.cleanSheets : '-'}
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center space-x-2">
                       <div className="w-12 bg-gray-200 rounded-full h-1">
