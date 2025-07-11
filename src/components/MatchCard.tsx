@@ -15,8 +15,12 @@ const formatPlayerEvent = (eventItems: (Scorer | Assister | CardDetail | GoalCon
     const player = getPlayerById(allPlayers, item.playerId);
     const playerName = player ? `${player.firstName || ''} ${player.lastName || ''}`.trim() : 'Joueur inconnu';
     let detail = '';
-    if ('minute' in item && item.minute) detail += ` (${item.minute}')`;
-    if (type === 'card' && 'cardType' in item && item.cardType) detail += ` [${item.cardType}]`;
+    if ('minute' in item && typeof item.minute === 'number') { // Explicitly check for number type, including 0
+      detail += ` (${item.minute}')`;
+    }
+    if (type === 'card' && 'cardType' in item && typeof item.cardType === 'string' && item.cardType) { // Ensure cardType is a string
+      detail += ` [${item.cardType}]`;
+    }
     return `${playerName}${detail}`;
   }).join(', ');
 };

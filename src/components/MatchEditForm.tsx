@@ -29,6 +29,12 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
   const [localAssisters, setLocalAssisters] = useState(
     matchToEdit.originalPerformanceRef.assisters?.map(a => ({ ...a })) || [] // Assisters usually just have playerId
   );
+  const [localYellowCards, setLocalYellowCards] = useState(
+    matchToEdit.originalPerformanceRef.yellowCardsDetails?.map(yc => ({ ...yc, minute: String(yc.minute) })) || []
+  );
+  const [localRedCards, setLocalRedCards] = useState(
+    matchToEdit.originalPerformanceRef.redCardsDetails?.map(rc => ({ ...rc, minute: String(rc.minute) })) || []
+  );
 
   // Effect to update form state if matchToEdit changes (e.g., user opens form for a different match)
   useEffect(() => {
@@ -42,6 +48,12 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
     );
     setLocalAssisters(
       matchToEdit.originalPerformanceRef.assisters?.map(a => ({ ...a })) || []
+    );
+    setLocalYellowCards(
+      matchToEdit.originalPerformanceRef.yellowCardsDetails?.map(yc => ({ ...yc, minute: String(yc.minute) })) || []
+    );
+    setLocalRedCards(
+      matchToEdit.originalPerformanceRef.redCardsDetails?.map(rc => ({ ...rc, minute: String(rc.minute) })) || []
     );
   }, [matchToEdit]);
 
@@ -64,6 +76,18 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
         .filter(a => a.playerId) // Ensure player is selected
         .map(a => ({
           playerId: a.playerId,
+        })),
+      yellowCardsDetails: localYellowCards
+        .filter(yc => yc.playerId && yc.minute !== '')
+        .map(yc => ({
+          playerId: yc.playerId,
+          minute: Number(yc.minute),
+        })),
+      redCardsDetails: localRedCards
+        .filter(rc => rc.playerId && rc.minute !== '')
+        .map(rc => ({
+          playerId: rc.playerId,
+          minute: Number(rc.minute),
         })),
       // season: matchToEdit.originalPerformanceRef.season, // Ensure season is preserved
       // type: 'match', // Ensure type is preserved
@@ -258,7 +282,119 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
           </div>
           {/* End Assisters Section */}
 
-          {/* Placeholder for Cards and Goals Conceded */}
+          {/* Yellow Cards Section */}
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cartons Jaunes</label>
+            {localYellowCards.map((card, index) => (
+              <div key={index} className="flex items-center space-x-2 p-2 border rounded-md">
+                <select
+                  value={card.playerId}
+                  onChange={(e) => {
+                    const newYellowCards = [...localYellowCards];
+                    newYellowCards[index].playerId = e.target.value;
+                    setLocalYellowCards(newYellowCards);
+                  }}
+                  className="flex-grow mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                >
+                  <option value="" disabled>Sélectionner joueur</option>
+                  {allPlayers.map(player => (
+                    <option key={player.id} value={player.id}>
+                      {player.firstName} {player.lastName}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  placeholder="Minute"
+                  value={card.minute}
+                  onChange={(e) => {
+                    const newYellowCards = [...localYellowCards];
+                    newYellowCards[index].minute = e.target.value; // Keep as string for input
+                    setLocalYellowCards(newYellowCards);
+                  }}
+                  className="mt-1 block w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  min="0"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newYellowCards = localYellowCards.filter((_, i) => i !== index);
+                    setLocalYellowCards(newYellowCards);
+                  }}
+                  className="p-2 text-red-500 hover:text-red-700"
+                  title="Supprimer carton jaune"
+                >
+                  &#x2716; {/* Cross mark */}
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setLocalYellowCards([...localYellowCards, { playerId: '', minute: '' }])}
+              className="mt-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-300 rounded-md shadow-sm"
+            >
+              + Ajouter Carton Jaune
+            </button>
+          </div>
+          {/* End Yellow Cards Section */}
+
+          {/* Red Cards Section */}
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cartons Rouges</label>
+            {localRedCards.map((card, index) => (
+              <div key={index} className="flex items-center space-x-2 p-2 border rounded-md">
+                <select
+                  value={card.playerId}
+                  onChange={(e) => {
+                    const newRedCards = [...localRedCards];
+                    newRedCards[index].playerId = e.target.value;
+                    setLocalRedCards(newRedCards);
+                  }}
+                  className="flex-grow mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                >
+                  <option value="" disabled>Sélectionner joueur</option>
+                  {allPlayers.map(player => (
+                    <option key={player.id} value={player.id}>
+                      {player.firstName} {player.lastName}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  placeholder="Minute"
+                  value={card.minute}
+                  onChange={(e) => {
+                    const newRedCards = [...localRedCards];
+                    newRedCards[index].minute = e.target.value; // Keep as string for input
+                    setLocalRedCards(newRedCards);
+                  }}
+                  className="mt-1 block w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  min="0"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newRedCards = localRedCards.filter((_, i) => i !== index);
+                    setLocalRedCards(newRedCards);
+                  }}
+                  className="p-2 text-red-500 hover:text-red-700"
+                  title="Supprimer carton rouge"
+                >
+                  &#x2716; {/* Cross mark */}
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setLocalRedCards([...localRedCards, { playerId: '', minute: '' }])}
+              className="mt-2 px-3 py-1.5 text-sm font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-300 rounded-md shadow-sm"
+            >
+              + Ajouter Carton Rouge
+            </button>
+          </div>
+          {/* End Red Cards Section */}
+
+          {/* Placeholder for Goals Conceded */}
 
           <div className="pt-6 flex justify-end space-x-3">
             <button
