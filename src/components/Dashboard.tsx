@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom'; // Assurez-vous que Link est importé si ce n'est pas déjà le cas pour d'autres cartes
 import { Player, TeamStats, Performance } from '../types';
-import { Users, Trophy, Target, Calendar, AlertCircle, CheckCircle, Activity, Download, Filter } from 'lucide-react';
+import { Users, Trophy, Target, Calendar, AlertCircle, CheckCircle, Activity, Download, Filter, ClipboardList } from 'lucide-react';
 import { exportToPDF } from '../utils/export';
 import { storage } from '../utils/storage'; // For getTotalTeamEvents
 
@@ -202,6 +203,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ players, selectedSeason, o
           ))}
         </select>
       </div>
+
+      {/* Navigation Cards to other sections */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        <Link to="/results" className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500 hover:shadow-lg transition-shadow duration-300 flex flex-col items-center justify-center text-center">
+          <ClipboardList size={32} className="text-blue-500 mb-2" />
+          <h3 className="text-lg font-semibold text-gray-900">Résultats Saison</h3>
+          <p className="text-sm text-gray-600">Voir les résultats des matchs</p>
+        </Link>
+        {/* Vous pouvez ajouter d'autres cartes de navigation ici sur le même modèle si nécessaire */}
+      </div>
+
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">

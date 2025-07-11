@@ -7,28 +7,144 @@ import { PlayerForm } from './components/PlayerForm';
 import { PlayerDetail } from './components/PlayerDetail';
 import { PerformanceEntry } from './components/PerformanceEntry';
 import { Statistics } from './components/Statistics';
+import { MatchResultsPage } from './components/MatchResultsPage';
+import { Routes, Route, Link as RouterLink, Navigate, Outlet, useNavigate, useParams } from 'react-router-dom';
+import { Unavailability, Performance } from './types'; // Assurez-vous que Unavailability et Performance sont importés
+
 import { 
   Home, 
   Users, 
   Plus, 
   Activity, 
-  BarChart3, 
+  BarChart3,
+  ClipboardList,
   Menu, 
   X 
 } from 'lucide-react';
 
-type View = 'dashboard' | 'players' | 'add-player' | 'edit-player' | 'player-detail' | 'performance' | 'statistics';
+
+// Structure pour les éléments du menu de navigation
+interface MenuItem {
+  id: string; // Peut rester 'View' ou devenir plus générique si currentView est abandonné
+  label: string;
+  icon: React.ElementType;
+  path: string;
+}
+
+// Layout principal avec la barre latérale
+const AppLayout: React.FC<{
+  menuItems: MenuItem[];
+  // currentView: View; // Remplacé par la gestion de route active de react-router
+  // onSetCurrentView: (view: View) => void; // Remplacé par react-router
+  // onAddPlayer: () => void; // Géré par Link to /players/add
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
+}> = ({ menuItems, sidebarOpen, setSidebarOpen }) => (
+  <div className="min-h-screen bg-gray-50 flex">
+    {/* Mobile menu overlay */}
+    {sidebarOpen && (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+        onClick={() => setSidebarOpen(false)}
+      />
+    )}
+
+    {/* Sidebar */}
+    <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+      sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+    }`}>
+      <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-black rounded-lg flex items-center justify-center">
+            <Users className="text-white" size={24} />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">US AIGNAN</h1>
+            <p className="text-sm text-gray-500">Gestion d'équipe</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setSidebarOpen(false)}
+          className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <nav className="mt-6">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          // Utilisation de NavLink pour la gestion automatique de la classe 'active'
+          return (
+            <RouterLink // Changé en NavLink pour la gestion de l'état actif si nécessaire, ou garder RouterLink et gérer l'état manuellement
+              to={item.path}
+              key={item.id}
+              onClick={() => setSidebarOpen(false)}
+              // className peut être une fonction pour NavLink : ({ isActive }) => `... ${isActive ? 'active-class' : ''}`
+              className={`w-full flex items-center space-x-3 px-6 py-3 text-left transition-colors duration-200 ${
+                window.location.pathname === item.path // Condition simpliste, NavLink gère mieux
+                  ? 'bg-primary/10 text-primary border-r-2 border-primary'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-secondary'
+              }`}
+            >
+              <Icon size={20} className={window.location.pathname === item.path ? 'text-primary' : 'text-gray-500 group-hover:text-secondary'} />
+              <span className="font-medium">{item.label}</span>
+            </RouterLink>
+          );
+        })}
+      </nav>
+
+      {/* Quick Actions */}
+      <div className="absolute bottom-6 left-6 right-6">
+        <RouterLink
+          to="/players/add" // Route pour ajouter un joueur
+          onClick={() => setSidebarOpen(false)}
+          className="w-full flex items-center justify-center space-x-2 bg-primary text-white py-3 rounded-lg hover:bg-primary-hover transition-colors duration-200"
+        >
+          <Plus size={20} />
+          <span>Nouveau joueur</span>
+        </RouterLink>
+      </div>
+    </div>
+
+    {/* Main content */}
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Mobile header */}
+      <div className="lg:hidden bg-white shadow-sm border-b px-4 py-3">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-lg hover:bg-gray-100"
+          >
+            <Menu size={24} />
+          </button>
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-black rounded-lg flex items-center justify-center">
+              <Users className="text-white" size={20} />
+            </div>
+            <span className="font-bold text-gray-900">US AIGNAN</span>
+          </div>
+          <div className="w-10" /> {/* Spacer for centering */}
+        </div>
+      </div>
+
+      {/* Content area */}
+      <main className="flex-1 overflow-auto p-6">
+        <div className="max-w-7xl mx-auto animate-fade-in">
+          <Outlet /> {/* Les composants de route sont rendus ici */}
+        </div>
+      </main>
+    </div>
+  </div>
+);
+
 
 function App() {
-  const [currentView, setCurrentView] = useState<View>('dashboard');
   const [players, setPlayers] = useState<Player[]>([]);
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // TODO: Déterminer dynamiquement la saison actuelle (par ex., la plus récente dans les données ou basée sur la date)
   const [selectedSeason, setSelectedSeason] = useState<string>('2024-2025');
 
   useEffect(() => {
-    // Initialize sample data and load players
     storage.initializeSampleData();
     setPlayers(storage.getPlayers());
   }, []);
@@ -37,21 +153,26 @@ function App() {
     setPlayers(storage.getPlayers());
   };
 
+  const navigate = useNavigate();
+
   const handleSavePlayer = (player: Player) => {
-    if (selectedPlayer) {
+    const existingPlayer = players.find(p => p.id === player.id);
+    if (existingPlayer) {
       storage.updatePlayer(player);
     } else {
       storage.addPlayer(player);
     }
     refreshPlayers();
-    setSelectedPlayer(null);
-    setCurrentView('players');
+    navigate('/players');
   };
 
   const handleDeletePlayer = (playerId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce joueur ?')) {
       storage.deletePlayer(playerId);
       refreshPlayers();
+      if(window.location.pathname.includes(`/players/${playerId}`)) {
+        navigate('/players');
+      }
     }
   };
 
@@ -60,194 +181,108 @@ function App() {
       ...performanceData,
       season: selectedSeason,
     };
-    storage.addPerformance(playerId, performanceWithSeason); // addPerformance will handle id and excused
+    storage.addPerformance(playerId, performanceWithSeason);
     refreshPlayers();
   };
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Tableau de bord', icon: Home },
-    { id: 'players', label: 'Joueurs', icon: Users },
-    { id: 'performance', label: 'Performances', icon: Activity },
-    { id: 'statistics', label: 'Statistiques', icon: BarChart3 },
-  ];
+  const handleUpdatePlayerStorage = (
+    type: 'unavailabilityDelete' | 'unavailabilityAdd' | 'matchUpdate',
+    refData: any,
+    value?: any
+  ) => {
+    const currentPlayers = storage.getPlayers(); // Lire depuis le storage pour la donnée la plus fraîche
+    let updatedPlayersArray = [...currentPlayers];
 
-  const renderContent = () => {
-    switch (currentView) {
-      case 'dashboard':
-        return <Dashboard players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />;
-      
-      case 'players':
-        return (
-          <PlayerList
-            players={players}
-            onSelectPlayer={(player) => {
-              setSelectedPlayer(player);
-              setCurrentView('player-detail');
-            }}
-            onEditPlayer={(player) => {
-              setSelectedPlayer(player);
-              setCurrentView('edit-player');
-            }}
-            onDeletePlayer={handleDeletePlayer}
-            onAddPlayer={() => {
-              setSelectedPlayer(null);
-              setCurrentView('add-player');
-            }}
-          />
+    if (type === 'unavailabilityAdd') {
+        const { playerId, unavailability } = refData as { playerId: string, unavailability: Unavailability };
+        updatedPlayersArray = updatedPlayersArray.map(p =>
+            p.id === playerId ? { ...p, unavailabilities: [...p.unavailabilities, unavailability] } : p
         );
-      
-      case 'add-player':
-      case 'edit-player':
-        return (
-          <PlayerForm
-            player={selectedPlayer || undefined}
-            onSave={handleSavePlayer}
-            onCancel={() => {
-              setSelectedPlayer(null);
-              setCurrentView('players');
-            }}
-          />
+    } else if (type === 'unavailabilityDelete') {
+        const { playerId, unavailabilityId } = refData as { playerId: string, unavailabilityId: string };
+        updatedPlayersArray = updatedPlayersArray.map(p =>
+            p.id === playerId ? { ...p, unavailabilities: p.unavailabilities.filter(u => u.id !== unavailabilityId) } : p
         );
-      
-      case 'player-detail':
-        return selectedPlayer ? (
-          <PlayerDetail
-            player={selectedPlayer}
-            onBack={() => setCurrentView('players')}
-            onEdit={(player) => {
-              setSelectedPlayer(player);
-              setCurrentView('edit-player');
-            }}
-            onPlayerUpdate={() => {
-              refreshPlayers();
-              // Update selected player with fresh data
-              const updatedPlayer = storage.getPlayers().find(p => p.id === selectedPlayer.id);
-              if (updatedPlayer) {
-                setSelectedPlayer(updatedPlayer);
-              }
-            }}
-          />
-        ) : null;
-      
-      case 'performance':
-        return (
-          <PerformanceEntry
-            players={players}
-            onSavePerformance={handleSavePerformance}
-          />
-        );
-      
-      case 'statistics':
-        return <Statistics players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />;
-      
-      default:
-        return <Dashboard players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />;
+    } else if (type === 'matchUpdate') {
+        const originalPerfRef = refData as Performance;
+        const updatedPerfData = value as Partial<Performance>;
+        updatedPlayersArray = updatedPlayersArray.map(p => ({
+            ...p,
+            performances: p.performances.map(perf => {
+                const isSameMatch = perf.type === 'match' &&
+                    perf.date === originalPerfRef.date &&
+                    perf.opponent === originalPerfRef.opponent &&
+                    perf.location === originalPerfRef.location &&
+                    (perf.scoreHome === originalPerfRef.scoreHome || (Number.isNaN(perf.scoreHome) && Number.isNaN(originalPerfRef.scoreHome))) &&
+                    (perf.scoreAway === originalPerfRef.scoreAway || (Number.isNaN(perf.scoreAway) && Number.isNaN(originalPerfRef.scoreAway)));
+
+                if (isSameMatch) {
+                    return { ...perf, ...updatedPerfData };
+                }
+                return perf;
+            })
+        }));
     }
+
+    setPlayers(updatedPlayersArray);
+    storage.savePlayers(updatedPlayersArray);
   };
 
+
+  const menuItems: MenuItem[] = [
+    { id: 'dashboard', label: 'Tableau de bord', icon: Home, path: '/' },
+    { id: 'players', label: 'Joueurs', icon: Users, path: '/players' },
+    { id: 'performance', label: 'Performances', icon: Activity, path: '/performance' },
+    { id: 'statistics', label: 'Statistiques', icon: BarChart3, path: '/statistics' },
+    { id: 'results', label: 'Résultats Saison', icon: ClipboardList, path: '/results' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Mobile menu overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      <AppLayout
+        menuItems={menuItems}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      >
+        <Routes>
+          <Route path="/" element={<Dashboard players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
 
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        <div className="flex items-center justify-between p-6 border-b">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-black rounded-lg flex items-center justify-center">
-              <Users className="text-white" size={24} />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">US AIGNAN</h1>
-              <p className="text-sm text-gray-500">Gestion d'équipe</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        
-        <nav className="mt-6">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentView === item.id;
-            
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setCurrentView(item.id as View);
-                  setSidebarOpen(false);
-                }}
-                className={`w-full flex items-center space-x-3 px-6 py-3 text-left transition-colors duration-200 ${
-                  isActive
-                    ? 'bg-primary/10 text-primary border-r-2 border-primary'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-secondary'
-                }`}
-              >
-                <Icon size={20} className={isActive ? 'text-primary' : 'text-gray-500 group-hover:text-secondary'} />
-                <span className="font-medium">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+          <Route path="/players" element={<PlayerList players={players} onDeletePlayer={handleDeletePlayer} />} />
+          <Route path="/players/add" element={<PlayerFormWrapper onSave={handleSavePlayer} players={players} />} />
+          <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
+          <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />
 
-        {/* Quick Actions */}
-        <div className="absolute bottom-6 left-6 right-6">
-          <button
-            onClick={() => {
-              setSelectedPlayer(null);
-              setCurrentView('add-player');
-              setSidebarOpen(false);
-            }}
-            className="w-full flex items-center justify-center space-x-2 bg-primary text-white py-3 rounded-lg hover:bg-primary-hover transition-colors duration-200"
-          >
-            <Plus size={20} />
-            <span>Nouveau joueur</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile header */}
-        <div className="lg:hidden bg-white shadow-sm border-b px-4 py-3">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 rounded-lg hover:bg-gray-100"
-            >
-              <Menu size={24} />
-            </button>
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-black rounded-lg flex items-center justify-center">
-                <Users className="text-white" size={20} />
-              </div>
-              <span className="font-bold text-gray-900">US AIGNAN</span>
-            </div>
-            <div className="w-10" /> {/* Spacer for centering */}
-          </div>
-        </div>
-
-        {/* Content area */}
-        <main className="flex-1 overflow-auto p-6">
-          <div className="max-w-7xl mx-auto animate-fade-in">
-            {renderContent()}
-          </div>
-        </main>
-      </div>
-    </div>
+          <Route path="/performance" element={<PerformanceEntry players={players} onSavePerformance={handleSavePerformance} />} />
+          <Route path="/statistics" element={<Statistics players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
+          <Route path="/results" element={<MatchResultsPage allPlayers={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} onUpdatePlayerStorage={handleUpdatePlayerStorage} />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </AppLayout>
   );
 }
+
+// Wrappers pour injecter la navigation et les paramètres d'URL si nécessaire
+const PlayerFormWrapper: React.FC<{players?: Player[], onSave: (player: Player) => void}> = ({players, onSave}) => {
+  const navigate = useNavigate();
+  const { playerId } = useParams<{ playerId: string }>();
+  const playerToEdit = playerId && players ? players.find(p => p.id === playerId) : undefined;
+
+  return <PlayerForm player={playerToEdit} onSave={onSave} onCancel={() => navigate('/players')} />;
+};
+
+const PlayerDetailWrapper: React.FC<{players: Player[], onPlayerUpdate: Function, onDeletePlayer: (id: string) => void, onEditPlayerRedirect: (id: string) => void}> = ({players, onPlayerUpdate, onDeletePlayer, onEditPlayerRedirect }) => {
+  const { playerId } = useParams<{ playerId: string }>();
+  const navigate = useNavigate();
+  const player = players.find(p => p.id === playerId);
+
+  if (!player) return <Navigate to="/players" />; // Ou afficher un message d'erreur/chargement
+
+  return <PlayerDetail
+            player={player}
+            onBack={() => navigate('/players')}
+            onEdit={() => onEditPlayerRedirect(player.id)}
+            // @ts-ignore Type 'Function' is not assignable to type '() => void'.
+            onPlayerUpdate={onPlayerUpdate}
+         />;
+};
 
 export default App;
