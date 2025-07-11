@@ -71,6 +71,12 @@ export interface Performance {
   scoreHome?: number;
   scoreAway?: number;
   location?: 'home' | 'away';
+  // Detailed match events - might be duplicated across all player performances for a single match
+  scorers?: { playerId: string, minute: number }[];
+  assisters?: { playerId:string }[]; // Minute for assists is less common
+  yellowCardsDetails?: { playerId: string, minute: number }[];
+  redCardsDetails?: { playerId: string, minute: number }[];
+  goalsConcededDetails?: { minute: number }[]; // Not tied to a specific player on the team
   excused?: boolean; // Si l'absence est couverte par une indisponibilité
 }
 

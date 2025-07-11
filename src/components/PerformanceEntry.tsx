@@ -86,7 +86,13 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
         assists: performanceData.assists[playerId] || 0,
         yellowCards: performanceData.yellowCards[playerId] || 0,
         redCards: performanceData.redCards[playerId] || 0,
-        cleanSheet: performanceData.cleanSheets[playerId] || false
+        cleanSheet: performanceData.cleanSheets[playerId] || false,
+        // Initialize new detailed fields as empty or undefined for now
+        scorers: performanceData.type === 'match' ? [] : undefined,
+        assisters: performanceData.type === 'match' ? [] : undefined,
+        yellowCardsDetails: performanceData.type === 'match' ? [] : undefined,
+        redCardsDetails: performanceData.type === 'match' ? [] : undefined,
+        goalsConcededDetails: performanceData.type === 'match' ? [] : undefined,
       };
       
       onSavePerformance(playerId, performanceDetails);
