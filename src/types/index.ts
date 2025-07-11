@@ -91,3 +91,18 @@ export interface TeamStats {
   averageMatchAttendance: number;
   averageTrainingAttendance: number;
 }
+
+export interface MatchDisplayData {
+  id: string;
+  date: string;
+  opponent?: string;
+  scoreHome?: number;
+  scoreAway?: number;
+  location?: 'home' | 'away';
+  scorers?: { playerId: string, minute: number }[];
+  assisters?: { playerId: string }[];
+  yellowCardsDetails?: { playerId: string, minute: number }[];
+  redCardsDetails?: { playerId: string, minute: number }[];
+  goalsConcededDetails?: { minute: number }[];
+  originalPerformanceRef: Performance; // Référence à une des performances du match pour accès facile
+}
