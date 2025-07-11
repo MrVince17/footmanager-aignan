@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom'; // Assurez-vous que Link est importé si ce n'est pas déjà le cas pour d'autres cartes
 import { Player, TeamStats, Performance } from '../types';
-import { Users, Trophy, Target, Calendar, AlertCircle, CheckCircle, Activity, Download, Filter } from 'lucide-react';
+import { Users, Trophy, Target, Calendar, AlertCircle, CheckCircle, Activity, Download, Filter, ClipboardList } from 'lucide-react';
 import { exportToPDF } from '../utils/export';
 import { storage } from '../utils/storage'; // For getTotalTeamEvents
 
@@ -65,8 +66,12 @@ const getPlayerStatsForSeason = (player: Player, season: string): PlayerSeasonSt
 
 
 export const Dashboard: React.FC<DashboardProps> = ({ players, selectedSeason, onSeasonChange, allPlayers }) => {
+  console.log("Dashboard props - players:", players);
+  console.log("Dashboard props - selectedSeason:", selectedSeason);
+  console.log("Dashboard props - allPlayers:", allPlayers);
 
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
+  console.log("Dashboard availableSeasons:", availableSeasons);
 
   const playersWithSeasonStats = useMemo(() => {
     return players.map(p => {
@@ -160,6 +165,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ players, selectedSeason, o
         </div>
       </div>
     );
+
+  // TEST: Return simple JSX to check rendering
+  // return (
+  //   <div>
+  //     <h1>Dashboard Test</h1>
+  //     <p>Saison sélectionnée : {selectedSeason}</p>
+  //     <p>Nombre de joueurs (players prop): {players.length}</p>
+  //     <p>Nombre de joueurs (allPlayers prop): {allPlayers.length}</p>
+  //   </div>
+  // );
+
+  if (!players || !allPlayers) {
+    return <div>Chargement des données du dashboard...</div>;
+  }
+
+  console.log("Dashboard stats object:", stats);
+  console.log("Dashboard adminIssues:", adminIssues);
+  console.log("Dashboard topScorers:", topScorers);
+
 
   return (
     <div id="dashboard-content" className="space-y-8">

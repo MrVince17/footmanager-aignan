@@ -2,21 +2,22 @@ import React, { useState } from 'react';
 import { Player } from '../types';
 import { Search, Plus, Edit, Trash2, Users, MapPin, Calendar, Award } from 'lucide-react';
 
+import { Link, useNavigate } from 'react-router-dom'; // Importer Link et useNavigate
+
 interface PlayerListProps {
   players: Player[];
-  onSelectPlayer: (player: Player) => void;
-  onEditPlayer: (player: Player) => void;
+  // onSelectPlayer: (player: Player) => void; // Sera géré par Link ou navigate
+  // onEditPlayer: (player: Player) => void;   // Sera géré par Link ou navigate
   onDeletePlayer: (playerId: string) => void;
-  onAddPlayer: () => void;
 }
 
 export const PlayerList: React.FC<PlayerListProps> = ({
   players,
-  onSelectPlayer,
-  onEditPlayer,
-  onDeletePlayer,
-  onAddPlayer
+  // onSelectPlayer, // Supprimé
+  // onEditPlayer, // Supprimé
+  onDeletePlayer
 }) => {
+  const navigate = useNavigate(); // Hook pour la navigation
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterPosition, setFilterPosition] = useState<string>('all');
@@ -97,13 +98,13 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             <option value="Attaquant">Attaquant</option>
           </select>
           
-          <button
-            onClick={onAddPlayer}
+          <Link
+            to="/players/add"
             className="flex items-center space-x-2 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"
           >
             <Plus size={20} />
             <span>Ajouter</span>
-          </button>
+          </Link>
         </div>
 
         <div className="text-sm text-gray-600 mb-4">
@@ -127,12 +128,12 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <button
-                    onClick={() => onEditPlayer(player)}
+                  <Link
+                    to={`/players/edit/${player.id}`}
                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                   >
                     <Edit size={16} />
-                  </button>
+                  </Link>
                   <button
                     onClick={() => onDeletePlayer(player.id)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
@@ -185,12 +186,12 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                 </div>
               </div>
 
-              <button
-                onClick={() => onSelectPlayer(player)}
-                className="w-full mt-4 bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200"
+              <Link
+                to={`/players/${player.id}`}
+                className="w-full mt-4 bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 block text-center" // Ajout de block et text-center pour style de lien
               >
                 Voir les détails
-              </button>
+              </Link>
             </div>
           </div>
         ))}
@@ -206,13 +207,13 @@ export const PlayerList: React.FC<PlayerListProps> = ({
               : 'Commencez par ajouter votre premier joueur'
             }
           </p>
-          <button
-            onClick={onAddPlayer}
+          <Link
+            to="/players/add"
             className="inline-flex items-center space-x-2 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"
           >
             <Plus size={20} />
             <span>Ajouter un joueur</span>
-          </button>
+          </Link>
         </div>
       )}
     </div>
