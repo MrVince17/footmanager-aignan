@@ -24,7 +24,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
     redCards: {} as Record<string, number>,
     cleanSheets: {} as Record<string, boolean>,
     present: {} as Record<string, boolean>,
-    matchType: 'ChD' as 'CdF' | 'CO' | 'CR' | 'CG' | 'CS' | 'ChD' | 'R2' | 'D2' | 'Savoldelli'
+    matchType: 'D2' as 'CdF' | 'CO' | 'CR' | 'CG' | 'CS' | 'ChD' | 'R2' | 'D2' | 'Savoldelli'
   });
 
   const handlePlayerSelection = (playerId: string, selected: boolean) => {
@@ -116,7 +116,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
       redCards: {},
       cleanSheets: {},
       present: {},
-      matchType: 'ChD'
+      matchType: 'D2'
     });
 
     alert('Performances enregistrées avec succès !');
