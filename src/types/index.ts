@@ -123,3 +123,20 @@ export interface MatchDisplayData {
   goalsConcededDetails?: GoalConcededDetail[];
   originalPerformanceRef: Performance;
 }
+
+export interface MatchDetails {
+  id: string;
+  date: string;
+  jourSemaine: string;
+  domicile: boolean;
+  adversaire: string;
+  scoreEquipe: number;
+  scoreAdverse: number;
+  saison: string;
+  buteurs: { nom: string; minute: number }[];
+  passeurs: { nom: string }[];
+  gardien: { nom: string; cleanSheet: boolean };
+  cartonsJaunes: { nom: string; minute: number }[];
+  cartonsRouges: { nom: string; minute: number }[];
+  prochainMatch?: string;
+}

@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { Player, Performance, MatchDisplayData } from '../types';
+import { Player, Performance, MatchDisplayData, MatchDetails } from '../types';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 import { MatchCard } from './MatchCard';
 import { SeasonStatsSummary } from './SeasonStatsSummary';
 import { MatchEditForm } from './MatchEditForm';
+import MatchSummaryGenerator from './MatchSummaryGenerator';
 import { Info, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -39,6 +40,7 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMatch, setEditingMatch] = useState<MatchDisplayData | null>(null);
+  const [summaryMatch, setSummaryMatch] = useState<MatchDisplayData | null>(null);
 
   const handleEditMatch = (match: MatchDisplayData) => {
     console.log('[MatchResultsPage] Editing match:', match);
@@ -314,6 +316,7 @@ const handleExportExcel = () => {
               match={match}
               allPlayers={allPlayers}
               onEdit={handleEditMatch}
+              onGenerateSummary={setSummaryMatch}
             />
           ))}
         </div>
@@ -336,6 +339,60 @@ const handleExportExcel = () => {
           isVisible={showEditModal}
         />
       )}
+
+      {summaryMatch && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-2xl max-w-2xl w-full">
+            <h2 className="text-2xl font-bold mb-4">Résumé du Match</h2>
+            <MatchSummaryGenerator match={transformMatchData(summaryMatch, allPlayers, selectedSeason)} />
+            <button
+              onClick={() => setSummaryMatch(null)}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
+};
+
+const transformMatchData = (matchData: MatchDisplayData, allPlayers: Player[], season: string): MatchDetails => {
+  const getPlayerName = (playerId: string) => {
+    const player = getPlayerById(allPlayers, playerId);
+    return player ? `${player.firstName} ${player.lastName}` : 'Inconnu';
+  };
+
+  const domicile = matchData.location === 'home';
+  const scoreEquipe = domicile ? matchData.scoreHome ?? 0 : matchData.scoreAway ?? 0;
+  const scoreAdverse = domicile ? matchData.scoreAway ?? 0 : matchData.scoreHome ?? 0;
+
+  // Find the goalkeeper for the match and check for clean sheet
+  const goalkeepers = allPlayers.filter(p => p.position === 'Gardien');
+  let gardienData = { nom: 'N/A', cleanSheet: false };
+  for (const gk of goalkeepers) {
+      const perf = gk.performances.find(p => p.date === matchData.date && p.opponent === matchData.opponent);
+      if (perf && perf.present) {
+          gardienData = { nom: getPlayerName(gk.id), cleanSheet: perf.cleanSheet || false };
+          break;
+      }
+  }
+
+  return {
+    id: matchData.id,
+    date: new Date(matchData.date).toLocaleDateString('fr-FR'),
+    jourSemaine: new Date(matchData.date).toLocaleDateString('fr-FR', { weekday: 'long' }),
+    domicile,
+    adversaire: matchData.opponent ?? 'Adversaire inconnu',
+    scoreEquipe,
+    scoreAdverse,
+    saison,
+    buteurs: matchData.scorers?.map(s => ({ nom: getPlayerName(s.playerId), minute: s.minute })) ?? [],
+    passeurs: matchData.assisters?.map(a => ({ nom: getPlayerName(a.playerId) })) ?? [],
+    gardien: gardienData,
+    cartonsJaunes: matchData.yellowCardsDetails?.map(c => ({ nom: getPlayerName(c.playerId), minute: c.minute })) ?? [],
+    cartonsRouges: matchData.redCardsDetails?.map(c => ({ nom: getPlayerName(c.playerId), minute: c.minute })) ?? [],
+    prochainMatch: "Prochain match à définir" // Placeholder
+  };
 };

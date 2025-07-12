@@ -7,6 +7,7 @@ interface MatchCardProps {
   match: MatchDisplayData;
   allPlayers: Player[];
   onEdit: (match: MatchDisplayData) => void;
+  onGenerateSummary: (match: MatchDisplayData) => void;
 }
 
 const formatPlayerEvent = (eventItems: (Scorer | Assister | CardDetail | GoalConcededDetail)[] | undefined, allPlayers: Player[]) => {
@@ -30,7 +31,7 @@ const formatPlayerEvent = (eventItems: (Scorer | Assister | CardDetail | GoalCon
   }).join(', ');
 };
 
-export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit }) => {
+export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit, onGenerateSummary }) => {
   const {
     date,
     opponent,
@@ -70,12 +71,20 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit 
           </h5>
           <p className="text-sm text-gray-500">{formattedDate} - {location === 'home' ? 'Domicile' : 'Extérieur'}</p>
         </div>
-        <button
-          onClick={() => onEdit(match)}
-          className="text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-3 rounded transition-colors"
-        >
-          Modifier
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => onGenerateSummary(match)}
+            className="text-sm bg-purple-500 hover:bg-purple-700 text-white py-1 px-3 rounded transition-colors"
+          >
+            Résumé
+          </button>
+          <button
+            onClick={() => onEdit(match)}
+            className="text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-3 rounded transition-colors"
+          >
+            Modifier
+          </button>
+        </div>
       </div>
 
       <div className="mb-3 text-center">
