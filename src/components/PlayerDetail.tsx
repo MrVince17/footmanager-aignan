@@ -121,6 +121,9 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
       </div>
     );
 
+  console.log('player.performances', player.performances);
+  console.log('getMatchStats(player.performances)', getMatchStats(player.performances));
+
   return (
     <div id="player-detail-content" className="space-y-6">
       {/* Header */}
