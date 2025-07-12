@@ -97,7 +97,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
         matchType: performanceData.type === 'match' ? performanceData.matchType : undefined,
       };
       
-      onSavePerformance(playerId, performanceDetails);
+      onSavePerformance(playerId, performanceDetails as any);
     });
 
     // Reset form

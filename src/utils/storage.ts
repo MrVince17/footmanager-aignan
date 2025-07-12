@@ -1,4 +1,5 @@
 import { Player, Performance, Absence, Injury, Unavailability } from '../types';
+import { getSeasonFromDate } from './seasonUtils';
 
 const STORAGE_KEYS = {
   PLAYERS: 'football_players',
@@ -165,14 +166,16 @@ export const storage = {
   },
 
   // Performance tracking
-  addPerformance: (playerId: string, performanceData: Omit<Performance, 'id' | 'excused'>) => {
+  addPerformance: (playerId: string, performanceData: Omit<Performance, 'id' | 'excused' | 'season'>) => {
     const players = storage.getPlayers();
     const player = players.find(p => p.id === playerId);
     if (player) {
+      const season = getSeasonFromDate(new Date(performanceData.date));
       const performance: Performance = {
         ...performanceData,
         id: `${Date.now().toString()}-${playerId}-${Math.random().toString(36).substr(2, 9)}`, // Unique ID
         excused: storage.isDateInUnavailabilityPeriod(player, performanceData.date),
+        season: season,
       };
       
       // Ensure performances array exists

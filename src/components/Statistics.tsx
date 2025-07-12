@@ -3,6 +3,7 @@ import { Player } from '../types';
 import { BarChart3, Download, Filter, Trophy, Target, Users, Activity } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../utils/export';
 import { storage } from '../utils/storage';
+import { getAvailableSeasons } from '../utils/seasonUtils';
 
 interface PlayerSeasonStats {
   totalMatches: number;
@@ -35,14 +36,6 @@ interface ExportPlayerData {
   'Assiduité Entraînements (%)': string;
 }
 
-const getAvailableSeasons = (players: Player[]): string[] => {
-  const seasons = new Set<string>();
-  players.forEach(p => {
-    (p.performances || []).forEach(perf => seasons.add(perf.season));
-  });
-  if (seasons.size === 0) return [new Date().getFullYear() + "-" + (new Date().getFullYear() + 1)];
-  return Array.from(seasons).sort((a, b) => b.localeCompare(a));
-};
 
 const getPlayerStatsForSeason = (
   player: Player,

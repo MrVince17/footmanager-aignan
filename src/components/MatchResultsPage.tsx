@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { Player, Performance, MatchDisplayData, MatchDetails } from '../types';
-import { getAvailableSeasons } from '../utils/seasonUtils';
 import { MatchCard } from './MatchCard';
 import { SeasonStatsSummary } from './SeasonStatsSummary';
 import { MatchEditForm } from './MatchEditForm';
@@ -10,6 +9,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { getPlayerById } from '../utils/playerUtils';
+import { getAvailableSeasons } from '../utils/seasonUtils';
 
 
 interface MatchResultsPageProps {
