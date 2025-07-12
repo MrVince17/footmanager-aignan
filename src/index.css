@@ -47,31 +47,6 @@
   @apply hover:shadow-lg hover:-translate-y-1 transition-all duration-300;
 }
 
-/* US Aignan color scheme overrides */
-.text-primary {
-  color: #DC2626; /* Red */
-}
-
-.text-secondary {
-  color: #000000; /* Black */
-}
-
-.bg-primary {
-  background-color: #DC2626; /* Red */
-}
-
-.bg-secondary {
-  background-color: #000000; /* Black */
-}
-
-.border-primary {
-  border-color: #DC2626; /* Red */
-}
-
-.border-secondary {
-  border-color: #000000; /* Black */
-}
-
 /* Print styles for PDF export */
 @media print {
   body {
