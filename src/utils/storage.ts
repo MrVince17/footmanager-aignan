@@ -95,7 +95,8 @@ export const storage = {
     allPlayers: Player[],
     type: 'training' | 'match',
     teamName?: 'Seniors 1' | 'Seniors 2',
-    season?: string // Optional season filter
+    season?: string, // Optional season filter
+    matchType?: string // Optional match type filter
   ): { date: string, opponent?: string, season: string }[] => {
     const uniqueEvents = new Map<string, { date: string, opponent?: string, season: string }>();
 
@@ -104,8 +105,11 @@ export const storage = {
         continue;
       }
       for (const perf of player.performances) {
-        if (perf.type === type && (!season || perf.season === season)) { // Filter by season if provided
-          // For matches, an event is unique by date and opponent for that season. For trainings, by date for that season.
+        if (
+          perf.type === type &&
+          (!season || perf.season === season) &&
+          (type !== 'match' || !matchType || matchType === 'all' || perf.matchType === matchType)
+        ) {
           const key = type === 'match'
             ? `${perf.season}-${perf.date}-${perf.opponent || 'unknown'}`
             : `${perf.season}-${perf.date}`;
