@@ -276,7 +276,6 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Matchs joués"
-          value={player.totalMatches}
           icon={<Trophy size={24} />}
           color="#DC2626"
           stats={getMatchStats(player.performances)}

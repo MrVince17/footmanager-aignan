@@ -24,7 +24,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
     redCards: {} as Record<string, number>,
     cleanSheets: {} as Record<string, boolean>,
     present: {} as Record<string, boolean>,
-    matchType: 'ChD' as 'CdF' | 'CO' | 'CR' | 'CG' | 'CS' | 'ChD' | 'R2' | 'D2'
+    matchType: 'ChD' as 'CdF' | 'CO' | 'CR' | 'CG' | 'CS' | 'ChD' | 'R2' | 'D2' | 'Savoldelli'
   });
 
   const handlePlayerSelection = (playerId: string, selected: boolean) => {
@@ -216,7 +216,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                       onChange={(e) => setPerformanceData({ ...performanceData, matchType: e.target.value as any })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     >
-                      <option value="ChD">Championnat D2</option>
+                      <option value="D2">Championnat D2</option>
                       <option value="R2">Championnat R2</option>
                       <option value="CdF">Coupe de France</option>
                       <option value="CO">Coupe d'Occitanie</option>
