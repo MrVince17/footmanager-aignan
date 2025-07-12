@@ -77,7 +77,7 @@ export interface Performance {
   redCardsDetails?: CardDetail[];
   goalsConcededDetails?: GoalConcededDetail[];
   excused?: boolean;
-  matchType?: 'CdF' | 'CO' | 'CR' | 'CG' | 'CS' | 'ChD' | 'R2' | 'D2' | 'Savoldelli';
+  matchType?: 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS';
 }
 
 export interface Scorer {
@@ -123,7 +123,7 @@ export interface MatchDisplayData {
   redCardsDetails?: CardDetail[];
   goalsConcededDetails?: GoalConcededDetail[];
   originalPerformanceRef: Performance;
-  matchType?: 'CdF' | 'CO' | 'CR' | 'CG' | 'CS' | 'ChD' | 'R2' | 'D2' | 'Savoldelli';
+  matchType?: 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS';
 }
 
 export interface MatchDetails {

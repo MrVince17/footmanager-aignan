@@ -40,7 +40,7 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMatch, setEditingMatch] = useState<MatchDisplayData | null>(null);
-  const [filterMatchType, setFilterMatchType] = useState<'all' | 'CdF' | 'CO' | 'CR' | 'CG' | 'CS' | 'ChD' | 'R2' | 'D2' | 'Savoldelli'>('all');
+  const [filterMatchType, setFilterMatchType] = useState<'all' | 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS'>('all');
 
   const handleGenerateSummary = (match: MatchDisplayData) => {
     const matchDetails = transformMatchData(match, allPlayers, selectedSeason);
@@ -324,14 +324,14 @@ const handleExportExcel = () => {
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
               <option value="all">Tous les matchs</option>
-              <option value="ChD">Championnat D2</option>
+              <option value="D2">Championnat D2</option>
               <option value="R2">Championnat R2</option>
               <option value="CdF">Coupe de France</option>
-              <option value="CO">Coupe d'Occitanie</option>
-              <option value="CR">Coupe du Gers</option>
-              <option value="CG">Challenge District</option>
-              <option value="CS">Coupe des Réserves</option>
-              <option value="Savoldelli">Coupe Savoldelli</option>
+              <option value="CO">Coupe Occitannie</option>
+              <option value="CG">Coupe du Gers</option>
+              <option value="ChD">Challenge District</option>
+              <option value="CR">Coupe des Réserves</option>
+              <option value="CS">Coupe Savoldelli</option>
             </select>
           </div>
         </div>

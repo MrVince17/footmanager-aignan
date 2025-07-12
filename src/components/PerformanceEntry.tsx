@@ -24,7 +24,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
     redCards: {} as Record<string, number>,
     cleanSheets: {} as Record<string, boolean>,
     present: {} as Record<string, boolean>,
-    matchType: 'D2' as 'CdF' | 'CO' | 'CR' | 'CG' | 'CS' | 'ChD' | 'R2' | 'D2' | 'Savoldelli'
+    matchType: 'D2' as 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS'
   });
 
   const handlePlayerSelection = (playerId: string, selected: boolean) => {
@@ -219,11 +219,11 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                       <option value="D2">Championnat D2</option>
                       <option value="R2">Championnat R2</option>
                       <option value="CdF">Coupe de France</option>
-                      <option value="CO">Coupe d'Occitanie</option>
-                      <option value="CR">Coupe du Gers</option>
-                      <option value="CG">Challenge District</option>
-                      <option value="CS">Coupe des Réserves</option>
-                      <option value="Savoldelli">Coupe Savoldelli</option>
+                      <option value="CO">Coupe Occitannie</option>
+                      <option value="CG">Coupe du Gers</option>
+                      <option value="ChD">Challenge District</option>
+                      <option value="CR">Coupe des Réserves</option>
+                      <option value="CS">Coupe Savoldelli</option>
                     </select>
                   </div>
                 </>
