@@ -124,7 +124,8 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">
-        <h1 className="text-3xl font-bold mb-2">Saisie des Performances</h1>
+        <h1 className="text-4xl font-bold mb-2">US AIGNAN</h1>
+        <h2 className="text-2xl font-semibold mb-2">Saisie des Performances</h2>
         <p className="text-red-100">Enregistrez les performances de vos joueurs</p>
       </div>
 

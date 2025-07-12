@@ -71,13 +71,30 @@ export interface Performance {
   scoreHome?: number;
   scoreAway?: number;
   location?: 'home' | 'away';
-  // Detailed match events - might be duplicated across all player performances for a single match
-  scorers?: { playerId: string, minute: number }[];
-  assisters?: { playerId:string }[]; // Minute for assists is less common
-  yellowCardsDetails?: { playerId: string, minute: number }[];
-  redCardsDetails?: { playerId: string, minute: number }[];
-  goalsConcededDetails?: { minute: number }[]; // Not tied to a specific player on the team
-  excused?: boolean; // Si l'absence est couverte par une indisponibilité
+  scorers?: Scorer[];
+  assisters?: Assister[];
+  yellowCardsDetails?: CardDetail[];
+  redCardsDetails?: CardDetail[];
+  goalsConcededDetails?: GoalConcededDetail[];
+  excused?: boolean;
+}
+
+export interface Scorer {
+  playerId: string;
+  minute: number;
+}
+
+export interface Assister {
+  playerId: string;
+}
+
+export interface CardDetail {
+  playerId: string;
+  minute: number;
+}
+
+export interface GoalConcededDetail {
+  minute: number;
 }
 
 export interface TeamStats {
@@ -99,10 +116,27 @@ export interface MatchDisplayData {
   scoreHome?: number;
   scoreAway?: number;
   location?: 'home' | 'away';
-  scorers?: { playerId: string, minute: number }[];
-  assisters?: { playerId: string }[];
-  yellowCardsDetails?: { playerId: string, minute: number }[];
-  redCardsDetails?: { playerId: string, minute: number }[];
-  goalsConcededDetails?: { minute: number }[];
-  originalPerformanceRef: Performance; // Référence à une des performances du match pour accès facile
+  scorers?: Scorer[];
+  assisters?: Assister[];
+  yellowCardsDetails?: CardDetail[];
+  redCardsDetails?: CardDetail[];
+  goalsConcededDetails?: GoalConcededDetail[];
+  originalPerformanceRef: Performance;
+}
+
+export interface MatchDetails {
+  id: string;
+  date: string;
+  jourSemaine: string;
+  domicile: boolean;
+  adversaire: string;
+  scoreEquipe: number;
+  scoreAdverse: number;
+  saison: string;
+  buteurs: { nom: string; minute: number }[];
+  passeurs: { nom: string }[];
+  gardien: { nom: string; cleanSheet: boolean };
+  cartonsJaunes: { nom: string; minute: number }[];
+  cartonsRouges: { nom: string; minute: number }[];
+  prochainMatch?: string;
 }

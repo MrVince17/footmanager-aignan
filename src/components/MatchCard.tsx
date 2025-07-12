@@ -7,25 +7,37 @@ interface MatchCardProps {
   match: MatchDisplayData;
   allPlayers: Player[];
   onEdit: (match: MatchDisplayData) => void;
+  onGenerateSummary: (match: MatchDisplayData) => void;
 }
 
-const formatPlayerEvent = (eventItems: (Scorer | Assister | CardDetail | GoalConcededDetail)[] | undefined, allPlayers: Player[], type: 'scorer' | 'assister' | 'card' | 'conceded') => {
+const formatPlayerEvent = (eventItems: (Scorer | Assister | CardDetail | GoalConcededDetail)[] | undefined, allPlayers: Player[]) => {
   if (!eventItems || eventItems.length === 0) return '-';
+
   return eventItems.map(item => {
-    const player = getPlayerById(allPlayers, item.playerId);
-    const playerName = player ? `${player.firstName || ''} ${player.lastName || ''}`.trim() : 'Joueur inconnu';
-    let detail = '';
-    if ('minute' in item && typeof item.minute === 'number') { // Explicitly check for number type, including 0
-      detail += ` (${item.minute}')`;
+    let playerName = 'N/A';
+    if ('playerId' in item && item.playerId) {
+      const player = getPlayerById(allPlayers, item.playerId);
+      if (player && player.firstName) {
+        playerName = `${player.firstName.charAt(0)}. ${player.lastName}`;
+      } else {
+        playerName = 'Inconnu';
+      }
+    } else if (!('playerId' in item)) {
+      // Handle GoalConcededDetail, which has no playerId
+      if ('minute' in item) {
+        return `(${item.minute}')`;
+      }
+      return ''; // Should not happen
     }
-    if (type === 'card' && 'cardType' in item && typeof item.cardType === 'string' && item.cardType) { // Ensure cardType is a string
-      detail += ` [${item.cardType}]`;
+
+    if ('minute' in item && item.minute) {
+      return `${playerName} (${item.minute}')`;
     }
-    return `${playerName}${detail}`;
+    return playerName;
   }).join(', ');
 };
 
-export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit }) => {
+export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit, onGenerateSummary }) => {
   const {
     date,
     opponent,
@@ -65,12 +77,20 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit 
           </h5>
           <p className="text-sm text-gray-500">{formattedDate} - {location === 'home' ? 'Domicile' : 'Extérieur'}</p>
         </div>
-        <button
-          onClick={() => onEdit(match)}
-          className="text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-3 rounded transition-colors"
-        >
-          Modifier
-        </button>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => onGenerateSummary(match)}
+            className="text-sm bg-purple-500 hover:bg-purple-700 text-white py-1 px-3 rounded transition-colors"
+          >
+            Résumé
+          </button>
+          <button
+            onClick={() => onEdit(match)}
+            className="text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-3 rounded transition-colors"
+          >
+            Modifier
+          </button>
+        </div>
       </div>
 
       <div className="mb-3 text-center">
@@ -78,12 +98,12 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-        <div><strong>Buteurs:</strong> {formatPlayerEvent(scorers, allPlayers, 'scorer')}</div>
-        <div><strong>Passeurs:</strong> {formatPlayerEvent(assisters, allPlayers, 'assister')}</div>
-        <div><strong>Cartons Jaunes:</strong> {formatPlayerEvent(yellowCardsDetails, allPlayers, 'card')}</div>
-        <div><strong>Cartons Rouges:</strong> {formatPlayerEvent(redCardsDetails, allPlayers, 'card')}</div>
-        {goalsConcededDetails && goalsConcededDetails.length > 0 && ( // Only show if data exists
-            <div><strong>Buts Encaissés (gardien):</strong> {formatPlayerEvent(goalsConcededDetails, allPlayers, 'conceded')}</div>
+        <div><strong>Buteurs:</strong> {formatPlayerEvent(scorers, allPlayers)}</div>
+        <div><strong>Passeurs:</strong> {formatPlayerEvent(assisters, allPlayers)}</div>
+        <div><strong>Cartons Jaunes:</strong> {formatPlayerEvent(yellowCardsDetails, allPlayers)}</div>
+        <div><strong>Cartons Rouges:</strong> {formatPlayerEvent(redCardsDetails, allPlayers)}</div>
+        {goalsConcededDetails && goalsConcededDetails.length > 0 && (
+            <div><strong>Buts Encaissés (gardien):</strong> {formatPlayerEvent(goalsConcededDetails, allPlayers)}</div>
         )}
       </div>
     </div>

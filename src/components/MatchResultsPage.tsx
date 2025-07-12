@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { Player, Performance, MatchDisplayData } from '../types';
+import { Player, Performance, MatchDisplayData, MatchDetails } from '../types';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 import { MatchCard } from './MatchCard';
 import { SeasonStatsSummary } from './SeasonStatsSummary';
 import { MatchEditForm } from './MatchEditForm';
+import { exportMatchSummaryToWord } from './MatchSummaryGenerator';
 import { Info, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -39,6 +40,11 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMatch, setEditingMatch] = useState<MatchDisplayData | null>(null);
+
+  const handleGenerateSummary = (match: MatchDisplayData) => {
+    const matchDetails = transformMatchData(match, allPlayers, selectedSeason);
+    exportMatchSummaryToWord(matchDetails);
+  };
 
   const handleEditMatch = (match: MatchDisplayData) => {
     console.log('[MatchResultsPage] Editing match:', match);
@@ -259,56 +265,67 @@ const handleExportExcel = () => {
 
 
   return (
-    <div className="space-y-6" id="match-results-content"> {/* Ajout de l'ID pour l'export PDF */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 bg-white rounded-lg shadow">
-        <h1 className="text-2xl font-bold text-gray-800">Résultats Saison</h1>
-        <div className="flex items-center gap-3">
-          <select
-            id="season-select-results" // ID unique pour le select
-            value={selectedSeason}
-            onChange={(e) => onSeasonChange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-          >
-            {availableSeasons.map(season => (
-              <option key={season} value={season}>
-                {season}
-              </option>
-            ))}
-          </select>
-           <button
+    <div className="space-y-6" id="match-results-content">
+      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white relative">
+        <div className="absolute top-4 right-4 flex items-center gap-3">
+          <button
             onClick={handleExportPDF}
-            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
             title="Exporter en PDF"
           >
             <Download size={20} />
+            <span>PDF</span>
           </button>
           <button
             onClick={handleExportExcel}
-            className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
             title="Exporter en Excel"
           >
             <Download size={20} />
+            <span>Excel</span>
           </button>
+        </div>
+        <h1 className="text-4xl font-bold mb-2">US AIGNAN</h1>
+        <h2 className="text-2xl font-semibold mb-2">Résultats de la Saison</h2>
+        <p className="text-red-100">Consultez les résultats des matchs pour la saison sélectionnée.</p>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="flex flex-col sm:flex-row justify-start items-center gap-4">
+          <div className="flex items-center gap-3">
+            <label htmlFor="season-select-results" className="text-sm font-medium text-gray-700">Saison :</label>
+            <select
+              id="season-select-results"
+              value={selectedSeason}
+              onChange={(e) => onSeasonChange(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            >
+              {availableSeasons.map(season => (
+                <option key={season} value={season}>
+                  {season}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Affichage du résumé des statistiques de la saison */}
       {displayedMatches.length > 0 && <SeasonStatsSummary matches={displayedMatches} />}
 
-
       {displayedMatches.length > 0 ? (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
           {displayedMatches.map((match) => (
             <MatchCard
               key={match.id}
               match={match}
               allPlayers={allPlayers}
               onEdit={handleEditMatch}
+              onGenerateSummary={handleGenerateSummary}
             />
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
+        <div className="text-center py-12 bg-white rounded-xl shadow-md">
           <Info size={48} className="mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun match trouvé</h3>
           <p className="text-gray-600">
@@ -328,4 +345,43 @@ const handleExportExcel = () => {
       )}
     </div>
   );
+};
+
+const transformMatchData = (matchData: MatchDisplayData, allPlayers: Player[], season: string): MatchDetails => {
+  const getPlayerName = (playerId: string) => {
+    const player = getPlayerById(allPlayers, playerId);
+    return player ? `${player.firstName} ${player.lastName}` : 'Inconnu';
+  };
+
+  const domicile = matchData.location === 'home';
+  const scoreEquipe = domicile ? matchData.scoreHome ?? 0 : matchData.scoreAway ?? 0;
+  const scoreAdverse = domicile ? matchData.scoreAway ?? 0 : matchData.scoreHome ?? 0;
+
+  // Find the goalkeeper for the match and check for clean sheet
+  const goalkeepers = allPlayers.filter(p => p.position === 'Gardien');
+  let gardienData = { nom: 'N/A', cleanSheet: false };
+  for (const gk of goalkeepers) {
+      const perf = gk.performances.find(p => p.date === matchData.date && p.opponent === matchData.opponent);
+      if (perf && perf.present) {
+          gardienData = { nom: getPlayerName(gk.id), cleanSheet: perf.cleanSheet || false };
+          break;
+      }
+  }
+
+  return {
+    id: matchData.id,
+    date: new Date(matchData.date).toLocaleDateString('fr-FR'),
+    jourSemaine: new Date(matchData.date).toLocaleDateString('fr-FR', { weekday: 'long' }),
+    domicile,
+    adversaire: matchData.opponent ?? 'Adversaire inconnu',
+    scoreEquipe,
+    scoreAdverse,
+    saison: season,
+    buteurs: matchData.scorers?.map(s => ({ nom: getPlayerName(s.playerId), minute: s.minute })) ?? [],
+    passeurs: matchData.assisters?.map(a => ({ nom: getPlayerName(a.playerId) })) ?? [],
+    gardien: gardienData,
+    cartonsJaunes: matchData.yellowCardsDetails?.map(c => ({ nom: getPlayerName(c.playerId), minute: c.minute })) ?? [],
+    cartonsRouges: matchData.redCardsDetails?.map(c => ({ nom: getPlayerName(c.playerId), minute: c.minute })) ?? [],
+    prochainMatch: "Prochain match à définir" // Placeholder
+  };
 };
