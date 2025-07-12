@@ -279,7 +279,8 @@ const handleExportExcel = () => {
             <span>Excel</span>
           </button>
         </div>
-        <h1 className="text-3xl font-bold mb-2">Résultats de la Saison</h1>
+        <h1 className="text-4xl font-bold mb-2">US AIGNAN</h1>
+        <h2 className="text-2xl font-semibold mb-2">Résultats de la Saison</h2>
         <p className="text-red-100">Consultez les résultats des matchs pour la saison sélectionnée.</p>
       </div>
 
