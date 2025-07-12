@@ -21,6 +21,7 @@ import {
   Menu, 
   X 
 } from 'lucide-react';
+import { getAvailableSeasons } from './utils/seasonUtils';
 
 interface MenuItem {
   id: string;
@@ -129,12 +130,17 @@ const AppLayout: React.FC<{
 function App() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedSeason, setSelectedSeason] = useState<string>('2024-2025');
+  const [selectedSeason, setSelectedSeason] = useState<string>('');
   const navigate = useNavigate();
 
   useEffect(() => {
     storage.initializeSampleData();
-    setPlayers(storage.getPlayers());
+    const allPlayers = storage.getPlayers();
+    setPlayers(allPlayers);
+    const seasons = getAvailableSeasons(allPlayers);
+    if (seasons.length > 0) {
+      setSelectedSeason(seasons[0]);
+    }
   }, []);
 
   const refreshPlayers = () => {
