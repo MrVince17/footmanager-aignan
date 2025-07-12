@@ -259,45 +259,54 @@ const handleExportExcel = () => {
 
 
   return (
-    <div className="space-y-6" id="match-results-content"> {/* Ajout de l'ID pour l'export PDF */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 bg-white rounded-lg shadow">
-        <h1 className="text-2xl font-bold text-gray-800">Résultats Saison</h1>
-        <div className="flex items-center gap-3">
-          <select
-            id="season-select-results" // ID unique pour le select
-            value={selectedSeason}
-            onChange={(e) => onSeasonChange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-          >
-            {availableSeasons.map(season => (
-              <option key={season} value={season}>
-                {season}
-              </option>
-            ))}
-          </select>
-           <button
-            onClick={handleExportPDF}
-            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            title="Exporter en PDF"
-          >
-            <Download size={20} />
-          </button>
-          <button
-            onClick={handleExportExcel}
-            className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-            title="Exporter en Excel"
-          >
-            <Download size={20} />
-          </button>
+    <div className="space-y-6" id="match-results-content">
+      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">
+        <h1 className="text-3xl font-bold mb-2">Résultats de la Saison</h1>
+        <p className="text-red-100">Consultez les résultats des matchs pour la saison sélectionnée.</p>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-3">
+            <label htmlFor="season-select-results" className="text-sm font-medium text-gray-700">Saison :</label>
+            <select
+              id="season-select-results"
+              value={selectedSeason}
+              onChange={(e) => onSeasonChange(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            >
+              {availableSeasons.map(season => (
+                <option key={season} value={season}>
+                  {season}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleExportPDF}
+              className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+              title="Exporter en PDF"
+            >
+              <Download size={20} />
+              <span>PDF</span>
+            </button>
+            <button
+              onClick={handleExportExcel}
+              className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              title="Exporter en Excel"
+            >
+              <Download size={20} />
+              <span>Excel</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Affichage du résumé des statistiques de la saison */}
       {displayedMatches.length > 0 && <SeasonStatsSummary matches={displayedMatches} />}
 
-
       {displayedMatches.length > 0 ? (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
           {displayedMatches.map((match) => (
             <MatchCard
               key={match.id}
@@ -308,7 +317,7 @@ const handleExportExcel = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
+        <div className="text-center py-12 bg-white rounded-xl shadow-md">
           <Info size={48} className="mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun match trouvé</h3>
           <p className="text-gray-600">
