@@ -17,7 +17,7 @@ const formatPlayerEvent = (eventItems: (Scorer | Assister | CardDetail | GoalCon
     let playerName = 'N/A';
     if ('playerId' in item && item.playerId) {
       const player = getPlayerById(allPlayers, item.playerId);
-      if (player) {
+      if (player && player.firstName) {
         playerName = `${player.firstName.charAt(0)}. ${player.lastName}`;
       } else {
         playerName = 'Inconnu';
