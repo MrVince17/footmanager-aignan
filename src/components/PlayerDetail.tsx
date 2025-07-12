@@ -101,16 +101,18 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-600">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-            {stats && (
-              <div className="mt-2 space-y-1">
-                {Object.entries(stats).map(([matchType, count]) => (
-                  <div key={matchType} className="text-xs text-gray-600">
-                    <span className="font-semibold">{matchType}:</span> {count}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="flex items-baseline space-x-2">
+              <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+              {stats && (
+                <div className="flex space-x-2">
+                  {Object.entries(stats).map(([matchType, count]) => (
+                    <div key={matchType} className="text-xs text-gray-600">
+                      <span className="font-semibold">{matchType}:</span> {count}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <div className="p-3 rounded-full" style={{ backgroundColor: `${color}20` }}>
             <div style={{ color }}>{icon}</div>
