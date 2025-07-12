@@ -101,7 +101,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-600">{title}</p>
-            {value && <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>}
+            <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
             {stats && (
               <div className="mt-2 space-y-1">
                 {Object.entries(stats).map(([matchType, count]) => (
