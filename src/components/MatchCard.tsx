@@ -57,7 +57,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit 
   };
 
   return (
-    <div className="bg-gray-800 shadow-lg rounded-lg p-4 mb-4 border border-gray-700 hover:border-red-700 transition-all duration-300">
+    <div className="bg-gray-800 shadow-lg rounded-lg p-4 mb-4 border border-gray-700 hover:border-primary transition-all duration-300">
       <div className="flex justify-between items-center mb-3 text-white">
         <div>
           <h5 className="text-lg font-bold uppercase tracking-wide">
@@ -67,7 +67,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit 
         </div>
         <button
           onClick={() => onEdit(match)}
-          className="text-sm bg-red-700 hover:bg-red-800 text-white py-1 px-3 rounded-md transition-colors"
+          className="text-sm bg-primary hover:bg-primary-hover text-white py-1 px-3 rounded-md transition-colors"
         >
           Modifier
         </button>
