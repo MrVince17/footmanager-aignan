@@ -1,88 +1,59 @@
-import React, { useState } from 'react';
 import { MatchDetails } from '../types';
+import * as fs from 'file-saver';
+import htmlToDocx from 'html-to-docx';
 
-function generateMatchSummary(match: MatchDetails): string {
+export function generateMatchSummaryHTML(match: MatchDetails): string {
   const {
     date, jourSemaine, domicile, adversaire, scoreEquipe, scoreAdverse,
     saison, buteurs, passeurs, gardien, cartonsJaunes, cartonsRouges, prochainMatch
   } = match;
 
-  const clubName = "US Aignan"; // à adapter dynamiquement si nécessaire
+  const clubName = "US Aignan";
   const lieu = domicile ? "Domicile" : "Extérieur";
 
-  const formatButeurs = buteurs.map(b => `– ${b.nom} (${b.minute}’)`).join('\n');
-  const formatPasseurs = passeurs.map(p => `– ${p.nom}`).join('\n');
-  const formatJaunes = cartonsJaunes.map(c => `– ${c.nom} (${c.minute}’)`).join('\n');
-  const formatRouges = cartonsRouges.map(c => `– ${c.nom} (${c.minute}’)`).join('\n');
-  const cleanSheet = gardien?.cleanSheet ? `– ${gardien.nom}` : '*n/a*';
+  const formatList = (items: {nom: string, minute?: number}[]) =>
+    items.map(item => `<li>– ${item.nom} ${item.minute ? `(${item.minute}’)` : ''}</li>`).join('');
 
-  return `🏆 ${clubName} vs ${adversaire}
-📅 ${jourSemaine} ${date} | 📍 ${lieu} | 🕊 Saison ${saison}
+  const cleanSheet = gardien?.cleanSheet ? `<li>– ${gardien.nom}</li>` : '<li><i>n/a</i></li>';
 
-🔚 Score final : ${clubName} ${scoreEquipe} – ${scoreAdverse} ${adversaire}
+  return `
+    <h1>🏆 ${clubName} vs ${adversaire}</h1>
+    <p>📅 ${jourSemaine} ${date} | 📍 ${lieu} | 🕊 Saison ${saison}</p>
+    <h2>🔚 Score final : ${clubName} ${scoreEquipe} – ${scoreAdverse} ${adversaire}</h2>
+    <h3>📌 Résumé du match :</h3>
+    <p>${clubName} s’est imposé ce ${jourSemaine} face à ${adversaire} au terme d’un match disputé et rythmé. L’équipe a su faire la différence avec un jeu collectif solide.</p>
 
-📌 Résumé du match :
-${clubName} s’est imposé ce ${jourSemaine} face à ${adversaire} au terme d’un match disputé et rythmé. L’équipe a su faire la différence avec un jeu collectif solide.
+    <h4>Les buts ont été marqués par :</h4>
+    <ul>${buteurs.length > 0 ? formatList(buteurs) : "<li>Aucun but marqué.</li>"}</ul>
 
-${buteurs.length > 0 ? `Les buts ont été marqués par :\n${formatButeurs}` : "Aucun but marqué."}
+    <h4>🎯 Passeurs décisifs :</h4>
+    <ul>${passeurs.length > 0 ? formatList(passeurs) : "<li>Aucun</li>"}</ul>
 
-${passeurs.length > 0 ? `\n🎯 Passeurs décisifs :\n${formatPasseurs}` : ""}
+    <h4>🧤 Clean sheet :</h4>
+    <ul>${cleanSheet}</ul>
 
-🧤 Clean sheet :
-${cleanSheet}
+    <h4>🟨 Cartons jaunes :</h4>
+    <ul>${cartonsJaunes.length > 0 ? formatList(cartonsJaunes) : "<li>Aucun</li>"}</ul>
 
-🟨 Cartons jaunes :
-${formatJaunes || "*Aucun*"}
+    <h4>🟥 Cartons rouges :</h4>
+    <ul>${cartonsRouges.length > 0 ? formatList(cartonsRouges) : "<li>Aucun</li>"}</ul>
 
-🟥 Cartons rouges :
-${formatRouges || "*Aucun*"}
+    <h3>✅ Bilan du match :</h3>
+    <p>Belle performance de l’équipe qui continue sur sa lancée. Bravo à tous ! 💪</p>
 
-✅ Bilan du match :
-Belle performance de l’équipe qui continue sur sa lancée. Bravo à tous ! 💪
+    <p>📆 Prochain rendez-vous : ${prochainMatch || "à venir"}</p>
 
-📆 Prochain rendez-vous : ${prochainMatch || "à venir"}
-
-#MatchDay #${scoreEquipe > scoreAdverse ? "Victoire" : scoreEquipe === scoreAdverse ? "MatchNul" : "Défaite"} #${clubName.replace(/\s/g, "")} #Saison${saison.replace(/-/g, "_")}`;
+    <p><i>#MatchDay #${scoreEquipe > scoreAdverse ? "Victoire" : scoreEquipe === scoreAdverse ? "MatchNul" : "Défaite"} #${clubName.replace(/\s/g, "")} #Saison${saison.replace(/-/g, "_")}</i></p>
+  `;
 }
 
-export default function MatchSummaryGenerator({ match }: { match: MatchDetails }) {
-  const [summary, setSummary] = useState('');
+export async function exportMatchSummaryToWord(match: MatchDetails) {
+  const htmlString = generateMatchSummaryHTML(match);
+  const fileBuffer = await htmlToDocx(htmlString, undefined, {
+    table: { row: { cantSplit: true } },
+    footer: true,
+    pageNumber: true,
+  });
 
-  const handleGenerate = () => {
-    const result = generateMatchSummary(match);
-    setSummary(result);
-  };
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(summary);
-  };
-
-  return (
-    <div className="p-4 border rounded-lg shadow-md bg-white space-y-4">
-      <button onClick={handleGenerate} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-        Générer le résumé
-      </button>
-
-      {summary && (
-        <>
-          <textarea
-            className="w-full h-80 p-2 border rounded"
-            value={summary}
-            onChange={e => setSummary(e.target.value)}
-          />
-          <div className="flex justify-end space-x-2">
-            <button onClick={handleCopy} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-              Copier le texte
-            </button>
-            <button
-              onClick={() => window.print()}
-              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-            >
-              Imprimer / Exporter PDF
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
+  fs.saveAs(fileBuffer, `resume_match_${match.adversaire}_${match.date}.docx`);
 }

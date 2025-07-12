@@ -4,7 +4,7 @@ import { getAvailableSeasons } from '../utils/seasonUtils';
 import { MatchCard } from './MatchCard';
 import { SeasonStatsSummary } from './SeasonStatsSummary';
 import { MatchEditForm } from './MatchEditForm';
-import MatchSummaryGenerator from './MatchSummaryGenerator';
+import { exportMatchSummaryToWord } from './MatchSummaryGenerator';
 import { Info, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -40,7 +40,11 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMatch, setEditingMatch] = useState<MatchDisplayData | null>(null);
-  const [summaryMatch, setSummaryMatch] = useState<MatchDisplayData | null>(null);
+
+  const handleGenerateSummary = (match: MatchDisplayData) => {
+    const matchDetails = transformMatchData(match, allPlayers, selectedSeason);
+    exportMatchSummaryToWord(matchDetails);
+  };
 
   const handleEditMatch = (match: MatchDisplayData) => {
     console.log('[MatchResultsPage] Editing match:', match);
@@ -316,7 +320,7 @@ const handleExportExcel = () => {
               match={match}
               allPlayers={allPlayers}
               onEdit={handleEditMatch}
-              onGenerateSummary={setSummaryMatch}
+              onGenerateSummary={handleGenerateSummary}
             />
           ))}
         </div>
@@ -338,21 +342,6 @@ const handleExportExcel = () => {
           onClose={handleCloseEditModal}
           isVisible={showEditModal}
         />
-      )}
-
-      {summaryMatch && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-8 rounded-lg shadow-2xl max-w-2xl w-full">
-            <h2 className="text-2xl font-bold mb-4">Résumé du Match</h2>
-            <MatchSummaryGenerator match={transformMatchData(summaryMatch, allPlayers, selectedSeason)} />
-            <button
-              onClick={() => setSummaryMatch(null)}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-            >
-              Fermer
-            </button>
-          </div>
-        </div>
       )}
     </div>
   );
