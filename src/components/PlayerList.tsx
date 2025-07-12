@@ -1,26 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Player } from '../types';
-import { Search, Plus, Edit, Trash2, Users, MapPin, Calendar, Award } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Users, Upload, Download, Calendar, Award } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
-import { Link, useNavigate } from 'react-router-dom'; // Importer Link et useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 
 interface PlayerListProps {
   players: Player[];
-  // onSelectPlayer: (player: Player) => void; // Sera géré par Link ou navigate
-  // onEditPlayer: (player: Player) => void;   // Sera géré par Link ou navigate
   onDeletePlayer: (playerId: string) => void;
+  onImportPlayers: (importedPlayers: Player[]) => void;
 }
 
 export const PlayerList: React.FC<PlayerListProps> = ({
   players,
   // onSelectPlayer, // Supprimé
   // onEditPlayer, // Supprimé
-  onDeletePlayer
+  onDeletePlayer,
+  onImportPlayers
 }) => {
-  const navigate = useNavigate(); // Hook pour la navigation
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterPosition, setFilterPosition] = useState<string>('all');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = () => {
+    const dataToExport = players.map(p => ({
+      'Prénom': p.firstName,
+      'Nom': p.lastName,
+      'Date de Naissance': p.dateOfBirth,
+      'N° Licence': p.licenseNumber,
+      'Équipes': p.teams.join(', '),
+      'Poste': p.position,
+      'Licence Valide': p.licenseValid ? 'Oui' : 'Non',
+      'Paiement Valide': p.paymentValid ? 'Oui' : 'Non',
+    }));
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Joueurs");
+    XLSX.writeFile(wb, "export_joueurs.xlsx");
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = e.target?.result;
+      const workbook = XLSX.read(data, { type: 'binary' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(worksheet);
+      // Here, you would typically perform validation and transformation
+      // For now, we assume the structure matches what we need.
+      onImportPlayers(json as Player[]);
+    };
+    reader.readAsBinaryString(file);
+  };
 
   const filteredPlayers = players.filter(player => {
     const matchesSearch = 
@@ -99,6 +140,27 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             <option value="Attaquant">Attaquant</option>
           </select>
           
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept=".xlsx, .xls"
+          />
+          <button
+            onClick={handleImportClick}
+            className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+          >
+            <Upload size={20} />
+            <span>Importer</span>
+          </button>
+          <button
+            onClick={handleExport}
+            className="flex items-center space-x-2 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200"
+          >
+            <Download size={20} />
+            <span>Exporter</span>
+          </button>
           <Link
             to="/players/add"
             className="flex items-center space-x-2 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"

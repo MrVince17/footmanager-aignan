@@ -152,6 +152,17 @@ function App() {
     navigate('/players');
   };
 
+  const handleImportPlayers = (importedPlayers: Player[]) => {
+    // Basic validation and merging logic
+    const newPlayers = importedPlayers.map(p => ({
+      ...p,
+      id: p.id || `imported-${Date.now()}-${Math.random()}`,
+      // Add other default fields if necessary
+    }));
+    storage.addMultiplePlayers(newPlayers);
+    refreshPlayers();
+  };
+
   const handleDeletePlayer = (playerId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce joueur ?')) {
       storage.deletePlayer(playerId);
@@ -230,7 +241,7 @@ function App() {
       >
         <Routes>
           <Route path="/" element={<Dashboard players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
-          <Route path="/players" element={<PlayerList players={players} onDeletePlayer={handleDeletePlayer} />} />
+          <Route path="/players" element={<PlayerList players={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} />} />
           <Route path="/players/add" element={<PlayerFormWrapper onSave={handleSavePlayer} players={players} />} />
           <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
           <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />

@@ -39,6 +39,13 @@ export const storage = {
     storage.savePlayers(players);
   },
 
+  addMultiplePlayers: (newPlayers: Player[]) => {
+    const players = storage.getPlayers();
+    // A simple merge, could be improved with more complex logic
+    const updatedPlayers = [...players, ...newPlayers];
+    storage.savePlayers(updatedPlayers);
+  },
+
   // Unavailability management
   addUnavailability: (playerId: string, unavailability: Unavailability) => {
     const players = storage.getPlayers();
