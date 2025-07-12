@@ -22,6 +22,12 @@ const formatPlayerEvent = (eventItems: (Scorer | Assister | CardDetail | GoalCon
       } else {
         playerName = 'Inconnu';
       }
+    } else if (!('playerId' in item)) {
+      // Handle GoalConcededDetail, which has no playerId
+      if ('minute' in item) {
+        return `(${item.minute}')`;
+      }
+      return ''; // Should not happen
     }
 
     if ('minute' in item && item.minute) {
