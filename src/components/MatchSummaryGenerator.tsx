@@ -1,6 +1,6 @@
 import { MatchDetails } from '../types';
 import * as fs from 'file-saver';
-import htmlToDocx from 'html-to-docx';
+const htmlToDocx = require('html-to-docx');
 
 export function generateMatchSummaryHTML(match: MatchDetails): string {
   const {
