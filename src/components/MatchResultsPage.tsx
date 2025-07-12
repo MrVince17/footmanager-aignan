@@ -376,7 +376,7 @@ const transformMatchData = (matchData: MatchDisplayData, allPlayers: Player[], s
     adversaire: matchData.opponent ?? 'Adversaire inconnu',
     scoreEquipe,
     scoreAdverse,
-    saison,
+    saison: season,
     buteurs: matchData.scorers?.map(s => ({ nom: getPlayerName(s.playerId), minute: s.minute })) ?? [],
     passeurs: matchData.assisters?.map(a => ({ nom: getPlayerName(a.playerId) })) ?? [],
     gardien: gardienData,
