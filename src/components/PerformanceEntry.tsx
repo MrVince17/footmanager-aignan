@@ -221,8 +221,9 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                       <option value="CdF">Coupe de France</option>
                       <option value="CO">Coupe d'Occitanie</option>
                       <option value="CR">Coupe du Gers</option>
-                      <option value="CG">Challenge du Gers</option>
-                      <option value="CS">Challenge des réserves</option>
+                      <option value="CG">Challenge District</option>
+                      <option value="CS">Coupe des Réserves</option>
+                      <option value="Savoldelli">Coupe Savoldelli</option>
                     </select>
                   </div>
                 </>
