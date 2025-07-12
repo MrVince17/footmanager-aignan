@@ -260,13 +260,31 @@ const handleExportExcel = () => {
 
   return (
     <div className="space-y-6" id="match-results-content">
-      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">
+      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white relative">
+        <div className="absolute top-4 right-4 flex items-center gap-3">
+          <button
+            onClick={handleExportPDF}
+            className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
+            title="Exporter en PDF"
+          >
+            <Download size={20} />
+            <span>PDF</span>
+          </button>
+          <button
+            onClick={handleExportExcel}
+            className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors"
+            title="Exporter en Excel"
+          >
+            <Download size={20} />
+            <span>Excel</span>
+          </button>
+        </div>
         <h1 className="text-3xl font-bold mb-2">Résultats de la Saison</h1>
         <p className="text-red-100">Consultez les résultats des matchs pour la saison sélectionnée.</p>
       </div>
 
       <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-start items-center gap-4">
           <div className="flex items-center gap-3">
             <label htmlFor="season-select-results" className="text-sm font-medium text-gray-700">Saison :</label>
             <select
@@ -281,24 +299,6 @@ const handleExportExcel = () => {
                 </option>
               ))}
             </select>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleExportPDF}
-              className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-              title="Exporter en PDF"
-            >
-              <Download size={20} />
-              <span>PDF</span>
-            </button>
-            <button
-              onClick={handleExportExcel}
-              className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-              title="Exporter en Excel"
-            >
-              <Download size={20} />
-              <span>Excel</span>
-            </button>
           </div>
         </div>
       </div>
