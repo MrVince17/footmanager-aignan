@@ -40,6 +40,7 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMatch, setEditingMatch] = useState<MatchDisplayData | null>(null);
+  const [filterMatchType, setFilterMatchType] = useState<'all' | 'CdF' | 'CO' | 'CR' | 'CG' | 'CS' | 'ChD' | 'R2' | 'D2' | 'Savoldelli'>('all');
 
   const handleGenerateSummary = (match: MatchDisplayData) => {
     const matchDetails = transformMatchData(match, allPlayers, selectedSeason);
@@ -77,7 +78,7 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
     console.log('[MatchResultsPage] All performances flattened count:', allPerformances.length);
 
     const seasonPerformances = allPerformances.filter(
-      (p) => p.type === 'match' && p.season === selectedSeason
+      (p) => p.type === 'match' && p.season === selectedSeason && (filterMatchType === 'all' || p.matchType === filterMatchType)
     );
     console.log(`[MatchResultsPage] Performances for season ${selectedSeason} and type 'match' count:`, seasonPerformances.length);
     // console.log(`[MatchResultsPage] Filtered season performances:`, JSON.stringify(seasonPerformances.slice(0, 5), null, 2)); // Log first 5 for brevity
@@ -306,6 +307,25 @@ const handleExportExcel = () => {
                   {season}
                 </option>
               ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-3">
+            <label htmlFor="match-type-filter-results" className="text-sm font-medium text-gray-700">Type de Match :</label>
+            <select
+              id="match-type-filter-results"
+              value={filterMatchType}
+              onChange={(e) => setFilterMatchType(e.target.value as any)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            >
+              <option value="all">Tous les matchs</option>
+              <option value="ChD">Championnat D2</option>
+              <option value="R2">Championnat R2</option>
+              <option value="CdF">Coupe de France</option>
+              <option value="CO">Coupe d'Occitanie</option>
+              <option value="CR">Coupe du Gers</option>
+              <option value="CG">Challenge District</option>
+              <option value="CS">Coupe des Réserves</option>
+              <option value="Savoldelli">Coupe Savoldelli</option>
             </select>
           </div>
         </div>
