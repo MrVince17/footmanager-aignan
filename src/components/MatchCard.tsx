@@ -12,6 +12,14 @@ interface MatchCardProps {
 const formatPlayerEvent = (eventItems: (Scorer | Assister | CardDetail | GoalConcededDetail)[] | undefined, allPlayers: Player[], type: 'scorer' | 'assister' | 'card' | 'conceded') => {
   if (!eventItems || eventItems.length === 0) return '-';
   return eventItems.map(item => {
+    // Handle cases where playerId might not exist (like GoalConcededDetail)
+    if (!item.playerId) {
+      if ('minute' in item && typeof item.minute === 'number') {
+        return `But encaissé (${item.minute}')`;
+      }
+      return 'N/A';
+    }
+
     const player = getPlayerById(allPlayers, item.playerId);
     const playerName = player ? `${player.firstName || ''} ${player.lastName || ''}`.trim() : 'Joueur inconnu';
     let detail = '';
