@@ -1,7 +1,7 @@
 import React from 'react';
-// Attempt to import shared types. If these don't exist, we'll need to define them locally or adjust.
 import { Player, MatchDisplayData, Scorer, Assister, CardDetail, GoalConcededDetail } from '../types';
-import { getPlayerById } from '../utils/playerUtils'; // Utility to find player details
+import { getPlayerById } from '../utils/playerUtils';
+import { Edit } from 'lucide-react'; // Import the Edit icon
 
 interface MatchCardProps {
   match: MatchDisplayData;
@@ -57,34 +57,37 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit 
   };
 
   return (
-    <div className="results-match-card">
-      <div className="flex justify-between items-center mb-3 text-white">
-        <div>
-          <h5 className="text-lg font-bold uppercase tracking-wide">
-            {location === 'home' ? 'US Aignan' : opponent} vs {location === 'home' ? opponent : 'US Aignan'}
-          </h5>
-          <p className="text-sm text-gray-400">{formattedDate} - {location === 'home' ? 'Domicile' : 'Extérieur'}</p>
+    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+      <div className="p-6">
+        <div className="flex items-start justify-between mb-4">
+            <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    {location === 'home' ? 'US Aignan' : opponent} vs {location === 'home' ? opponent : 'US Aignan'}
+                </h3>
+                <p className="text-sm text-gray-600">{formattedDate} - {location === 'home' ? 'Domicile' : 'Extérieur'}</p>
+            </div>
+            <button
+                onClick={() => onEdit(match)}
+                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                title="Modifier le match"
+            >
+                <Edit size={16} />
+            </button>
         </div>
-        <button
-          onClick={() => onEdit(match)}
-          className="text-sm bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-md transition-colors"
-        >
-          Modifier
-        </button>
-      </div>
 
-      <div className="mb-4 text-center text-white">
-        <p className="text-3xl font-bold tracking-tighter" dangerouslySetInnerHTML={{ __html: renderScore() }} />
-      </div>
+        <div className="text-center mb-4">
+            <p className="text-3xl font-bold text-black" dangerouslySetInnerHTML={{ __html: renderScore() }} />
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm text-gray-300">
-        <div><strong className="text-gray-100">Buteurs:</strong> {formatPlayerEvent(scorers, allPlayers, 'scorer')}</div>
-        <div><strong className="text-gray-100">Passeurs:</strong> {formatPlayerEvent(assisters, allPlayers, 'assister')}</div>
-        <div><strong className="text-gray-100">Cartons Jaunes:</strong> {formatPlayerEvent(yellowCardsDetails, allPlayers, 'card')}</div>
-        <div><strong className="text-gray-100">Cartons Rouges:</strong> {formatPlayerEvent(redCardsDetails, allPlayers, 'card')}</div>
-        {goalsConcededDetails && goalsConcededDetails.length > 0 && ( // Only show if data exists
-            <div><strong className="text-gray-100">Buts Encaissés (gardien):</strong> {formatPlayerEvent(goalsConcededDetails, allPlayers, 'conceded')}</div>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm text-gray-700">
+            <div><strong className="text-gray-900">Buteurs:</strong> {formatPlayerEvent(scorers, allPlayers, 'scorer')}</div>
+            <div><strong className="text-gray-900">Passeurs:</strong> {formatPlayerEvent(assisters, allPlayers, 'assister')}</div>
+            <div><strong className="text-gray-900">Cartons Jaunes:</strong> {formatPlayerEvent(yellowCardsDetails, allPlayers, 'card')}</div>
+            <div><strong className="text-gray-900">Cartons Rouges:</strong> {formatPlayerEvent(redCardsDetails, allPlayers, 'card')}</div>
+            {goalsConcededDetails && goalsConcededDetails.length > 0 && (
+                <div><strong className="text-gray-900">Buts Encaissés:</strong> {formatPlayerEvent(goalsConcededDetails, allPlayers, 'conceded')}</div>
+            )}
+        </div>
       </div>
     </div>
   );

@@ -259,36 +259,45 @@ const handleExportExcel = () => {
 
 
   return (
-    <div className="space-y-6" id="match-results-content">
-      <div className="results-header">
-        <h1 className="text-2xl font-bold uppercase tracking-wider">Résultats Saison</h1>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-6 text-white">
+        <h1 className="text-3xl font-bold mb-2">Résultats Saison</h1>
+        <p className="text-red-100">Consultez les résultats des matchs pour la saison sélectionnée.</p>
+      </div>
+
+      {/* Filter/Export Bar */}
+      <div className="bg-white rounded-xl shadow-md p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3">
-          <select
-            id="season-select-results" // ID unique pour le select
-            value={selectedSeason}
-            onChange={(e) => onSeasonChange(e.target.value)}
-            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent"
-          >
-            {availableSeasons.map(season => (
-              <option key={season} value={season}>
-                {season}
-              </option>
-            ))}
-          </select>
-           <button
-            onClick={handleExportPDF}
-            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            title="Exporter en PDF"
-          >
-            <Download size={20} />
-          </button>
-          <button
-            onClick={handleExportExcel}
-            className="p-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
-            title="Exporter en Excel"
-          >
-            <Download size={20} />
-          </button>
+            <label htmlFor="season-select-results" className="text-sm font-medium text-gray-700">Saison :</label>
+            <select
+                id="season-select-results"
+                value={selectedSeason}
+                onChange={(e) => onSeasonChange(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            >
+                {availableSeasons.map(season => (
+                <option key={season} value={season}>{season}</option>
+                ))}
+            </select>
+        </div>
+        <div className="flex items-center gap-3">
+            <button
+                onClick={handleExportPDF}
+                className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                title="Exporter en PDF"
+            >
+                <Download size={18} />
+                <span>PDF</span>
+            </button>
+            <button
+                onClick={handleExportExcel}
+                className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                title="Exporter en Excel"
+            >
+                <Download size={18} />
+                <span>Excel</span>
+            </button>
         </div>
       </div>
 

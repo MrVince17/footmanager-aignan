@@ -47,36 +47,36 @@ export const SeasonStatsSummary: React.FC<SeasonStatsSummaryProps> = ({ matches 
   const goalDifference = goalsScoredByTeam - goalsConcededByTeam;
 
   return (
-    <div className="results-summary">
-      <h3 className="text-xl font-bold uppercase tracking-wider mb-4 text-center">Résumé de la Saison</h3>
+    <div className="bg-white rounded-xl shadow-md p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Résumé de la Saison</h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-center">
-        <div className="p-3 bg-gray-800 rounded-md">
-          <div className="text-2xl font-bold">{totalMatches}</div>
-          <div className="text-sm text-gray-400">Matchs Joués</div>
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <div className="text-2xl font-bold text-gray-800">{totalMatches}</div>
+          <div className="text-sm text-gray-600">Matchs Joués</div>
         </div>
-        <div className="p-3 bg-gray-800 rounded-md">
-          <div className="text-2xl font-bold text-green-400">{victories}</div>
-          <div className="text-sm text-gray-400">Victoires</div>
+        <div className="p-3 bg-green-50 rounded-lg">
+          <div className="text-2xl font-bold text-green-700">{victories}</div>
+          <div className="text-sm text-green-600">Victoires</div>
         </div>
-        <div className="p-3 bg-gray-800 rounded-md">
-          <div className="text-2xl font-bold text-yellow-400">{draws}</div>
-          <div className="text-sm text-gray-400">Nuls</div>
+        <div className="p-3 bg-yellow-50 rounded-lg">
+          <div className="text-2xl font-bold text-yellow-700">{draws}</div>
+          <div className="text-sm text-yellow-600">Nuls</div>
         </div>
-        <div className="p-3 bg-gray-800 rounded-md">
-          <div className="text-2xl font-bold text-red-500">{defeats}</div>
-          <div className="text-sm text-gray-400">Défaites</div>
+        <div className="p-3 bg-red-50 rounded-lg">
+          <div className="text-2xl font-bold text-red-700">{defeats}</div>
+          <div className="text-sm text-red-600">Défaites</div>
         </div>
-        <div className="p-3 bg-gray-800 rounded-md">
-          <div className="text-2xl font-bold">{goalsScoredByTeam}</div>
-          <div className="text-sm text-gray-400">Buts Marqués</div>
+        <div className="p-3 bg-blue-50 rounded-lg">
+          <div className="text-2xl font-bold text-blue-700">{goalsScoredByTeam}</div>
+          <div className="text-sm text-blue-600">Buts Marqués</div>
         </div>
-        <div className="p-3 bg-gray-800 rounded-md">
-          <div className="text-2xl font-bold">{goalsConcededByTeam}</div>
-          <div className="text-sm text-gray-400">Buts Encaissés</div>
+        <div className="p-3 bg-pink-50 rounded-lg">
+          <div className="text-2xl font-bold text-pink-700">{goalsConcededByTeam}</div>
+          <div className="text-sm text-pink-600">Buts Encaissés</div>
         </div>
       </div>
        <div className="mt-4 text-center">
-        <p className={`text-lg font-semibold ${goalDifference >= 0 ? 'text-green-400' : 'text-red-500'}`}>
+        <p className={`text-lg font-semibold ${goalDifference >= 0 ? 'text-green-700' : 'text-red-700'}`}>
           Différence de buts : {goalDifference > 0 ? '+' : ''}{goalDifference}
         </p>
       </div>
