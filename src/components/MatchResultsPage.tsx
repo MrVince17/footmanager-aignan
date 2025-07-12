@@ -330,7 +330,7 @@ const handleExportExcel = () => {
           <Info size={48} className="mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun match trouvé</h3>
           <p className="text-gray-600">
-            Aucun résultat de match disponible pour la saison {selectedSeason}.
+            Aucun résultat de match disponible pour la saison {selectedSeason}
           </p>
         </div>
       )}
