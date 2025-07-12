@@ -23,7 +23,8 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
     yellowCards: {} as Record<string, number>,
     redCards: {} as Record<string, number>,
     cleanSheets: {} as Record<string, boolean>,
-    present: {} as Record<string, boolean>
+    present: {} as Record<string, boolean>,
+    matchType: 'ChD' as 'CdF' | 'CO' | 'CR' | 'CG' | 'CS' | 'ChD' | 'R2' | 'D2'
   });
 
   const handlePlayerSelection = (playerId: string, selected: boolean) => {
@@ -93,6 +94,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
         yellowCardsDetails: performanceData.type === 'match' ? [] : undefined,
         redCardsDetails: performanceData.type === 'match' ? [] : undefined,
         goalsConcededDetails: performanceData.type === 'match' ? [] : undefined,
+        matchType: performanceData.type === 'match' ? performanceData.matchType : undefined,
       };
       
       onSavePerformance(playerId, performanceDetails);
@@ -113,7 +115,8 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
       yellowCards: {},
       redCards: {},
       cleanSheets: {},
-      present: {}
+      present: {},
+      matchType: 'ChD'
     });
 
     alert('Performances enregistrées avec succès !');
@@ -191,18 +194,38 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
               </div>
               
               {performanceData.type === 'match' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Adversaire
-                  </label>
-                  <input
-                    type="text"
-                    value={performanceData.opponent}
-                    onChange={(e) => setPerformanceData({ ...performanceData, opponent: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder="Nom de l'équipe adverse"
-                  />
-                </div>
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Adversaire
+                    </label>
+                    <input
+                      type="text"
+                      value={performanceData.opponent}
+                      onChange={(e) => setPerformanceData({ ...performanceData, opponent: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      placeholder="Nom de l'équipe adverse"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Type de Match
+                    </label>
+                    <select
+                      value={performanceData.matchType}
+                      onChange={(e) => setPerformanceData({ ...performanceData, matchType: e.target.value as any })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    >
+                      <option value="ChD">Championnat D2</option>
+                      <option value="R2">Championnat R2</option>
+                      <option value="CdF">Coupe de France</option>
+                      <option value="CO">Coupe d'Occitanie</option>
+                      <option value="CR">Coupe du Gers</option>
+                      <option value="CG">Challenge du Gers</option>
+                      <option value="CS">Challenge des réserves</option>
+                    </select>
+                  </div>
+                </>
               )}
             </div>
             {performanceData.type === 'match' && (

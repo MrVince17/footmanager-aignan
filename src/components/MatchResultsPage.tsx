@@ -115,6 +115,7 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
           redCardsDetails: refPerf.redCardsDetails || [],
           goalsConcededDetails: refPerf.goalsConcededDetails || [],
           originalPerformanceRef: refPerf,
+          matchType: refPerf.matchType,
         };
       })
       .filter(match => match !== null) as MatchDisplayData[];

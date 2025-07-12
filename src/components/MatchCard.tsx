@@ -49,6 +49,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit,
     yellowCardsDetails,
     redCardsDetails,
     goalsConcededDetails,
+    matchType,
   } = match;
 
   const formattedDate = new Date(date).toLocaleDateString('fr-FR', {
@@ -76,6 +77,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit,
             {location === 'home' ? 'US Aignan' : opponent} vs {location === 'home' ? opponent : 'US Aignan'}
           </h5>
           <p className="text-sm text-gray-500">{formattedDate} - {location === 'home' ? 'Domicile' : 'Extérieur'}</p>
+        </div>
+        <div className="text-sm bg-gray-200 text-gray-800 px-3 py-1 rounded-full">
+          {matchType}
         </div>
         <div className="flex space-x-2">
           <button
