@@ -3,6 +3,7 @@ import { Player } from '../types';
 import { BarChart3, Download, Filter, Trophy, Target, Users, Activity } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../utils/export';
 import { storage } from '../utils/storage';
+import { getAvailableSeasons } from '../utils/seasonUtils';
 
 interface PlayerSeasonStats {
   totalMatches: number;
@@ -35,17 +36,17 @@ interface ExportPlayerData {
   'Assiduité Entraînements (%)': string;
 }
 
-const getAvailableSeasons = (players: Player[]): string[] => {
-  const seasons = new Set<string>();
-  players.forEach(p => {
-    (p.performances || []).forEach(perf => seasons.add(perf.season));
-  });
-  if (seasons.size === 0) return [new Date().getFullYear() + "-" + (new Date().getFullYear() + 1)];
-  return Array.from(seasons).sort((a, b) => b.localeCompare(a));
-};
 
-const getPlayerStatsForSeason = (player: Player, season: string, allPlayersForContext: Player[]): PlayerSeasonStats => {
-  const seasonPerformances = (player.performances || []).filter(p => p.season === season);
+const getPlayerStatsForSeason = (
+  player: Player,
+  season: string,
+  allPlayersForContext: Player[],
+  matchTypeFilter: string
+): PlayerSeasonStats => {
+  const seasonPerformances = (player.performances || []).filter(p =>
+    p.season === season &&
+    (matchTypeFilter === 'all' || p.matchType === matchTypeFilter)
+  );
 
   let stats: Omit<PlayerSeasonStats, 'trainingAttendanceRateSeason' | 'matchAttendanceRateSeason'> = {
     totalMatches: 0, totalMinutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, cleanSheets: 0, presentTrainings: 0, presentMatches: 0
@@ -98,6 +99,7 @@ interface StatisticsProps {
 
 export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason, onSeasonChange, allPlayers }) => {
   const [filterTeam, setFilterTeam] = useState<'all' | 'Seniors 1' | 'Seniors 2'>('all');
+  const [filterMatchType, setFilterMatchType] = useState<'all' | 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS'>('all');
   const [sortBy, setSortBy] = useState<string>('goals');
 
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
@@ -105,9 +107,9 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
   const playersWithSeasonStats = useMemo(() => {
     return players.map(p => ({
       ...p,
-      seasonStats: getPlayerStatsForSeason(p, selectedSeason, allPlayers),
+      seasonStats: getPlayerStatsForSeason(p, selectedSeason, allPlayers, filterMatchType),
     }));
-  }, [players, selectedSeason, allPlayers]);
+  }, [players, selectedSeason, allPlayers, filterMatchType]);
 
   const filteredPlayersByTeam = playersWithSeasonStats.filter(player =>
     filterTeam === 'all' || player.teams.includes(filterTeam)
@@ -139,10 +141,10 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     let uniqueTeamTrainingsForSeason = 0;
 
     if (filterTeam === 'all') {
-      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
+      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason, filterMatchType).length;
       uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
     } else {
-      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', filterTeam, selectedSeason).length;
+      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', filterTeam, selectedSeason, filterMatchType).length;
       uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', filterTeam, selectedSeason).length;
     }
 
@@ -278,6 +280,26 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
               <option value="all">Toutes les équipes</option>
               <option value="Seniors 1">Seniors 1</option>
               <option value="Seniors 2">Seniors 2</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="match-type-filter-stats" className="sr-only">Type de Match</label>
+            <select
+              id="match-type-filter-stats"
+              value={filterMatchType}
+              onChange={(e) => setFilterMatchType(e.target.value as any)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            >
+              <option value="all">Tous les matchs</option>
+              <option value="D2">Championnat D2</option>
+              <option value="R2">Championnat R2</option>
+              <option value="CdF">Coupe de France</option>
+              <option value="CO">Coupe Occitannie</option>
+              <option value="CG">Coupe du Gers</option>
+              <option value="ChD">Challenge District</option>
+              <option value="CR">Coupe des Réserves</option>
+              <option value="CS">Coupe Savoldelli</option>
             </select>
           </div>
           

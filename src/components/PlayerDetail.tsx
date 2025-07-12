@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { exportPlayerStats, exportToPDF } from '../utils/export';
 import { storage } from '../utils/storage';
+import { getMatchStats } from '../utils/playerUtils';
 
 interface PlayerDetailProps {
   player: Player;
@@ -94,20 +95,31 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
     }
   };
 
-  const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; color: string }> = 
-    ({ title, value, icon, color }) => (
-      <div className="bg-white rounded-xl shadow-md p-6 border-l-4 hover:shadow-lg transition-shadow duration-300" style={{ borderLeftColor: color }}>
-        <div className="flex items-center justify-between">
+  const StatCard: React.FC<{ title: string; value?: string | number; icon: React.ReactNode; color: string; stats?: Record<string, number> }> =
+    ({ title, value, icon, color, stats }) => (
+      <div className="bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow duration-300" style={{ borderLeftColor: color }}>
+        <div className="flex justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-600">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+            <p className="text-xs font-medium text-gray-600">{title}</p>
+            <p className="text-xl font-bold text-gray-900 mt-1">{value}</p>
           </div>
-          <div className="p-3 rounded-full" style={{ backgroundColor: `${color}20` }}>
-            <div style={{ color }}>{icon}</div>
+          <div className="flex flex-col items-center">
+            {stats && (
+              <div className="mt-1 space-y-0.5">
+                {Object.entries(stats).map(([matchType, count]) => (
+                  <div key={matchType} className="text-2xs text-gray-600">
+                    <span className="font-semibold">{matchType}:</span> {count}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
     );
+
+  console.log('player.performances', player.performances);
+  console.log('getMatchStats(player.performances)', getMatchStats(player.performances));
 
   return (
     <div id="player-detail-content" className="space-y-6">
@@ -269,6 +281,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
           value={player.totalMatches}
           icon={<Trophy size={24} />}
           color="#DC2626"
+          stats={getMatchStats(player.performances)}
         />
         <StatCard
           title="Entraînements"

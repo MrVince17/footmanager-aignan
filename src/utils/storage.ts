@@ -1,4 +1,5 @@
 import { Player, Performance, Absence, Injury, Unavailability } from '../types';
+import { getSeasonFromDate } from './seasonUtils';
 
 const STORAGE_KEYS = {
   PLAYERS: 'football_players',
@@ -32,6 +33,22 @@ export const storage = {
       players[index] = updatedPlayer;
       storage.savePlayers(players);
     }
+  },
+
+  deleteMatch: (matchPerformance: Performance) => {
+    const players = storage.getPlayers();
+    const updatedPlayers = players.map(player => {
+      const performances = player.performances.filter(p => {
+        return !(p.type === 'match' &&
+                 p.date === matchPerformance.date &&
+                 p.opponent === matchPerformance.opponent &&
+                 p.location === matchPerformance.location &&
+                 p.scoreHome === matchPerformance.scoreHome &&
+                 p.scoreAway === matchPerformance.scoreAway);
+      });
+      return { ...player, performances };
+    });
+    storage.savePlayers(updatedPlayers);
   },
 
   deletePlayer: (playerId: string) => {
@@ -95,7 +112,8 @@ export const storage = {
     allPlayers: Player[],
     type: 'training' | 'match',
     teamName?: 'Seniors 1' | 'Seniors 2',
-    season?: string // Optional season filter
+    season?: string, // Optional season filter
+    matchType?: string // Optional match type filter
   ): { date: string, opponent?: string, season: string }[] => {
     const uniqueEvents = new Map<string, { date: string, opponent?: string, season: string }>();
 
@@ -104,8 +122,11 @@ export const storage = {
         continue;
       }
       for (const perf of player.performances) {
-        if (perf.type === type && (!season || perf.season === season)) { // Filter by season if provided
-          // For matches, an event is unique by date and opponent for that season. For trainings, by date for that season.
+        if (
+          perf.type === type &&
+          (!season || perf.season === season) &&
+          (type !== 'match' || !matchType || matchType === 'all' || perf.matchType === matchType)
+        ) {
           const key = type === 'match'
             ? `${perf.season}-${perf.date}-${perf.opponent || 'unknown'}`
             : `${perf.season}-${perf.date}`;
@@ -161,14 +182,16 @@ export const storage = {
   },
 
   // Performance tracking
-  addPerformance: (playerId: string, performanceData: Omit<Performance, 'id' | 'excused'>) => {
+  addPerformance: (playerId: string, performanceData: Omit<Performance, 'id' | 'excused' | 'season'>) => {
     const players = storage.getPlayers();
     const player = players.find(p => p.id === playerId);
     if (player) {
+      const season = getSeasonFromDate(new Date(performanceData.date));
       const performance: Performance = {
         ...performanceData,
         id: `${Date.now().toString()}-${playerId}-${Math.random().toString(36).substr(2, 9)}`, // Unique ID
         excused: storage.isDateInUnavailabilityPeriod(player, performanceData.date),
+        season: season,
       };
       
       // Ensure performances array exists

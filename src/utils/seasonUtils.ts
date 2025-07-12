@@ -1,31 +1,31 @@
-// Placeholder for season utilities
+import { Player } from '../types';
 
-// Define a basic Player type if not already available globally,
-// or import it if it exists elsewhere.
-interface Player {
-  performances?: Performance[];
-  // Add other player properties as needed
-}
+export const getSeasonFromDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = date.getMonth(); // 0-indexed (0 for January, 6 for July)
 
-interface Performance {
-  season?: string;
-  // Add other performance properties as needed
-}
+  if (month >= 6) {
+    // July or later, so it's the start of a new season
+    return `${year}-${year + 1}`;
+  } else {
+    // Before July, so it's the end of the previous season
+    return `${year - 1}-${year}`;
+  }
+};
 
-export const getAvailableSeasons = (allPlayers?: Player[]): string[] => {
-  // This is a placeholder. In a real application, you would fetch this
-  // from a data source (e.g., an API, local storage, etc.)
-  // For now, it just returns example seasons, ignoring the allPlayers argument.
-  console.log("Fetching available seasons...", allPlayers ? `with ${allPlayers.length} players` : '');
-  // A more realistic implementation might derive seasons from player data:
-  // if (allPlayers && allPlayers.length > 0) {
-  //   const seasons = new Set<string>();
-  //   allPlayers.forEach(player => {
-  //     player.performances?.forEach(perf => {
-  //       if (perf.season) seasons.add(perf.season);
-  //     });
-  //   });
-  //   return Array.from(seasons).sort().reverse();
-  // }
-  return ["2023-2024", "2024-2025", "2022-2023"]; // Example seasons
+export const getAvailableSeasons = (allPlayers: Player[]): string[] => {
+  const seasons = new Set<string>();
+  allPlayers.forEach(p => {
+    (p.performances || []).forEach(perf => {
+      const season = getSeasonFromDate(new Date(perf.date));
+      seasons.add(season);
+    });
+  });
+
+  if (seasons.size === 0) {
+    const currentSeason = getSeasonFromDate(new Date());
+    return [currentSeason];
+  }
+
+  return Array.from(seasons).sort((a, b) => b.localeCompare(a));
 };

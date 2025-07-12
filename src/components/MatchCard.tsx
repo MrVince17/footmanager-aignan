@@ -3,11 +3,14 @@ import React from 'react';
 import { Player, MatchDisplayData, Scorer, Assister, CardDetail, GoalConcededDetail } from '../types';
 import { getPlayerById } from '../utils/playerUtils'; // Utility to find player details
 
+import { Trash2 } from 'lucide-react';
+
 interface MatchCardProps {
   match: MatchDisplayData;
   allPlayers: Player[];
   onEdit: (match: MatchDisplayData) => void;
   onGenerateSummary: (match: MatchDisplayData) => void;
+  onDelete: (match: MatchDisplayData) => void;
 }
 
 const formatPlayerEvent = (eventItems: (Scorer | Assister | CardDetail | GoalConcededDetail)[] | undefined, allPlayers: Player[]) => {
@@ -37,7 +40,7 @@ const formatPlayerEvent = (eventItems: (Scorer | Assister | CardDetail | GoalCon
   }).join(', ');
 };
 
-export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit, onGenerateSummary }) => {
+export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit, onGenerateSummary, onDelete }) => {
   const {
     date,
     opponent,
@@ -49,6 +52,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit,
     yellowCardsDetails,
     redCardsDetails,
     goalsConcededDetails,
+    matchType,
   } = match;
 
   const formattedDate = new Date(date).toLocaleDateString('fr-FR', {
@@ -77,6 +81,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit,
           </h5>
           <p className="text-sm text-gray-500">{formattedDate} - {location === 'home' ? 'Domicile' : 'Extérieur'}</p>
         </div>
+        <div className="text-sm bg-gray-200 text-gray-800 px-3 py-1 rounded-full">
+          {matchType}
+        </div>
         <div className="flex space-x-2">
           <button
             onClick={() => onGenerateSummary(match)}
@@ -89,6 +96,12 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit,
             className="text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-3 rounded transition-colors"
           >
             Modifier
+          </button>
+          <button
+            onClick={() => onDelete(match)}
+            className="text-sm bg-red-500 hover:bg-red-700 text-white py-1 px-3 rounded transition-colors"
+          >
+            <Trash2 size={16} />
           </button>
         </div>
       </div>

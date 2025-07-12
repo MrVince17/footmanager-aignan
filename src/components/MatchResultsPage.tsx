@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { Player, Performance, MatchDisplayData, MatchDetails } from '../types';
-import { getAvailableSeasons } from '../utils/seasonUtils';
 import { MatchCard } from './MatchCard';
 import { SeasonStatsSummary } from './SeasonStatsSummary';
 import { MatchEditForm } from './MatchEditForm';
@@ -10,6 +9,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { getPlayerById } from '../utils/playerUtils';
+import { getAvailableSeasons } from '../utils/seasonUtils';
 
 
 interface MatchResultsPageProps {
@@ -40,6 +40,7 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMatch, setEditingMatch] = useState<MatchDisplayData | null>(null);
+  const [filterMatchType, setFilterMatchType] = useState<'all' | 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS'>('all');
 
   const handleGenerateSummary = (match: MatchDisplayData) => {
     const matchDetails = transformMatchData(match, allPlayers, selectedSeason);
@@ -66,6 +67,12 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
     handleCloseEditModal();
   };
 
+  const handleDeleteMatch = (match: MatchDisplayData) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le match contre ${match.opponent} du ${new Date(match.date).toLocaleDateString('fr-FR')}?`)) {
+      onUpdatePlayerStorage('matchDelete', match.originalPerformanceRef);
+    }
+  };
+
   const displayedMatches = useMemo(() => {
     console.log(`[MatchResultsPage] Calculating displayedMatches for season: ${selectedSeason}`);
     if (!allPlayers || allPlayers.length === 0) {
@@ -77,7 +84,7 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
     console.log('[MatchResultsPage] All performances flattened count:', allPerformances.length);
 
     const seasonPerformances = allPerformances.filter(
-      (p) => p.type === 'match' && p.season === selectedSeason
+      (p) => p.type === 'match' && p.season === selectedSeason && (filterMatchType === 'all' || p.matchType === filterMatchType)
     );
     console.log(`[MatchResultsPage] Performances for season ${selectedSeason} and type 'match' count:`, seasonPerformances.length);
     // console.log(`[MatchResultsPage] Filtered season performances:`, JSON.stringify(seasonPerformances.slice(0, 5), null, 2)); // Log first 5 for brevity
@@ -115,6 +122,7 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
           redCardsDetails: refPerf.redCardsDetails || [],
           goalsConcededDetails: refPerf.goalsConcededDetails || [],
           originalPerformanceRef: refPerf,
+          matchType: refPerf.matchType,
         };
       })
       .filter(match => match !== null) as MatchDisplayData[];
@@ -307,6 +315,25 @@ const handleExportExcel = () => {
               ))}
             </select>
           </div>
+          <div className="flex items-center gap-3">
+            <label htmlFor="match-type-filter-results" className="text-sm font-medium text-gray-700">Type de Match :</label>
+            <select
+              id="match-type-filter-results"
+              value={filterMatchType}
+              onChange={(e) => setFilterMatchType(e.target.value as any)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            >
+              <option value="all">Tous les matchs</option>
+              <option value="D2">Championnat D2</option>
+              <option value="R2">Championnat R2</option>
+              <option value="CdF">Coupe de France</option>
+              <option value="CO">Coupe Occitannie</option>
+              <option value="CG">Coupe du Gers</option>
+              <option value="ChD">Challenge District</option>
+              <option value="CR">Coupe des Réserves</option>
+              <option value="CS">Coupe Savoldelli</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -321,6 +348,7 @@ const handleExportExcel = () => {
               allPlayers={allPlayers}
               onEdit={handleEditMatch}
               onGenerateSummary={handleGenerateSummary}
+              onDelete={handleDeleteMatch}
             />
           ))}
         </div>
@@ -329,7 +357,7 @@ const handleExportExcel = () => {
           <Info size={48} className="mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun match trouvé</h3>
           <p className="text-gray-600">
-            Aucun résultat de match disponible pour la saison {selectedSeason}.
+            Aucun résultat de match disponible pour la saison {selectedSeason}
           </p>
         </div>
       )}
