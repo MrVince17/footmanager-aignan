@@ -1,29 +1,25 @@
-// Placeholder for player utilities
-
-// Define a basic Player type if not already available globally,
-// or import it if it exists elsewhere.
-interface Player {
-  id: string;
-  lastName?: string;
-  firstName?: string;
-  // Add other player properties as needed
-}
+import { Player, Performance } from '../types';
 
 export const getPlayerById = (allPlayers: Player[], playerId: string): Player | undefined => {
-  // This is a placeholder. In a real application, you would have a more robust way
-  // to fetch or look up players.
-  console.log(`[playerUtils] Searching for player ID: ${playerId} among ${allPlayers?.length || 0} players.`);
   if (!allPlayers || !playerId) {
     return undefined;
   }
-  const player = allPlayers.find(p => p.id === playerId);
-  if (!player) {
-    console.warn(`[playerUtils] Player with ID ${playerId} not found.`);
-  }
-  return player;
+  return allPlayers.find(p => p.id === playerId);
 };
 
-// Add any other player utility functions here if needed, for example:
-// export const getPlayerFullName = (player: Player): string => {
-//   return `${player.firstName || ''} ${player.lastName || ''}`.trim();
-// };
+export const getMatchStats = (performances: Performance[]): Record<string, number> => {
+  const matchStats: Record<string, number> = {};
+
+  performances.forEach(performance => {
+    if (performance.type === 'match' && performance.present) {
+      const matchType = performance.matchType || 'N/A';
+      if (matchStats[matchType]) {
+        matchStats[matchType]++;
+      } else {
+        matchStats[matchType] = 1;
+      }
+    }
+  });
+
+  return matchStats;
+};
