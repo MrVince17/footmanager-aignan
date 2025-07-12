@@ -57,7 +57,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit 
   };
 
   return (
-    <div className="bg-gray-800 shadow-lg rounded-lg p-4 mb-4 border border-gray-700 hover:border-red-600 transition-all duration-300">
+    <div className="results-match-card">
       <div className="flex justify-between items-center mb-3 text-white">
         <div>
           <h5 className="text-lg font-bold uppercase tracking-wide">

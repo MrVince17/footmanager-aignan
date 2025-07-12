@@ -47,7 +47,7 @@ export const SeasonStatsSummary: React.FC<SeasonStatsSummaryProps> = ({ matches 
   const goalDifference = goalsScoredByTeam - goalsConcededByTeam;
 
   return (
-    <div className="p-4 my-6 bg-black text-white rounded-lg shadow-md border border-gray-700">
+    <div className="results-summary">
       <h3 className="text-xl font-bold uppercase tracking-wider mb-4 text-center">Résumé de la Saison</h3>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-center">
         <div className="p-3 bg-gray-800 rounded-md">

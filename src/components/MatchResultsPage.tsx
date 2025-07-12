@@ -260,7 +260,7 @@ const handleExportExcel = () => {
 
   return (
     <div className="space-y-6" id="match-results-content">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 bg-black text-white rounded-lg shadow-md border-b-4 border-red-600">
+      <div className="results-header">
         <h1 className="text-2xl font-bold uppercase tracking-wider">Résultats Saison</h1>
         <div className="flex items-center gap-3">
           <select
