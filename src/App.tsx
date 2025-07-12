@@ -189,7 +189,7 @@ function App() {
   };
 
   const handleUpdatePlayerStorage = (
-    type: 'unavailabilityDelete' | 'unavailabilityAdd' | 'matchUpdate',
+    type: 'unavailabilityDelete' | 'unavailabilityAdd' | 'matchUpdate' | 'matchDelete',
     refData: any,
     value?: any
   ) => {
@@ -225,6 +225,10 @@ function App() {
                 return perf;
             })
         }));
+    } else if (type === 'matchDelete') {
+        const originalPerfRef = refData as Performance;
+        storage.deleteMatch(originalPerfRef);
+        updatedPlayersArray = storage.getPlayers();
     }
 
     setPlayers(updatedPlayersArray);

@@ -35,6 +35,22 @@ export const storage = {
     }
   },
 
+  deleteMatch: (matchPerformance: Performance) => {
+    const players = storage.getPlayers();
+    const updatedPlayers = players.map(player => {
+      const performances = player.performances.filter(p => {
+        return !(p.type === 'match' &&
+                 p.date === matchPerformance.date &&
+                 p.opponent === matchPerformance.opponent &&
+                 p.location === matchPerformance.location &&
+                 p.scoreHome === matchPerformance.scoreHome &&
+                 p.scoreAway === matchPerformance.scoreAway);
+      });
+      return { ...player, performances };
+    });
+    storage.savePlayers(updatedPlayers);
+  },
+
   deletePlayer: (playerId: string) => {
     const players = storage.getPlayers().filter(p => p.id !== playerId);
     storage.savePlayers(players);

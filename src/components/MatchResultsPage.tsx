@@ -67,6 +67,12 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
     handleCloseEditModal();
   };
 
+  const handleDeleteMatch = (match: MatchDisplayData) => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer le match contre ${match.opponent} du ${new Date(match.date).toLocaleDateString('fr-FR')}?`)) {
+      onUpdatePlayerStorage('matchDelete', match.originalPerformanceRef);
+    }
+  };
+
   const displayedMatches = useMemo(() => {
     console.log(`[MatchResultsPage] Calculating displayedMatches for season: ${selectedSeason}`);
     if (!allPlayers || allPlayers.length === 0) {
@@ -342,6 +348,7 @@ const handleExportExcel = () => {
               allPlayers={allPlayers}
               onEdit={handleEditMatch}
               onGenerateSummary={handleGenerateSummary}
+              onDelete={handleDeleteMatch}
             />
           ))}
         </div>
