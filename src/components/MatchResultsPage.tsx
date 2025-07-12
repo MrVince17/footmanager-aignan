@@ -259,15 +259,15 @@ const handleExportExcel = () => {
 
 
   return (
-    <div className="space-y-6" id="match-results-content"> {/* Ajout de l'ID pour l'export PDF */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 bg-white rounded-lg shadow">
-        <h1 className="text-2xl font-bold text-gray-800">Résultats Saison</h1>
+    <div className="space-y-6" id="match-results-content">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 bg-gray-900 text-white rounded-lg shadow-md border-b-4 border-red-700">
+        <h1 className="text-2xl font-bold uppercase tracking-wider">Résultats Saison</h1>
         <div className="flex items-center gap-3">
           <select
             id="season-select-results" // ID unique pour le select
             value={selectedSeason}
             onChange={(e) => onSeasonChange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           >
             {availableSeasons.map(season => (
               <option key={season} value={season}>
@@ -277,14 +277,14 @@ const handleExportExcel = () => {
           </select>
            <button
             onClick={handleExportPDF}
-            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="p-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors"
             title="Exporter en PDF"
           >
             <Download size={20} />
           </button>
           <button
             onClick={handleExportExcel}
-            className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="p-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
             title="Exporter en Excel"
           >
             <Download size={20} />

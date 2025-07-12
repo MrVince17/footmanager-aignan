@@ -57,33 +57,33 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit 
   };
 
   return (
-    <div className="bg-white shadow-md rounded-lg p-4 mb-4 border border-gray-200 hover:shadow-lg transition-shadow">
-      <div className="flex justify-between items-center mb-3">
+    <div className="bg-gray-800 shadow-lg rounded-lg p-4 mb-4 border border-gray-700 hover:border-red-700 transition-all duration-300">
+      <div className="flex justify-between items-center mb-3 text-white">
         <div>
-          <h5 className="text-lg font-semibold text-gray-800">
+          <h5 className="text-lg font-bold uppercase tracking-wide">
             {location === 'home' ? 'US Aignan' : opponent} vs {location === 'home' ? opponent : 'US Aignan'}
           </h5>
-          <p className="text-sm text-gray-500">{formattedDate} - {location === 'home' ? 'Domicile' : 'Extérieur'}</p>
+          <p className="text-sm text-gray-400">{formattedDate} - {location === 'home' ? 'Domicile' : 'Extérieur'}</p>
         </div>
         <button
           onClick={() => onEdit(match)}
-          className="text-sm bg-blue-500 hover:bg-blue-700 text-white py-1 px-3 rounded transition-colors"
+          className="text-sm bg-red-700 hover:bg-red-800 text-white py-1 px-3 rounded-md transition-colors"
         >
           Modifier
         </button>
       </div>
 
-      <div className="mb-3 text-center">
-        <p className="text-2xl font-bold" dangerouslySetInnerHTML={{ __html: renderScore() }} />
+      <div className="mb-4 text-center text-white">
+        <p className="text-3xl font-bold tracking-tighter" dangerouslySetInnerHTML={{ __html: renderScore() }} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-        <div><strong>Buteurs:</strong> {formatPlayerEvent(scorers, allPlayers, 'scorer')}</div>
-        <div><strong>Passeurs:</strong> {formatPlayerEvent(assisters, allPlayers, 'assister')}</div>
-        <div><strong>Cartons Jaunes:</strong> {formatPlayerEvent(yellowCardsDetails, allPlayers, 'card')}</div>
-        <div><strong>Cartons Rouges:</strong> {formatPlayerEvent(redCardsDetails, allPlayers, 'card')}</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm text-gray-300">
+        <div><strong className="text-gray-100">Buteurs:</strong> {formatPlayerEvent(scorers, allPlayers, 'scorer')}</div>
+        <div><strong className="text-gray-100">Passeurs:</strong> {formatPlayerEvent(assisters, allPlayers, 'assister')}</div>
+        <div><strong className="text-gray-100">Cartons Jaunes:</strong> {formatPlayerEvent(yellowCardsDetails, allPlayers, 'card')}</div>
+        <div><strong className="text-gray-100">Cartons Rouges:</strong> {formatPlayerEvent(redCardsDetails, allPlayers, 'card')}</div>
         {goalsConcededDetails && goalsConcededDetails.length > 0 && ( // Only show if data exists
-            <div><strong>Buts Encaissés (gardien):</strong> {formatPlayerEvent(goalsConcededDetails, allPlayers, 'conceded')}</div>
+            <div><strong className="text-gray-100">Buts Encaissés (gardien):</strong> {formatPlayerEvent(goalsConcededDetails, allPlayers, 'conceded')}</div>
         )}
       </div>
     </div>
