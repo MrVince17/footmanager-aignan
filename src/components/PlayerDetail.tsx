@@ -98,25 +98,18 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
   const StatCard: React.FC<{ title: string; value?: string | number; icon: React.ReactNode; color: string; stats?: Record<string, number> }> =
     ({ title, value, icon, color, stats }) => (
       <div className="bg-white rounded-xl shadow-md p-6 border-l-4 hover:shadow-lg transition-shadow duration-300" style={{ borderLeftColor: color }}>
-        <div className="flex justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-600">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
-          </div>
-          <div className="flex flex-col items-end">
-            {stats && (
-              <div className="mt-2 space-y-1">
-                {Object.entries(stats).map(([matchType, count]) => (
-                  <div key={matchType} className="text-xs text-gray-600">
-                    <span className="font-semibold">{matchType}:</span> {count}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="p-3 rounded-full" style={{ backgroundColor: `${color}20`, position: 'absolute', top: '1rem', right: '1rem' }}>
-            <div style={{ color }}>{icon}</div>
+        <div className="flex flex-col items-center">
+          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+          {stats && (
+            <div className="mt-2 space-y-1">
+              {Object.entries(stats).map(([matchType, count]) => (
+                <div key={matchType} className="text-xs text-gray-600">
+                  <span className="font-semibold">{matchType}:</span> {count}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
