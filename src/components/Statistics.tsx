@@ -400,8 +400,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
               <tr className="bg-gray-50">
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Rang</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Joueur</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Position</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Équipe(s)</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Pos.</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Matchs</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Entraînements</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Minutes</th>
@@ -437,11 +436,8 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
                       player.position === 'Milieu' ? 'bg-green-100 text-green-800' :
                       'bg-red-100 text-red-800'
                     }`}>
-                      {player.position}
+                      {player.position.charAt(0)}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {player.teams.join(', ')}
                   </td>
                   <td className="px-4 py-3 font-medium">{player.seasonStats.totalMatches}</td>
                   <td className="px-4 py-3 font-medium">{player.seasonStats.presentTrainings}</td>
