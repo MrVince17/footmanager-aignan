@@ -88,7 +88,18 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({ data, type, allPla
         return row;
       });
 
-      const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+      const totalRow: (string | number)[] = ["Total", ""];
+      trainingDates.forEach((date, index) => {
+        const totalPresent = rows.reduce((acc, row) => {
+          return acc + (row[index + 2] === '✅' ? 1 : 0);
+        }, 0);
+        totalRow.push(totalPresent);
+      });
+      totalRow.push(""); // for Total Présences column
+      totalRow.push(""); // for % Présence column
+
+
+      const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totalRow]);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Présences Entraînements");
       XLSX.writeFile(wb, `presences_entrainements_Saison_${selectedSeason}.xlsx`);
