@@ -1,7 +1,7 @@
 import React from 'react';
 import { Download } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 import { Player } from '../types';
@@ -41,7 +41,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({ data, type, allPla
         Array.isArray(item.presentPlayers) ? item.presentPlayers.join(', ') : '',
       ]);
 
-      (doc as any).autoTable({
+      autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
         startY: 30,
