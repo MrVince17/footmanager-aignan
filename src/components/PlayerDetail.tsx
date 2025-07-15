@@ -97,7 +97,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
 
   const StatCard: React.FC<{ title: string; value?: string | number; icon: React.ReactNode; color: string; stats?: Record<string, number> }> =
     ({ title, value, icon, color, stats }) => (
-      <div className="bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow duration-300" style={{ borderLeftColor: color }}>
+      <div className="bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow duration-300 w-48" style={{ borderLeftColor: color }}>
         <div className="flex justify-between">
           <div>
             <p className="text-xs font-medium text-gray-600">{title}</p>
@@ -286,7 +286,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
           />
         </div>
         <div className="lg:col-span-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <StatCard
               title="Entraînements"
               value={player.totalTrainings}
