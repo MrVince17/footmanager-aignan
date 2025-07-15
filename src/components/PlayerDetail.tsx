@@ -97,7 +97,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
 
   const StatCard: React.FC<{ title: string; value?: string | number; icon: React.ReactNode; color: string; stats?: Record<string, number> }> =
     ({ title, value, icon, color, stats }) => (
-      <div className="bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow duration-300" style={{ borderLeftColor: color }}>
+      <div className="bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow duration-300 h-full" style={{ borderLeftColor: color }}>
         <div className="flex justify-between">
           <div>
             <p className="text-xs font-medium text-gray-600">{title}</p>
@@ -168,7 +168,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
 
       {/* Player Information */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-md p-6 h-full">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations générales</h3>
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
@@ -276,13 +276,15 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
 
       {/* Statistics */}
       <div className="flex justify-between">
-        <StatCard
-          title="Matchs joués"
-          value={player.totalMatches}
-          icon={<Trophy size={24} />}
-          color="#DC2626"
-          stats={getMatchStats(player.performances)}
-        />
+        <div className="h-full">
+          <StatCard
+            title="Matchs joués"
+            value={player.totalMatches}
+            icon={<Trophy size={24} />}
+            color="#DC2626"
+            stats={getMatchStats(player.performances)}
+          />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <StatCard
             title="Entraînements"
