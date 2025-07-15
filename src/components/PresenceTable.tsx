@@ -23,32 +23,44 @@ interface PresenceTableProps {
 
 export const PresenceTable: React.FC<PresenceTableProps> = ({ data, type, allPlayers, selectedSeason }) => {
   const handleExportPDF = () => {
-    const doc = new jsPDF();
-    const title = type === 'training' ? 'Présence Entraînements' : 'Présence Matchs';
-    doc.text(title, 14, 22);
+    if (!data || data.length === 0) {
+      alert("Aucune donnée à exporter.");
+      return;
+    }
 
-    const tableColumn = ["Date", "Équipe", "Nombre de présents", "Joueurs présents"];
-    const tableRows: (string | number)[][] = [];
+    try {
+      const doc = new jsPDF();
+      const title = type === 'training' ? 'Présence Entraînements' : 'Présence Matchs';
+      doc.text(title, 14, 22);
 
-    data.forEach(item => {
-      const row = [
+      const tableColumn = ["Date", "Équipe", "Nombre de présents", "Joueurs présents"];
+      const tableRows: (string | number)[][] = data.map(item => [
         new Date(item.date).toLocaleDateString('fr-FR'),
-        item.team,
-        item.presentCount,
-        item.presentPlayers.join(', '),
-      ];
-      tableRows.push(row);
-    });
+        item.team || 'N/A',
+        item.presentCount || 0,
+        Array.isArray(item.presentPlayers) ? item.presentPlayers.join(', ') : '',
+      ]);
 
-    (doc as any).autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 30,
-      theme: 'grid',
-      headStyles: { fillColor: [220, 26, 38] },
-    });
+      (doc as any).autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 30,
+        theme: 'grid',
+        headStyles: { fillColor: [220, 26, 38] },
+        styles: {
+          fontSize: 8,
+          cellPadding: 2,
+        },
+        columnStyles: {
+          3: { cellWidth: 'auto' },
+        },
+      });
 
-    doc.save(`presence_${type}.pdf`);
+      doc.save(`presence_${type}_${selectedSeason}.pdf`);
+    } catch (error) {
+      console.error("Erreur lors de la génération du PDF :", error);
+      alert("Une erreur est survenue lors de la génération du PDF. Veuillez consulter la console pour plus de détails.");
+    }
   };
 
   const handleExportExcel = () => {
