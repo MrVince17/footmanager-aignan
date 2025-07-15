@@ -114,10 +114,20 @@ export const PresencePage: React.FC = () => {
 
       <div>
         {activeTab === 'trainings' && (
-          <PresenceTable data={trainings} type="training" />
+          <PresenceTable
+            data={trainings}
+            type="training"
+            allPlayers={allPlayers}
+            selectedSeason={selectedSeason}
+          />
         )}
         {activeTab === 'matches' && (
-          <PresenceTable data={matches} type="match" />
+          <PresenceTable
+            data={matches}
+            type="match"
+            allPlayers={allPlayers}
+            selectedSeason={selectedSeason}
+          />
         )}
       </div>
     </div>

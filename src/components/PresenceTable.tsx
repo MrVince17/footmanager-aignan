@@ -4,6 +4,9 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
+import { Player } from '../types';
+import { storage } from '../utils/storage';
+
 interface PresenceData {
   date: string;
   team: string;
@@ -14,9 +17,11 @@ interface PresenceData {
 interface PresenceTableProps {
   data: PresenceData[];
   type: 'training' | 'match';
+  allPlayers: Player[];
+  selectedSeason: string;
 }
 
-export const PresenceTable: React.FC<PresenceTableProps> = ({ data, type }) => {
+export const PresenceTable: React.FC<PresenceTableProps> = ({ data, type, allPlayers, selectedSeason }) => {
   const handleExportPDF = () => {
     const doc = new jsPDF();
     const title = type === 'training' ? 'Présence Entraînements' : 'Présence Matchs';
@@ -47,17 +52,60 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({ data, type }) => {
   };
 
   const handleExportExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(
-      data.map(item => ({
-        "Date": new Date(item.date).toLocaleDateString('fr-FR'),
-        "Équipe": item.team,
-        "Nombre de présents": item.presentCount,
-        "Joueurs présents": item.presentPlayers.join(', '),
-      }))
-    );
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Présences");
-    XLSX.writeFile(wb, `presence_${type}.xlsx`);
+    if (type === 'training') {
+      const allTrainings = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      const trainingDates = allTrainings.map(t => t.date);
+
+      const playersWithPresence = allPlayers.filter(p =>
+        p.performances.some(perf => perf.type === 'training' && perf.season === selectedSeason)
+      );
+
+      const header = ["Nom Prénom", "Équipe", ...trainingDates.map(d => new Date(d).toLocaleDateString('fr-FR')), "Total Présences", "% Présence"];
+
+      const rows = playersWithPresence.map(player => {
+        const row: (string | number)[] = [
+          `${player.firstName} ${player.lastName}`,
+          player.teams.join(', '),
+        ];
+
+        let presentCount = 0;
+        trainingDates.forEach(date => {
+          const isPresent = player.performances.some(p => p.date === date && p.type === 'training' && p.present);
+          row.push(isPresent ? '✅' : '❌');
+          if (isPresent) {
+            presentCount++;
+          }
+        });
+
+        const totalTrainings = trainingDates.length;
+        const presencePercentage = totalTrainings > 0 ? (presentCount / totalTrainings) * 100 : 0;
+
+        row.push(presentCount);
+        row.push(`${presencePercentage.toFixed(2)} %`);
+
+        return row;
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Présences Entraînements");
+      XLSX.writeFile(wb, `presences_entrainements_Saison_${selectedSeason}.xlsx`);
+
+    } else {
+      const ws = XLSX.utils.json_to_sheet(
+        data.map(item => ({
+          "Date": new Date(item.date).toLocaleDateString('fr-FR'),
+          "Équipe": item.team,
+          "Nombre de présents": item.presentCount,
+          "Joueurs présents": item.presentPlayers.join(', '),
+        }))
+      );
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Présences");
+      XLSX.writeFile(wb, `presence_${type}.xlsx`);
+    }
   };
 
   return (
