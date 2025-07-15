@@ -97,13 +97,13 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
 
   const StatCard: React.FC<{ title: string; value?: string | number; icon: React.ReactNode; color: string; stats?: Record<string, number> }> =
     ({ title, value, icon, color, stats }) => (
-      <div className="bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow duration-300 w-fit" style={{ borderLeftColor: color }}>
+      <div className="bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow duration-300 h-full" style={{ borderLeftColor: color }}>
         <div className="flex justify-between">
           <div>
             <p className="text-xs font-medium text-gray-600">{title}</p>
             <p className="text-xl font-bold text-gray-900 mt-1">{value}</p>
           </div>
-          <div className="flex flex-col items-center ml-4">
+          <div className="flex flex-col items-center">
             {stats && (
               <div className="mt-1 space-y-0.5">
                 {Object.entries(stats).map(([matchType, count]) => (
@@ -275,7 +275,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
           <StatCard
             title="Matchs joués"
@@ -285,7 +285,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             stats={getMatchStats(player.performances)}
           />
         </div>
-        <div className="lg:col-span-3 bg-white rounded-xl shadow-md p-6">
+        <div className="lg:col-span-2">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <StatCard
               title="Entraînements"
