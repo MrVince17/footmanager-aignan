@@ -275,8 +275,8 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="h-full lg:col-span-1">
           <StatCard
             title="Matchs joués"
             value={player.totalMatches}
@@ -285,54 +285,54 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             stats={getMatchStats(player.performances)}
           />
         </div>
-        <StatCard
-          title="Entraînements"
-          value={player.totalTrainings}
-          icon={<Activity size={24} />}
-          color="#000000"
-        />
-        <StatCard
-          title="Minutes jouées"
-          value={player.totalMinutes}
-          icon={<Clock size={24} />}
-          color="#DC2626"
-        />
-        <StatCard
-          title="Buts marqués"
-          value={player.goals}
-          icon={<Target size={24} />}
-          color="#000000"
-        />
-      </div>
-
-      {/* Additional Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Passes décisives"
-          value={player.assists}
-          icon={<Users size={24} />}
-          color="#DC2626"
-        />
-        {player.position === 'Gardien' && (
-          <StatCard
-            title="Clean Sheets"
-            value={player.cleanSheets}
-            icon={<CheckCircle size={24} />}
-            color="#000000"
-          />
-        )}
-        <StatCard
-          title="Cartons jaunes"
-          value={player.yellowCards}
-          icon={<AlertCircle size={24} />}
-          color="#F59E0B"
-        />
-        <StatCard
-          title="Cartons rouges"
-          value={player.redCards}
-          icon={<AlertCircle size={24} />}
-          color="#EF4444"
-        />
+        <div className="lg:col-span-3 border rounded-xl p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <StatCard
+              title="Entraînements"
+              value={player.totalTrainings}
+              icon={<Activity size={24} />}
+              color="#000000"
+            />
+            <StatCard
+              title="Minutes jouées"
+              value={player.totalMinutes}
+              icon={<Clock size={24} />}
+              color="#DC2626"
+            />
+            <StatCard
+              title="Buts marqués"
+              value={player.goals}
+              icon={<Target size={24} />}
+              color="#000000"
+            />
+            <StatCard
+              title="Passes décisives"
+              value={player.assists}
+              icon={<Users size={24} />}
+              color="#DC2626"
+            />
+            {player.position === 'Gardien' && (
+              <StatCard
+                title="Clean Sheets"
+                value={player.cleanSheets}
+                icon={<CheckCircle size={24} />}
+                color="#000000"
+              />
+            )}
+            <StatCard
+              title="Cartons jaunes"
+              value={player.yellowCards}
+              icon={<AlertCircle size={24} />}
+              color="#F59E0B"
+            />
+            <StatCard
+              title="Cartons rouges"
+              value={player.redCards}
+              icon={<AlertCircle size={24} />}
+              color="#EF4444"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Unavailabilities Management */}
