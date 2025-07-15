@@ -8,12 +8,17 @@ export const getPlayerById = (allPlayers: Player[], playerId: string): Player | 
 };
 
 export const getMatchStats = (performances: Performance[]): Record<string, number> => {
+  const matchTypes = ['D2', 'R2', 'CdF', 'CO', 'CR', 'ChD', 'CG', 'CS'];
   const matchStats: Record<string, number> = {};
+
+  matchTypes.forEach(type => {
+    matchStats[type] = 0;
+  });
 
   performances.forEach(performance => {
     if (performance.type === 'match' && performance.present) {
       const matchType = performance.matchType || 'N/A';
-      if (matchStats[matchType]) {
+      if (matchStats.hasOwnProperty(matchType)) {
         matchStats[matchType]++;
       } else {
         matchStats[matchType] = 1;
