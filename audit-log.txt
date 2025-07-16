@@ -1,0 +1,43 @@
+# npm audit report
+
+dompurify  <3.2.4
+Severity: moderate
+DOMPurify allows Cross-site Scripting (XSS) - https://github.com/advisories/GHSA-vhxf-7vqr-mrjg
+fix available via `npm audit fix --force`
+Will install jspdf@3.0.1, which is a breaking change
+node_modules/dompurify
+  jspdf  <=3.0.0
+  Depends on vulnerable versions of dompurify
+  node_modules/jspdf
+
+esbuild  <=0.24.2
+Severity: moderate
+esbuild enables any website to send any requests to the development server and read the response - https://github.com/advisories/GHSA-67mh-4wv8-2f99
+fix available via `npm audit fix --force`
+Will install vite@7.0.4, which is a breaking change
+node_modules/esbuild
+  vite  0.11.0 - 6.1.6
+  Depends on vulnerable versions of esbuild
+  node_modules/vite
+    @vitejs/plugin-react  2.0.0-alpha.0 - 4.3.3
+    Depends on vulnerable versions of vite
+    node_modules/@vitejs/plugin-react
+
+
+xlsx  *
+Severity: high
+Prototype Pollution in sheetJS - https://github.com/advisories/GHSA-4r6h-8v6p-xvw6
+SheetJS Regular Expression Denial of Service (ReDoS) - https://github.com/advisories/GHSA-5pgg-2g8v-p4x9
+No fix available
+node_modules/xlsx
+
+6 vulnerabilities (4 moderate, 2 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.
