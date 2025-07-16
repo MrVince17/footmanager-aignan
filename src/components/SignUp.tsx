@@ -20,11 +20,11 @@ export const SignUp: React.FC = () => {
       // 1. Create a new club
       const { data: clubData, error: clubError } = await supabase
         .from('clubs')
-        .insert([{ name: clubName, primary_color: primaryColor, secondary_color: secondaryColor }])
-        .select('*')
+        .insert({ name: clubName, primary_color: primaryColor, secondary_color: secondaryColor })
+        .select()
         .single();
-
       if (clubError) throw clubError;
+      if (!clubData) throw new Error('Club not created');
 
       // 2. Sign up the user
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -44,7 +44,7 @@ export const SignUp: React.FC = () => {
       // 3. Link user to the club
       const { error: userError } = await supabase
         .from('users')
-        .insert({ id: authData.user.id, full_name: fullName, club_id: clubData.id });
+        .insert([{ id: authData.user.id, full_name: fullName, club_id: clubData.id }]);
 
       if (userError) throw userError;
 
