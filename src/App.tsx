@@ -8,6 +8,7 @@ import { PlayerDetail } from './components/PlayerDetail';
 import { PerformanceEntry } from './components/PerformanceEntry';
 import { Statistics } from './components/Statistics';
 import { MatchResultsPage } from './components/MatchResultsPage';
+import { PresencePage } from './components/PresencePage';
 import { Routes, Route, Link as RouterLink, Navigate, Outlet, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Unavailability, Performance } from './types';
 
@@ -19,7 +20,8 @@ import {
   BarChart3,
   ClipboardList,
   Menu, 
-  X 
+  X,
+  FileText
 } from 'lucide-react';
 import { getAvailableSeasons } from './utils/seasonUtils';
 
@@ -239,6 +241,7 @@ function App() {
     { id: 'dashboard', label: 'Tableau de bord', icon: Home, path: '/' },
     { id: 'players', label: 'Joueurs', icon: Users, path: '/players' },
     { id: 'performance', label: 'Performances', icon: Activity, path: '/performance' },
+    { id: 'presence', label: 'Présence', icon: FileText, path: '/presence' },
     { id: 'statistics', label: 'Statistiques', icon: BarChart3, path: '/statistics' },
     { id: 'results', label: 'Résultats Saison', icon: ClipboardList, path: '/results' },
   ];
@@ -256,6 +259,7 @@ function App() {
           <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
           <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />
           <Route path="/performance" element={<PerformanceEntry players={players} onSavePerformance={handleSavePerformance} />} />
+          <Route path="/presence" element={<PresencePage />} />
           <Route path="/statistics" element={<Statistics players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
           <Route path="/results" element={<MatchResultsPage allPlayers={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} onUpdatePlayerStorage={handleUpdatePlayerStorage} />} />
           <Route path="*" element={<Navigate to="/" />} />
