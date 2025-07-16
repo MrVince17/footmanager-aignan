@@ -22,6 +22,55 @@ interface PresenceTableProps {
 }
 
 export const PresenceTable: React.FC<PresenceTableProps> = ({ data, type, allPlayers, selectedSeason }) => {
+  const generatePresenceData = () => {
+    const events = storage.getTotalTeamEvents(allPlayers, type, undefined, selectedSeason)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    const eventDates = events.map(e => e.date);
+
+    const playersWithPresence = allPlayers.filter(p =>
+      p.performances.some(perf => perf.type === type && perf.season === selectedSeason)
+    );
+
+    const header = ["Nom Prénom", "Équipe", ...eventDates.map(d => new Date(d).toLocaleDateString('fr-FR')), "Total Présences", "% Présence"];
+
+    const rows = playersWithPresence.map(player => {
+      const row: (string | number)[] = [
+        `${player.firstName} ${player.lastName}`,
+        player.teams.join(', '),
+      ];
+
+      let presentCount = 0;
+      eventDates.forEach(date => {
+        const isPresent = player.performances.some(p => p.date === date && p.type === type && p.present);
+        row.push(isPresent ? '✅' : '❌');
+        if (isPresent) {
+          presentCount++;
+        }
+      });
+
+      const totalEvents = eventDates.length;
+      const presencePercentage = totalEvents > 0 ? (presentCount / totalEvents) * 100 : 0;
+
+      row.push(presentCount);
+      row.push(`${presencePercentage.toFixed(2)} %`);
+
+      return row;
+    });
+
+    const totalRow: (string | number)[] = ["Total", ""];
+    eventDates.forEach((date, index) => {
+      const totalPresent = rows.reduce((acc, row) => {
+        return acc + (row[index + 2] === '✅' ? 1 : 0);
+      }, 0);
+      totalRow.push(totalPresent);
+    });
+    totalRow.push(""); // for Total Présences column
+    totalRow.push(""); // for % Présence column
+
+    return { header, rows, totalRow };
+  };
+
   const handleExportPDF = () => {
     if (!data || data.length === 0) {
       alert("Aucune donnée à exporter.");
@@ -29,30 +78,24 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({ data, type, allPla
     }
 
     try {
-      const doc = new jsPDF();
+      const { header, rows, totalRow } = generatePresenceData();
+      const doc = new jsPDF({ orientation: 'landscape' });
       const title = type === 'training' ? 'Présence Entraînements' : 'Présence Matchs';
       doc.text(title, 14, 22);
 
-      const tableColumn = ["Date", "Équipe", "Nombre de présents", "Joueurs présents"];
-      const tableRows: (string | number)[][] = data.map(item => [
-        new Date(item.date).toLocaleDateString('fr-FR'),
-        item.team || 'N/A',
-        item.presentCount || 0,
-        Array.isArray(item.presentPlayers) ? item.presentPlayers.join(', ') : '',
-      ]);
-
       autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
+        head: [header],
+        body: [...rows, totalRow],
         startY: 30,
         theme: 'grid',
         headStyles: { fillColor: [220, 26, 38] },
         styles: {
           fontSize: 8,
-          cellPadding: 2,
+          cellPadding: 1,
         },
         columnStyles: {
-          3: { cellWidth: 'auto' },
+          0: { cellWidth: 25 },
+          1: { cellWidth: 25 },
         },
       });
 
@@ -64,71 +107,17 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({ data, type, allPla
   };
 
   const handleExportExcel = () => {
-    if (type === 'training') {
-      const allTrainings = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason)
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-      const trainingDates = allTrainings.map(t => t.date);
-
-      const playersWithPresence = allPlayers.filter(p =>
-        p.performances.some(perf => perf.type === 'training' && perf.season === selectedSeason)
-      );
-
-      const header = ["Nom Prénom", "Équipe", ...trainingDates.map(d => new Date(d).toLocaleDateString('fr-FR')), "Total Présences", "% Présence"];
-
-      const rows = playersWithPresence.map(player => {
-        const row: (string | number)[] = [
-          `${player.firstName} ${player.lastName}`,
-          player.teams.join(', '),
-        ];
-
-        let presentCount = 0;
-        trainingDates.forEach(date => {
-          const isPresent = player.performances.some(p => p.date === date && p.type === 'training' && p.present);
-          row.push(isPresent ? '✅' : '❌');
-          if (isPresent) {
-            presentCount++;
-          }
-        });
-
-        const totalTrainings = trainingDates.length;
-        const presencePercentage = totalTrainings > 0 ? (presentCount / totalTrainings) * 100 : 0;
-
-        row.push(presentCount);
-        row.push(`${presencePercentage.toFixed(2)} %`);
-
-        return row;
-      });
-
-      const totalRow: (string | number)[] = ["Total", ""];
-      trainingDates.forEach((date, index) => {
-        const totalPresent = rows.reduce((acc, row) => {
-          return acc + (row[index + 2] === '✅' ? 1 : 0);
-        }, 0);
-        totalRow.push(totalPresent);
-      });
-      totalRow.push(""); // for Total Présences column
-      totalRow.push(""); // for % Présence column
-
-
-      const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totalRow]);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Présences Entraînements");
-      XLSX.writeFile(wb, `presences_entrainements_Saison_${selectedSeason}.xlsx`);
-
-    } else {
-      const ws = XLSX.utils.json_to_sheet(
-        data.map(item => ({
-          "Date": new Date(item.date).toLocaleDateString('fr-FR'),
-          "Équipe": item.team,
-          "Nombre de présents": item.presentCount,
-          "Joueurs présents": item.presentPlayers.join(', '),
-        }))
-      );
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Présences");
-      XLSX.writeFile(wb, `presence_${type}.xlsx`);
+    if (!data || data.length === 0) {
+      alert("Aucune donnée à exporter.");
+      return;
     }
+
+    const { header, rows, totalRow } = generatePresenceData();
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totalRow]);
+    const wb = XLSX.utils.book_new();
+    const sheetName = type === 'training' ? 'Présences Entraînements' : 'Présences Matchs';
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    XLSX.writeFile(wb, `presences_${type}_Saison_${selectedSeason}.xlsx`);
   };
 
   return (
