@@ -4,10 +4,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#DC2626', // Rouge US Aignan
-        secondary: '#000000', // Noir US Aignan
-        'primary-hover': '#B91C1C', // Un rouge un peu plus foncé pour le hover
-        'secondary-hover': '#1F2937', // Un gris foncé pour le hover du noir
+        primary: 'var(--primary-color)',
+        secondary: 'var(--secondary-color)',
+        'primary-hover': 'var(--primary-color-hover)',
+        'secondary-hover': 'var(--secondary-color-hover)',
       },
     },
   },

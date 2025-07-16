@@ -6,28 +6,11 @@ export interface Player {
   licenseNumber: string;
   teams: ('Seniors 1' | 'Seniors 2')[];
   position: 'Gardien' | 'Défenseur' | 'Milieu' | 'Attaquant';
-  
-  // Statistics
-  totalMatches: number;
-  totalMinutes: number;
-  totalTrainings: number;
-  goals: number;
-  assists: number;
-  cleanSheets: number;
-  yellowCards: number;
-  redCards: number;
-  trainingAttendanceRate: number;
-  matchAttendanceRate: number;
-  
-  // Administrative
   licenseValid: boolean;
   paymentValid: boolean;
-  
-  // History
-  absences: Absence[];
-  injuries: Injury[];
   unavailabilities: Unavailability[];
   performances: Performance[];
+  club_id: string;
 }
 
 export interface Absence {
@@ -35,7 +18,9 @@ export interface Absence {
   date: string;
   type: 'training' | 'match';
   reason: string;
-  excused: boolean; // Si l'absence est justifiée par une indisponibilité
+  excused: boolean;
+  player_id: string;
+  club_id: string;
 }
 
 export interface Injury {
@@ -44,6 +29,8 @@ export interface Injury {
   endDate?: string;
   description: string;
   severity: 'Légère' | 'Modérée' | 'Grave';
+  player_id: string;
+  club_id: string;
 }
 
 export interface Unavailability {
@@ -53,6 +40,8 @@ export interface Unavailability {
   reason: string;
   type: 'injury' | 'personal' | 'other';
   description: string;
+  player_id: string;
+  club_id: string;
 }
 
 export interface Performance {
@@ -60,7 +49,7 @@ export interface Performance {
   date: string;
   type: 'training' | 'match';
   present: boolean;
-  season: string; // e.g., "2024-2025"
+  season: string;
   minutesPlayed?: number;
   goals?: number;
   assists?: number;
@@ -78,6 +67,8 @@ export interface Performance {
   goalsConcededDetails?: GoalConcededDetail[];
   excused?: boolean;
   matchType?: 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS';
+  player_id: string;
+  club_id: string;
 }
 
 export interface Scorer {

@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { Player } from '../types';
 import { BarChart3, Download, Filter, Trophy, Target, Users, Activity } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../utils/export';
-import { storage } from '../utils/storage';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 
 interface PlayerSeasonStats {
@@ -35,6 +34,23 @@ interface ExportPlayerData {
   'Assiduité Matchs (%)': string;
   'Assiduité Entraînements (%)': string;
 }
+
+const getTotalTeamEvents = (players: Player[], type: 'training' | 'match', team?: string, season?: string, matchTypeFilter?: string) => {
+  const events = new Set<string>();
+  players.forEach(player => {
+    if (!team || player.teams.includes(team as any)) {
+      player.performances.forEach(performance => {
+        if (performance.type === type && (!season || performance.season === season) && (type === 'training' || !matchTypeFilter || matchTypeFilter === 'all' || performance.matchType === matchTypeFilter)) {
+          events.add(`${performance.date}-${performance.opponent || ''}`);
+        }
+      });
+    }
+  });
+  return Array.from(events).map(eventString => {
+    const [date, opponent] = eventString.split('-');
+    return { date, opponent };
+  });
+};
 
 
 const getPlayerStatsForSeason = (
@@ -71,21 +87,21 @@ const getPlayerStatsForSeason = (
     }
   });
 
-  const allTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayersForContext, 'training', undefined, season).length;
+  const allTeamTrainingsForSeason = getTotalTeamEvents(allPlayersForContext, 'training', undefined, season).length;
   let allTeamMatchesForPlayerForSeason = 0;
   const uniqueMatchEventsForPlayerSeason = new Set<string>();
   player.teams.forEach(team => {
-    const teamMatchEvents = storage.getTotalTeamEvents(allPlayersForContext, 'match', team, season);
+    const teamMatchEvents = getTotalTeamEvents(allPlayersForContext, 'match', team, season);
     teamMatchEvents.forEach(event => uniqueMatchEventsForPlayerSeason.add(`${event.date}-${event.opponent || 'unknown'}`));
   });
   allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
 
   const trainingAttendanceRateSeason = allTeamTrainingsForSeason > 0
     ? (stats.presentTrainings / allTeamTrainingsForSeason) * 100
-    : player.trainingAttendanceRate;
+    : 0;
   const matchAttendanceRateSeason = allTeamMatchesForPlayerForSeason > 0
     ? (stats.presentMatches / allTeamMatchesForPlayerForSeason) * 100
-    : player.matchAttendanceRate;
+    : 0;
 
   return { ...stats, trainingAttendanceRateSeason, matchAttendanceRateSeason };
 };
@@ -141,11 +157,11 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     let uniqueTeamTrainingsForSeason = 0;
 
     if (filterTeam === 'all') {
-      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason, filterMatchType).length;
-      uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
+      uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason, filterMatchType).length;
+      uniqueTeamTrainingsForSeason = getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
     } else {
-      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', filterTeam, selectedSeason, filterMatchType).length;
-      uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', filterTeam, selectedSeason).length;
+      uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', filterTeam, selectedSeason, filterMatchType).length;
+      uniqueTeamTrainingsForSeason = getTotalTeamEvents(allPlayers, 'training', filterTeam, selectedSeason).length;
     }
 
     const totalMinutes = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.totalMinutes, 0);
@@ -237,7 +253,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
               <span>PDF</span>
             </button>
             <button
-              onClick={() => exportToExcel(filteredPlayersByTeam, 'statistiques_US_Aignan.xlsx')}
+              onClick={() => exportToExcel(exportData, 'statistiques_US_Aignan.xlsx')}
               className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors duration-200"
             >
               <Download size={20} />

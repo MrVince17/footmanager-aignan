@@ -5,7 +5,6 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 import { Player } from '../types';
-import { storage } from '../utils/storage';
 
 interface PresenceData {
   date: string;
@@ -21,9 +20,26 @@ interface PresenceTableProps {
   selectedSeason: string;
 }
 
+const getTotalTeamEvents = (players: Player[], type: 'training' | 'match', team?: string, season?: string) => {
+  const events = new Set<string>();
+  players.forEach(player => {
+    if (!team || player.teams.includes(team as any)) {
+      player.performances.forEach(performance => {
+        if (performance.type === type && (!season || performance.season === season)) {
+          events.add(`${performance.date}-${performance.opponent || ''}`);
+        }
+      });
+    }
+  });
+  return Array.from(events).map(eventString => {
+    const [date, opponent] = eventString.split('-');
+    return { date, opponent };
+  });
+};
+
 export const PresenceTable: React.FC<PresenceTableProps> = ({ data, type, allPlayers, selectedSeason }) => {
   const generatePresenceData = () => {
-    const events = storage.getTotalTeamEvents(allPlayers, type, undefined, selectedSeason)
+    const events = getTotalTeamEvents(allPlayers, type, undefined, selectedSeason)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     const eventDates = events.map(e => e.date);

@@ -20,14 +20,15 @@ import {
   Bus
 } from 'lucide-react';
 import { exportPlayerStats, exportToPDF } from '../utils/export';
-import { storage } from '../utils/storage';
 import { getMatchStats } from '../utils/playerUtils';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 
 interface PlayerDetailProps {
   player: Player;
   onBack: () => void;
   onEdit: (player: Player) => void;
-  onPlayerUpdate: () => void;
+  onPlayerUpdate: (type: 'unavailabilityDelete' | 'unavailabilityAdd', refData: any) => void;
 }
 
 export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEdit, onPlayerUpdate }) => {
@@ -39,6 +40,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
     type: 'injury' as 'injury' | 'personal' | 'other',
     description: ''
   });
+  const { club } = useAuth();
 
   const getAge = (dateOfBirth: string) => {
     const today = new Date();
@@ -67,8 +69,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
       return;
     }
 
-    const newUnavailability: Unavailability = {
-      id: Date.now().toString(),
+    const newUnavailability: Omit<Unavailability, 'id' | 'player_id' | 'club_id'> = {
       startDate: unavailabilityForm.startDate,
       endDate: unavailabilityForm.endDate || undefined,
       reason: unavailabilityForm.reason,
@@ -76,7 +77,8 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
       description: unavailabilityForm.description
     };
 
-    storage.addUnavailability(player.id, newUnavailability);
+    onPlayerUpdate('unavailabilityAdd', { playerId: player.id, unavailability: newUnavailability });
+
     setShowUnavailabilityForm(false);
     setUnavailabilityForm({
       startDate: '',
@@ -85,13 +87,11 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
       type: 'injury',
       description: ''
     });
-    onPlayerUpdate();
   };
 
   const handleDeleteUnavailability = (unavailabilityId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette indisponibilité ?')) {
-      storage.deleteUnavailability(player.id, unavailabilityId);
-      onPlayerUpdate();
+      onPlayerUpdate('unavailabilityDelete', { unavailabilityId });
     }
   };
 
@@ -248,12 +248,12 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">Présence matchs</span>
-                <span className="font-medium">{player.matchAttendanceRate.toFixed(1)}%</span>
+                <span className="font-medium">{0}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-red-600 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${player.matchAttendanceRate}%` }}
+                  style={{ width: `0%` }}
                 ></div>
               </div>
             </div>
@@ -261,12 +261,12 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">Présence entraînements</span>
-                <span className="font-medium">{player.trainingAttendanceRate.toFixed(1)}%</span>
+                <span className="font-medium">{0}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-black h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${player.trainingAttendanceRate}%` }}
+                  style={{ width: `0%` }}
                 ></div>
               </div>
             </div>
@@ -279,7 +279,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
         <div className="lg:col-span-1">
           <StatCard
             title="Matchs joués"
-            value={player.totalMatches}
+            value={0}
             icon={<Trophy size={24} />}
             color="#DC2626"
             stats={getMatchStats(player.performances)}
@@ -289,45 +289,45 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <StatCard
               title="Entraînements"
-              value={player.totalTrainings}
+              value={0}
               icon={<Activity size={24} />}
               color="#000000"
             />
             <StatCard
               title="Minutes jouées"
-              value={player.totalMinutes}
+              value={0}
               icon={<Clock size={24} />}
               color="#DC2626"
             />
             <StatCard
               title="Buts marqués"
-              value={player.goals}
+              value={0}
               icon={<Target size={24} />}
               color="#000000"
             />
             <StatCard
               title="Passes décisives"
-              value={player.assists}
+              value={0}
               icon={<Users size={24} />}
               color="#DC2626"
             />
             {player.position === 'Gardien' && (
               <StatCard
                 title="Clean Sheets"
-                value={player.cleanSheets}
+                value={0}
                 icon={<CheckCircle size={24} />}
                 color="#000000"
               />
             )}
             <StatCard
               title="Cartons jaunes"
-              value={player.yellowCards}
+              value={0}
               icon={<AlertCircle size={24} />}
               color="#F59E0B"
             />
             <StatCard
               title="Cartons rouges"
-              value={player.redCards}
+              value={0}
               icon={<AlertCircle size={24} />}
               color="#EF4444"
             />

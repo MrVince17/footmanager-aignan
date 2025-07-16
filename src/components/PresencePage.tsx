@@ -1,27 +1,50 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Player } from '../types';
-import { storage } from '../utils/storage';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 import { PresenceTable } from './PresenceTable';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabaseClient';
 
 export const PresencePage: React.FC = () => {
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'trainings' | 'matches'>('trainings');
+  const { club } = useAuth();
 
-  useState(() => {
-    const players = storage.getPlayers();
-    setAllPlayers(players);
-    const seasons = getAvailableSeasons(players);
-    if (seasons.length > 0) {
-      setSelectedSeason(seasons[0]);
+  useEffect(() => {
+    if (club) {
+      const fetchPlayers = async () => {
+        const { data, error } = await supabase
+          .from('players')
+          .select('*, performances(*), unavailabilities(*)')
+          .eq('club_id', club.id);
+
+        if (error) {
+          console.error('Error fetching players:', error);
+        } else {
+          setAllPlayers(data as Player[]);
+          const seasons = getAvailableSeasons(data as Player[]);
+          if (seasons.length > 0) {
+            setSelectedSeason(seasons[0]);
+          }
+        }
+      };
+      fetchPlayers();
     }
-  });
+  }, [club]);
 
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
   const trainings = useMemo(() => {
-    const allTrainings = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason);
+    const allTrainings = allPlayers
+      .flatMap(p => p.performances)
+      .filter(p => p.type === 'training' && p.season === selectedSeason)
+      .reduce((acc, curr) => {
+        if (!acc.find(item => item.date === curr.date)) {
+          acc.push(curr);
+        }
+        return acc;
+      }, [] as any[]);
 
     return allTrainings.map(training => {
       const presentPlayers = allPlayers.filter(player =>
@@ -45,7 +68,15 @@ export const PresencePage: React.FC = () => {
   }, [allPlayers, selectedSeason]);
 
   const matches = useMemo(() => {
-    const allMatches = storage.getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason);
+    const allMatches = allPlayers
+      .flatMap(p => p.performances)
+      .filter(p => p.type === 'match' && p.season === selectedSeason)
+      .reduce((acc, curr) => {
+        if (!acc.find(item => item.date === curr.date && item.opponent === curr.opponent)) {
+          acc.push(curr);
+        }
+        return acc;
+      }, [] as any[]);
 
     return allMatches.map(match => {
       const presentPlayers = allPlayers.filter(player =>

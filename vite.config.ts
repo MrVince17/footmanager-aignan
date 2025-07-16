@@ -8,7 +8,9 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
+      stream: 'rollup-plugin-node-polyfills/polyfills/stream',
       events: 'rollup-plugin-node-polyfills/polyfills/events',
+      util: 'rollup-plugin-node-polyfills/polyfills/util',
     },
   },
   optimizeDeps: {

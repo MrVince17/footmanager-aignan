@@ -4,7 +4,7 @@ import { Save, X, User, Calendar, Hash, Users, MapPin } from 'lucide-react';
 
 interface PlayerFormProps {
   player?: Player;
-  onSave: (player: Player) => void;
+  onSave: (player: Omit<Player, 'id' | 'club_id' | 'performances' | 'unavailabilities'>) => void;
   onCancel: () => void;
 }
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Player } from './types';
-import { storage } from './utils/storage';
 import { Dashboard } from './components/Dashboard';
 import { PlayerList } from './components/PlayerList';
 import { PlayerForm } from './components/PlayerForm';
@@ -9,8 +8,15 @@ import { PerformanceEntry } from './components/PerformanceEntry';
 import { Statistics } from './components/Statistics';
 import { MatchResultsPage } from './components/MatchResultsPage';
 import { PresencePage } from './components/PresencePage';
-import { Routes, Route, Link as RouterLink, Navigate, Outlet, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { SignUp } from './components/SignUp';
+import { Login } from './components/Login';
+import { ResetPassword } from './components/ResetPassword';
+import { UpdatePassword } from './components/UpdatePassword';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { Routes, Route, Link as RouterLink, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Unavailability, Performance } from './types';
+import { useAuth } from './contexts/AuthContext';
+import { supabase } from './lib/supabaseClient';
 
 import { 
   Home, 
@@ -39,6 +45,18 @@ const AppLayout: React.FC<{
   children: React.ReactNode;
 }> = ({ menuItems, sidebarOpen, setSidebarOpen, children }) => {
   const location = useLocation(); // Hook pour obtenir la localisation actuelle
+  const { club } = useAuth();
+
+  useEffect(() => {
+    if (club) {
+      document.documentElement.style.setProperty('--primary-color', club.primary_color);
+      document.documentElement.style.setProperty('--primary-color-hover', `${club.primary_color}E6`); // Add alpha for hover
+      if (club.secondary_color) {
+        document.documentElement.style.setProperty('--secondary-color', club.secondary_color);
+        document.documentElement.style.setProperty('--secondary-color-hover', `${club.secondary_color}E6`); // Add alpha for hover
+      }
+    }
+  }, [club]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -48,16 +66,22 @@ const AppLayout: React.FC<{
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      <div
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        style={{
+          '--primary-color': club?.primary_color,
+          '--secondary-color': club?.secondary_color,
+        } as React.CSSProperties}
+      >
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-black rounded-lg flex items-center justify-center">
               <Users className="text-white" size={24} />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">US AIGNAN</h1>
+              <h1 className="text-xl font-bold text-gray-900">{club?.name || 'Club App'}</h1>
               <p className="text-sm text-gray-500">Gestion d'équipe</p>
             </div>
           </div>
@@ -95,6 +119,7 @@ const AppLayout: React.FC<{
             to="/players/add"
             onClick={() => setSidebarOpen(false)}
             className="w-full flex items-center justify-center space-x-2 bg-primary text-white py-3 rounded-lg hover:bg-primary-hover transition-colors duration-200"
+            style={{ backgroundColor: 'var(--primary-color)' }}
           >
             <Plus size={20} />
             <span>Nouveau joueur</span>
@@ -114,7 +139,7 @@ const AppLayout: React.FC<{
               <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-black rounded-lg flex items-center justify-center">
                 <Users className="text-white" size={20} />
               </div>
-              <span className="font-bold text-gray-900">US AIGNAN</span>
+              <span className="font-bold text-gray-900">{club?.name || 'Club App'}</span>
             </div>
             <div className="w-10" />
           </div>
@@ -134,46 +159,72 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState<string>('');
   const navigate = useNavigate();
+  const { club } = useAuth();
 
   useEffect(() => {
-    storage.initializeSampleData();
-    const allPlayers = storage.getPlayers();
-    setPlayers(allPlayers);
-    const seasons = getAvailableSeasons(allPlayers);
-    if (seasons.length > 0) {
-      setSelectedSeason(seasons[0]);
+    if (club) {
+      const fetchPlayers = async () => {
+        const { data, error } = await supabase
+          .from('players')
+          .select('*, performances(*), unavailabilities(*)')
+          .eq('club_id', club.id);
+
+        if (error) {
+          console.error('Error fetching players:', error);
+        } else {
+          setPlayers(data as Player[]);
+          const seasons = getAvailableSeasons(data as Player[]);
+          if (seasons.length > 0) {
+            setSelectedSeason(seasons[0]);
+          }
+        }
+      };
+      fetchPlayers();
     }
-  }, []);
+  }, [club]);
 
-  const refreshPlayers = () => {
-    setPlayers(storage.getPlayers());
-  };
+  const refreshPlayers = async () => {
+    if (club) {
+      const { data, error } = await supabase
+        .from('players')
+        .select('*, performances(*), unavailabilities(*)')
+        .eq('club_id', club.id);
 
-  const handleSavePlayer = (player: Player) => {
-    const existingPlayer = players.find(p => p.id === player.id);
-    if (existingPlayer) {
-      storage.updatePlayer(player);
-    } else {
-      storage.addPlayer(player);
+      if (error) {
+        console.error('Error fetching players:', error);
+      } else {
+        setPlayers(data as Player[]);
+      }
     }
-    refreshPlayers();
-    navigate('/players');
   };
 
-  const handleImportPlayers = (importedPlayers: Player[]) => {
-    // Basic validation and merging logic
-    const newPlayers = importedPlayers.map(p => ({
-      ...p,
-      id: p.id || `imported-${Date.now()}-${Math.random()}`,
-      // Add other default fields if necessary
-    }));
-    storage.addMultiplePlayers(newPlayers);
-    refreshPlayers();
+  const handleSavePlayer = async (player: Omit<Player, 'id' | 'club_id' | 'performances' | 'unavailabilities'>, id?: string) => {
+    if (club) {
+      const playerWithClub = { ...player, club_id: club.id };
+      if (id) {
+        await supabase.from('players').update(playerWithClub).eq('id', id);
+      } else {
+        await supabase.from('players').insert(playerWithClub);
+      }
+      refreshPlayers();
+      navigate('/players');
+    }
   };
 
-  const handleDeletePlayer = (playerId: string) => {
+  const handleImportPlayers = async (importedPlayers: Player[]) => {
+    if (club) {
+      const newPlayers = importedPlayers.map(p => ({
+        ...p,
+        club_id: club.id,
+      }));
+      await supabase.from('players').insert(newPlayers);
+      refreshPlayers();
+    }
+  };
+
+  const handleDeletePlayer = async (playerId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce joueur ?')) {
-      storage.deletePlayer(playerId);
+      await supabase.from('players').delete().eq('id', playerId);
       refreshPlayers();
       if(window.location.pathname.includes(`/players/${playerId}`)) {
         navigate('/players');
@@ -181,60 +232,41 @@ function App() {
     }
   };
 
-  const handleSavePerformance = (playerId: string, performanceData: Omit<Performance, 'id' | 'season' | 'excused'>) => {
-    const performanceWithSeason: Omit<Performance, 'id' | 'excused'> = {
-      ...performanceData,
-      season: selectedSeason,
-    };
-    storage.addPerformance(playerId, performanceWithSeason);
-    refreshPlayers();
+  const handleSavePerformance = async (playerId: string, performanceData: Omit<Performance, 'id' | 'season' | 'excused'>) => {
+    if(club) {
+      const performanceWithSeason = {
+        ...performanceData,
+        season: selectedSeason,
+        player_id: playerId,
+        club_id: club.id,
+      };
+      await supabase.from('performances').insert(performanceWithSeason);
+      refreshPlayers();
+    }
   };
 
-  const handleUpdatePlayerStorage = (
+  const handleUpdatePlayerStorage = async (
     type: 'unavailabilityDelete' | 'unavailabilityAdd' | 'matchUpdate' | 'matchDelete',
     refData: any,
     value?: any
   ) => {
-    const currentPlayers = storage.getPlayers();
-    let updatedPlayersArray = [...currentPlayers];
-
-    if (type === 'unavailabilityAdd') {
+    if (club) {
+      if (type === 'unavailabilityAdd') {
         const { playerId, unavailability } = refData as { playerId: string, unavailability: Unavailability };
-        updatedPlayersArray = updatedPlayersArray.map(p =>
-            p.id === playerId ? { ...p, unavailabilities: [...p.unavailabilities, unavailability] } : p
-        );
-    } else if (type === 'unavailabilityDelete') {
-        const { playerId, unavailabilityId } = refData as { playerId: string, unavailabilityId: string };
-        updatedPlayersArray = updatedPlayersArray.map(p =>
-            p.id === playerId ? { ...p, unavailabilities: p.unavailabilities.filter(u => u.id !== unavailabilityId) } : p
-        );
-    } else if (type === 'matchUpdate') {
+        await supabase.from('unavailabilities').insert({ ...unavailability, player_id: playerId, club_id: club.id });
+      } else if (type === 'unavailabilityDelete') {
+        const { unavailabilityId } = refData as { unavailabilityId: string };
+        await supabase.from('unavailabilities').delete().eq('id', unavailabilityId);
+      } else if (type === 'matchUpdate') {
         const originalPerfRef = refData as Performance;
         const updatedPerfData = value as Partial<Performance>;
-        updatedPlayersArray = updatedPlayersArray.map(p => ({
-            ...p,
-            performances: p.performances.map(perf => {
-                const isSameMatch = perf.type === 'match' &&
-                    perf.date === originalPerfRef.date &&
-                    perf.opponent === originalPerfRef.opponent &&
-                    perf.location === originalPerfRef.location &&
-                    (perf.scoreHome === originalPerfRef.scoreHome || (Number.isNaN(perf.scoreHome) && Number.isNaN(originalPerfRef.scoreHome))) &&
-                    (perf.scoreAway === originalPerfRef.scoreAway || (Number.isNaN(perf.scoreAway) && Number.isNaN(originalPerfRef.scoreAway)));
-
-                if (isSameMatch) {
-                    return { ...perf, ...updatedPerfData };
-                }
-                return perf;
-            })
-        }));
-    } else if (type === 'matchDelete') {
+        await supabase.from('performances').update(updatedPerfData).eq('id', originalPerfRef.id);
+      } else if (type === 'matchDelete') {
         const originalPerfRef = refData as Performance;
-        storage.deleteMatch(originalPerfRef);
-        updatedPlayersArray = storage.getPlayers();
+        await supabase.from('performances').delete().eq('id', originalPerfRef.id);
+      }
+      refreshPlayers();
     }
-
-    setPlayers(updatedPlayersArray);
-    storage.savePlayers(updatedPlayersArray);
   };
 
   const menuItems: MenuItem[] = [
@@ -247,33 +279,50 @@ function App() {
   ];
 
   return (
-      <AppLayout
-        menuItems={menuItems}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-      >
-        <Routes>
-          <Route path="/" element={<Dashboard players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
-          <Route path="/players" element={<PlayerList players={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} />} />
-          <Route path="/players/add" element={<PlayerFormWrapper onSave={handleSavePlayer} players={players} />} />
-          <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
-          <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />
-          <Route path="/performance" element={<PerformanceEntry players={players} onSavePerformance={handleSavePerformance} />} />
-          <Route path="/presence" element={<PresencePage />} />
-          <Route path="/statistics" element={<Statistics players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
-          <Route path="/results" element={<MatchResultsPage allPlayers={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} onUpdatePlayerStorage={handleUpdatePlayerStorage} />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </AppLayout>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/update-password" element={<UpdatePassword />} />
+        <Route element={<ProtectedRoute />}>
+          <Route
+            path="/*"
+            element={
+              <AppLayout
+                menuItems={menuItems}
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+              >
+                <Routes>
+                  <Route path="/" element={<Dashboard players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
+                  <Route path="/players" element={<PlayerList players={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} />} />
+                  <Route path="/players/add" element={<PlayerFormWrapper onSave={handleSavePlayer} players={players} />} />
+                  <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
+                  <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />
+                  <Route path="/performance" element={<PerformanceEntry players={players} onSavePerformance={handleSavePerformance} />} />
+                  <Route path="/presence" element={<PresencePage />} />
+                  <Route path="/statistics" element={<Statistics players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
+                  <Route path="/results" element={<MatchResultsPage allPlayers={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} onUpdatePlayerStorage={handleUpdatePlayerStorage} />} />
+                  <Route path="*" element={<Navigate to="/" />} />
+                </Routes>
+              </AppLayout>
+            }
+          />
+        </Route>
+      </Routes>
   );
 }
 
-const PlayerFormWrapper: React.FC<{players?: Player[], onSave: (player: Player) => void}> = ({players, onSave}) => {
+const PlayerFormWrapper: React.FC<{players?: Player[], onSave: (player: Omit<Player, 'id' | 'club_id' | 'performances' | 'unavailabilities'>, id?: string) => void}> = ({players, onSave}) => {
   const navigate = useNavigate();
   const { playerId } = useParams<{ playerId: string }>();
   const playerToEdit = playerId && players ? players.find(p => p.id === playerId) : undefined;
 
-  return <PlayerForm player={playerToEdit} onSave={onSave} onCancel={() => navigate('/players')} />;
+  const handleSave = (player: Omit<Player, 'id' | 'club_id' | 'performances' | 'unavailabilities'>) => {
+    onSave(player, playerId);
+  };
+
+  return <PlayerForm player={playerToEdit} onSave={handleSave} onCancel={() => navigate('/players')} />;
 };
 
 const PlayerDetailWrapper: React.FC<{players: Player[], onPlayerUpdate: Function, onDeletePlayer: (id: string) => void, onEditPlayerRedirect: (id: string) => void}> = ({players, onPlayerUpdate, onDeletePlayer, onEditPlayerRedirect }) => {

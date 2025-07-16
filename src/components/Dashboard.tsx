@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'; // Assurez-vous que Link est importé s
 import { Player, TeamStats, Performance } from '../types';
 import { Users, Trophy, Target, Calendar, AlertCircle, CheckCircle, Activity, Download, Filter, ClipboardList } from 'lucide-react';
 import { exportToPDF } from '../utils/export';
-import { storage } from '../utils/storage'; // For getTotalTeamEvents
 
 interface PlayerSeasonStats {
   totalMatches: number;
@@ -64,6 +63,23 @@ const getPlayerStatsForSeason = (player: Player, season: string): PlayerSeasonSt
   return stats;
 };
 
+const getTotalTeamEvents = (players: Player[], type: 'training' | 'match', team?: string, season?: string) => {
+  const events = new Set<string>();
+  players.forEach(player => {
+    if (!team || player.teams.includes(team as any)) {
+      player.performances.forEach(performance => {
+        if (performance.type === type && (!season || performance.season === season)) {
+          events.add(`${performance.date}-${performance.opponent || ''}`);
+        }
+      });
+    }
+  });
+  return Array.from(events).map(eventString => {
+    const [date, opponent] = eventString.split('-');
+    return { date, opponent };
+  });
+};
+
 
 export const Dashboard: React.FC<DashboardProps> = ({ players, selectedSeason, onSeasonChange, allPlayers }) => {
   console.log("Dashboard props - players:", players);
@@ -77,12 +93,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ players, selectedSeason, o
     return players.map(p => {
       const seasonStats = getPlayerStatsForSeason(p, selectedSeason);
       // Calculate season-specific attendance rates
-      const allTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
+      const allTeamTrainingsForSeason = getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
 
       let allTeamMatchesForPlayerForSeason = 0;
       const uniqueMatchEventsForPlayerSeason = new Set<string>();
       p.teams.forEach(team => {
-        const teamMatchEvents = storage.getTotalTeamEvents(allPlayers, 'match', team, selectedSeason);
+        const teamMatchEvents = getTotalTeamEvents(allPlayers, 'match', team, selectedSeason);
         teamMatchEvents.forEach(event => uniqueMatchEventsForPlayerSeason.add(`${event.date}-${event.opponent || 'unknown'}`));
       });
       allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
@@ -90,10 +106,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ players, selectedSeason, o
       // Calculate season-specific attendance rates
       const trainingAttendanceRate = allTeamTrainingsForSeason > 0
         ? (seasonStats.presentTrainings / allTeamTrainingsForSeason) * 100
-        : p.trainingAttendanceRate; // Fallback or 0
+        : 0;
       const matchAttendanceRate = allTeamMatchesForPlayerForSeason > 0
         ? (seasonStats.presentMatches / allTeamMatchesForPlayerForSeason) * 100
-        : p.matchAttendanceRate; // Fallback or 0
+        : 0;
 
       return {
         ...p,
@@ -118,8 +134,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ players, selectedSeason, o
     
     const totalGoals = playersWithSeasonStats.reduce((sum, player) => sum + player.seasonStats.goals, 0);
     // For totalMatches and totalTrainings, we should count unique team events for the season.
-    const uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
-    const uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
+    const uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
+    const uniqueTeamTrainingsForSeason = getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
 
     const averageMatchAttendance = totalPlayers > 0
       ? playersWithSeasonStats.reduce((sum, player) => sum + player.matchAttendanceRateSeason, 0) / totalPlayers
@@ -355,7 +371,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ players, selectedSeason, o
                   </div>
                   <span className="font-medium">{player.firstName} {player.lastName}</span>
                 </div>
-                <span className="font-bold text-lg">{player.goals}</span>
+                <span className="font-bold text-lg">{player.seasonStats.goals}</span>
               </div>
             ))}
           </div>
@@ -374,7 +390,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ players, selectedSeason, o
                   </div>
                   <span className="font-medium">{player.firstName} {player.lastName}</span>
                 </div>
-                <span className="font-bold text-lg">{player.matchAttendanceRate.toFixed(0)}%</span>
+                <span className="font-bold text-lg">{player.matchAttendanceRateSeason.toFixed(0)}%</span>
               </div>
             ))}
           </div>
@@ -393,7 +409,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ players, selectedSeason, o
                   </div>
                   <span className="font-medium">{player.firstName} {player.lastName}</span>
                 </div>
-                <span className="font-bold text-lg">{player.trainingAttendanceRate.toFixed(0)}%</span>
+                <span className="font-bold text-lg">{player.trainingAttendanceRateSeason.toFixed(0)}%</span>
               </div>
             ))}
           </div>
