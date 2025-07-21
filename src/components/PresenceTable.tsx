@@ -4,7 +4,6 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { Player } from "../types";
-import { DejaVuSans } from "../assets/fonts/DejaVuSans-normal";
 import { storage } from "../utils/storage";
 
 interface PresenceData {
@@ -86,7 +85,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     });
 
     const totalRow: (string | number)[] = ["Total", ""];
-    eventDates.forEach((_, index) => {
+    eventDates.forEach((date, index) => {
       const totalPresent = rows.reduce((acc, row) => {
         return acc + (row[index + 2] === "\u2713" ? 1 : 0);
       }, 0);
@@ -122,10 +121,6 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
         columnStyles[i] = { cellWidth: 12 }; // Largeur pour correspondre aux dates
       }
 
-      doc.addFileToVFS("DejaVuSans.ttf", DejaVuSans);
-      doc.addFont("DejaVuSans.ttf", "DejaVuSans", "normal");
-      doc.setFont("DejaVuSans");
-
       autoTable(doc, {
         head: [header],
         body: [...rows, totalRow],
@@ -133,7 +128,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
         theme: "grid",
         headStyles: { fillColor: [220, 26, 38] },
         styles: {
-          font: "DejaVuSans",
+          font: "helvetica",
           fontSize: 8,
           cellPadding: 1,
         },
