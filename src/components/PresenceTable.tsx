@@ -42,7 +42,12 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({ data, type, allPla
 
       let presentCount = 0;
       eventDates.forEach(date => {
-        const isPresent = player.performances.some(p => p.date === date && p.type === type && p.present);
+        const isPresent = player.performances.some(p => 
+          p.date === date && 
+          p.type === type && 
+          p.present &&
+          (p.type === 'training' || (p.type === 'match' && (p.minutesPlayed ?? 0) > 0))
+        );
         row.push(isPresent ? '✅' : '❌');
         if (isPresent) {
           presentCount++;
