@@ -3,9 +3,6 @@ import { Download } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
-import checkIcon from "../assets/images/check.png"; // Chemin vers l'icône ✅
-import crossIcon from "../assets/images/cross.png"; // Chemin vers l'icône ❌
-
 import { Player } from "../types";
 import { storage } from "../utils/storage";
 
@@ -45,7 +42,12 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     const header = [
       "Nom Prénom",
       "Équipe",
-      ...eventDates.map((d) => new Date(d).toLocaleDateString("fr-FR")),
+      ...eventDates.map((d) => {
+        const date = new Date(d);
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        return `${day}/${month}`;
+      }),
       "Total Présences",
       "% Présence",
     ];
@@ -130,42 +132,6 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
           cellPadding: 1,
         },
         columnStyles,
-        didDrawCell: (data) => {
-          if (
-            data.section === "body" &&
-            data.column.index >= 2 &&
-            data.column.index < header.length - 2
-          ) {
-            const cellValue = data.cell.raw;
-            const iconSize = 4; // Taille de l'image en mm (réduite pour s'adapter aux cellules)
-            const cellHeight = data.cell.height;
-            const cellWidth = data.cell.width;
-            const xOffset = data.cell.x + (cellWidth - iconSize) / 2; // Centrer horizontalement
-            const yOffset = data.cell.y + (cellHeight - iconSize) / 2; // Centrer verticalement
-
-            if (cellValue === "\u2713") {
-              doc.addImage(
-                checkIcon,
-                "PNG",
-                xOffset,
-                yOffset,
-                iconSize,
-                iconSize
-              );
-              data.cell.text = []; // Vider complètement le texte
-            } else if (cellValue === "\u2717") {
-              doc.addImage(
-                crossIcon,
-                "PNG",
-                xOffset,
-                yOffset,
-                iconSize,
-                iconSize
-              );
-              data.cell.text = []; // Vider complètement le texte
-            }
-          }
-        },
       });
 
       doc.save(`presence_${type}_${selectedSeason}.pdf`);
