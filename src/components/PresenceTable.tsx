@@ -64,7 +64,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
             (p.type === "training" ||
               (p.type === "match" && (p.minutesPlayed ?? 0) > 0))
         );
-        row.push(isPresent ? "✅" : "❌");
+        row.push(isPresent ? "\u2713" : "\u2717");
         if (isPresent) {
           presentCount++;
         }
@@ -83,7 +83,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     const totalRow: (string | number)[] = ["Total", ""];
     eventDates.forEach((date, index) => {
       const totalPresent = rows.reduce((acc, row) => {
-        return acc + (row[index + 2] === "✅" ? 1 : 0);
+        return acc + (row[index + 2] === "\u2713" ? 1 : 0);
       }, 0);
       totalRow.push(totalPresent);
     });
@@ -102,15 +102,6 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     try {
       const { header, rows, totalRow } = generatePresenceData();
       const doc = new jsPDF({ orientation: "landscape" });
-
-      // Add a font that supports emojis
-      doc.addFont(
-        "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-regular-webfont.ttf",
-        "Roboto",
-        "normal"
-      );
-      doc.setFont("Roboto");
-
       const title =
         type === "training" ? "Présence Entraînements" : "Présence Matchs";
       doc.text(title, 14, 22);
@@ -120,11 +111,10 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
         body: [...rows, totalRow],
         startY: 30,
         theme: "grid",
-        headStyles: { fillColor: [220, 26, 38], font: "Roboto" },
+        headStyles: { fillColor: [220, 26, 38] },
         styles: {
           fontSize: 8,
           cellPadding: 1,
-          font: "Roboto",
         },
         columnStyles: {
           0: { cellWidth: 25 },
