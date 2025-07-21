@@ -4,7 +4,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { Player } from "../types";
-import { DejaVuSans } from "../../assets/fonts/DejaVuSans-normal";
+import { DejaVuSans } from "../assets/fonts/DejaVuSans-normal";
 import { storage } from "../utils/storage";
 
 interface PresenceData {
@@ -86,7 +86,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     });
 
     const totalRow: (string | number)[] = ["Total", ""];
-    eventDates.forEach((date, index) => {
+    eventDates.forEach((_, index) => {
       const totalPresent = rows.reduce((acc, row) => {
         return acc + (row[index + 2] === "\u2713" ? 1 : 0);
       }, 0);
