@@ -3,6 +3,8 @@ import { Download } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import checkIcon from "../assets/images/check.png"; // Chemin vers l'icône ✅
+import crossIcon from "../assets/images/cross.png"; // Chemin vers l'icône ❌
 
 import { Player } from "../types";
 import { storage } from "../utils/storage";
@@ -102,9 +104,20 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     try {
       const { header, rows, totalRow } = generatePresenceData();
       const doc = new jsPDF({ orientation: "landscape" });
+
       const title =
         type === "training" ? "Présence Entraînements" : "Présence Matchs";
       doc.text(title, 14, 22);
+
+      // Définir les styles des colonnes pour ajuster la taille
+      const columnStyles: { [key: number]: { cellWidth: number } } = {
+        0: { cellWidth: 25 }, // Nom Prénom
+        1: { cellWidth: 25 }, // Équipe
+      };
+      // Appliquer une largeur fixe pour les colonnes des dates/icônes
+      for (let i = 2; i < header.length - 2; i++) {
+        columnStyles[i] = { cellWidth: 12 }; // Largeur pour correspondre aux dates
+      }
 
       autoTable(doc, {
         head: [header],
@@ -116,9 +129,42 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
           fontSize: 8,
           cellPadding: 1,
         },
-        columnStyles: {
-          0: { cellWidth: 25 },
-          1: { cellWidth: 25 },
+        columnStyles,
+        didDrawCell: (data) => {
+          if (
+            data.section === "body" &&
+            data.column.index >= 2 &&
+            data.column.index < header.length - 2
+          ) {
+            const cellValue = data.cell.raw;
+            const iconSize = 4; // Taille de l'image en mm (réduite pour s'adapter aux cellules)
+            const cellHeight = data.cell.height;
+            const cellWidth = data.cell.width;
+            const xOffset = data.cell.x + (cellWidth - iconSize) / 2; // Centrer horizontalement
+            const yOffset = data.cell.y + (cellHeight - iconSize) / 2; // Centrer verticalement
+
+            if (cellValue === "\u2713") {
+              doc.addImage(
+                checkIcon,
+                "PNG",
+                xOffset,
+                yOffset,
+                iconSize,
+                iconSize
+              );
+              data.cell.text = []; // Vider complètement le texte
+            } else if (cellValue === "\u2717") {
+              doc.addImage(
+                crossIcon,
+                "PNG",
+                xOffset,
+                yOffset,
+                iconSize,
+                iconSize
+              );
+              data.cell.text = []; // Vider complètement le texte
+            }
+          }
         },
       });
 
