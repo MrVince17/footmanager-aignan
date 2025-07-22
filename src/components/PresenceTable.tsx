@@ -68,7 +68,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
             (p.type === "training" ||
               (p.type === "match" && (p.minutesPlayed ?? 0) > 0))
         );
-        row.push(isPresent ? "✅" : "❌");
+        row.push(isPresent ? "\u2714" : "\u274C");
         if (isPresent) {
           presentCount++;
         }
@@ -87,7 +87,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     const totalRow: (string | number)[] = ["Total", ""];
     eventDates.forEach((date, index) => {
       const totalPresent = rows.reduce((acc, row) => {
-        return acc + (row[index + 2] === "✅" ? 1 : 0);
+        return acc + (row[index + 2] === "\u2714" ? 1 : 0);
       }, 0);
       totalRow.push(totalPresent);
     });
@@ -110,10 +110,10 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
         type === "training" ? "Présence Entraînements" : "Présence Matchs";
 
       // Load custom font
-      const fontUrl = "/fonts/NotoSansSymbols-VariableFont_wght.ttf";
+      const fontUrl = "/fonts/DejaVuSans.ttf";
       const fontResponse = await fetch(fontUrl);
       const font = await fontResponse.arrayBuffer();
-      const fontName = "NotoSansSymbols";
+      const fontName = "DejaVuSans";
       doc.addFileToVFS(`${fontName}.ttf`, new Uint8Array(font).reduce((data, byte) => data + String.fromCharCode(byte), ''));
       doc.addFont(`${fontName}.ttf`, fontName, "normal");
 
@@ -128,7 +128,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
         styles: {
           fontSize: 8,
           cellPadding: 1,
-          font: fontName,
+          font: "DejaVuSans",
         },
         columnStyles: {
           0: { cellWidth: 25 },
