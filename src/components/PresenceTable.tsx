@@ -131,22 +131,12 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
           font: "DejaVuSans",
         },
         columnStyles: {
-          0: { cellWidth: 'auto' },
+          0: { cellWidth: Math.max(...rows.map(row => doc.getTextWidth(row[0].toString()))) + 10 },
           1: { cellWidth: 'auto' },
           // Center align for date columns
           ...Array.from({ length: header.length - 4 }, (_, i) => i + 2).reduce((acc, i) => ({ ...acc, [i]: { halign: 'center' } }), {}),
           [header.length - 1]: { halign: 'center' },
         },
-        didParseCell: (data) => {
-          if (data.section === 'head') {
-            if (data.column.index >= 2 && data.column.index < header.length - 2) {
-              data.cell.styles.halign = 'center';
-            }
-            if (data.column.index === header.length - 1) {
-              data.cell.styles.halign = 'center';
-            }
-          }
-        }
       });
 
       doc.save(`presence_${type}_${selectedSeason}.pdf`);
