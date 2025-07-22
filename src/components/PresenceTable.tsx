@@ -131,8 +131,11 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
           font: "DejaVuSans",
         },
         columnStyles: {
-          0: { cellWidth: 25 },
-          1: { cellWidth: 25 },
+          0: { cellWidth: 'auto' },
+          1: { cellWidth: 'auto' },
+          // Center align for date columns
+          ...Array.from({ length: header.length - 4 }, (_, i) => i + 2).reduce((acc, i) => ({ ...acc, [i]: { halign: 'center' } }), {}),
+          [header.length - 1]: { halign: 'center' },
         },
       });
 
@@ -153,10 +156,41 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
 
     const { header, rows, totalRow } = generatePresenceData();
     const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totalRow]);
+
     const wb = XLSX.utils.book_new();
     const sheetName =
       type === "training" ? "Présences Entraînements" : "Présences Matchs";
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+    // Auto-fit columns
+    const cols = Object.keys(ws).filter(key => key.endsWith('1')).map(key => key.replace('1', ''));
+    const colWidths = cols.map(col => {
+      const addresses = Object.keys(ws).filter(key => key.startsWith(col) && key !== `${col}1`);
+      const maxWidth = Math.max(
+        ...addresses.map(addr => ws[addr].v?.toString().length || 0),
+        ws[`${col}1`].v?.toString().length || 0
+      );
+      return { wch: maxWidth + 2 };
+    });
+    ws['!cols'] = colWidths;
+
+    // Center align columns
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_address = { c: C, r: R };
+        const cell_ref = XLSX.utils.encode_cell(cell_address);
+        if (ws[cell_ref]) {
+          if (C >= 2 && C < header.length - 2) {
+            ws[cell_ref].s = { alignment: { horizontal: 'center' } };
+          }
+          if (C === header.length - 1) {
+            ws[cell_ref].s = { alignment: { horizontal: 'center' } };
+          }
+        }
+      }
+    }
+
     XLSX.writeFile(wb, `presences_${type}_Saison_${selectedSeason}.xlsx`);
   };
 
