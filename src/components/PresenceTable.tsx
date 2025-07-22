@@ -124,7 +124,10 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
         body: [...rows, totalRow],
         startY: 30,
         theme: "grid",
-        headStyles: { fillColor: [220, 26, 38] },
+        headStyles: {
+          fillColor: [220, 26, 38],
+          halign: 'center'
+        },
         styles: {
           fontSize: 8,
           cellPadding: 1,
