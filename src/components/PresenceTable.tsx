@@ -107,9 +107,9 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
       const { header, rows, totalRow } = generatePresenceData();
       const doc = new jsPDF({ orientation: "landscape" });
 
-      // Ajouter la police NotoSansSymbols
-      doc.addFont('/fonts/NotoSansSymbols-Regular.ttf', 'NotoSansSymbols', 'normal');
-      doc.setFont('NotoSansSymbols');
+      // Définir la police sur Arial, qui a une bonne prise en charge d'Unicode
+      doc.setFont('Arial');
+      console.log('Font set to Arial');
 
       const title =
         type === "training" ? "Présence Entraînements" : "Présence Matchs";
