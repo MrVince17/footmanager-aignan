@@ -68,7 +68,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
             (p.type === "training" ||
               (p.type === "match" && (p.minutesPlayed ?? 0) > 0))
         );
-        row.push(isPresent ? "\u2714" : "\u274C");
+        row.push(isPresent ? "\u2714" : "\u2716");
         if (isPresent) {
           presentCount++;
         }
