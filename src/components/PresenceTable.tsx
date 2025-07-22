@@ -124,10 +124,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
         body: [...rows, totalRow],
         startY: 30,
         theme: "grid",
-        headStyles: {
-          fillColor: [220, 26, 38],
-          halign: 'center'
-        },
+        headStyles: { fillColor: [220, 26, 38] },
         styles: {
           fontSize: 8,
           cellPadding: 1,
@@ -140,6 +137,16 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
           ...Array.from({ length: header.length - 4 }, (_, i) => i + 2).reduce((acc, i) => ({ ...acc, [i]: { halign: 'center' } }), {}),
           [header.length - 1]: { halign: 'center' },
         },
+        didParseCell: (data) => {
+          if (data.section === 'head') {
+            if (data.column.index >= 2 && data.column.index < header.length - 2) {
+              data.cell.styles.halign = 'center';
+            }
+            if (data.column.index === header.length - 1) {
+              data.cell.styles.halign = 'center';
+            }
+          }
+        }
       });
 
       doc.save(`presence_${type}_${selectedSeason}.pdf`);
