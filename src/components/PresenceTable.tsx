@@ -32,9 +32,9 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
   allPlayers,
   selectedSeason,
 }) => {
-  // Chemins des images dans /public/images/
-  const checkIcon = "/images/check.png";
-  const crossIcon = "/images/cross.png";
+  // Importer les images directement pour obtenir leurs URL de données
+  const checkIcon = new URL('/images/check.png', import.meta.url).href;
+  const crossIcon = new URL('/images/cross.png', import.meta.url).href;
 
   const generatePresenceData = () => {
     const events = storage
