@@ -12,12 +12,27 @@ const STORAGE_KEYS = {
 export const storage = {
   // Players
   getPlayers: (): Player[] => {
-    const data = localStorage.getItem(STORAGE_KEYS.PLAYERS);
-    return data ? JSON.parse(data) : [];
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.PLAYERS);
+      console.log('Data read from localStorage:', data);
+      if (data) {
+        return JSON.parse(data);
+      }
+      return [];
+    } catch (error) {
+      console.error('Failed to read from localStorage:', error);
+      return [];
+    }
   },
 
   savePlayers: (players: Player[]) => {
-    localStorage.setItem(STORAGE_KEYS.PLAYERS, JSON.stringify(players));
+    try {
+      const dataToSave = JSON.stringify(players);
+      localStorage.setItem(STORAGE_KEYS.PLAYERS, dataToSave);
+      console.log('Data saved to localStorage:', dataToSave);
+    } catch (error) {
+      console.error('Failed to save to localStorage:', error);
+    }
   },
 
   addPlayer: (player: Player) => {
