@@ -20,22 +20,12 @@ interface PresenceTableProps {
   selectedSeason: string;
 }
 
-interface ImageCell {
-  image: string;
-  width: number;
-  height: number;
-}
-
 export const PresenceTable: React.FC<PresenceTableProps> = ({
   data,
   type,
   allPlayers,
   selectedSeason,
 }) => {
-  // Chemins des images dans /public/images/
-  const checkIcon = "/images/check.png";
-  const crossIcon = "/images/cross.png";
-
   const generatePresenceData = () => {
     const events = storage
       .getTotalTeamEvents(allPlayers, type, undefined, selectedSeason)
@@ -63,7 +53,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     ];
 
     const rows = playersWithPresence.map((player) => {
-      const row: (string | number | ImageCell)[] = [
+      const row: (string | number)[] = [
         `${player.firstName} ${player.lastName}`,
         player.teams.join(", "),
       ];
@@ -78,11 +68,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
             (p.type === "training" ||
               (p.type === "match" && (p.minutesPlayed ?? 0) > 0))
         );
-        row.push(
-          isPresent
-            ? { image: checkIcon, width: 4, height: 4 }
-            : { image: crossIcon, width: 4, height: 4 }
-        );
+        row.push(isPresent ? "✅" : "❌");
         if (isPresent) {
           presentCount++;
         }
@@ -98,16 +84,10 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
       return row;
     });
 
-    const totalRow: (string | number | ImageCell)[] = ["Total", ""];
+    const totalRow: (string | number)[] = ["Total", ""];
     eventDates.forEach((date, index) => {
       const totalPresent = rows.reduce((acc, row) => {
-        return (
-          acc +
-          (typeof row[index + 2] === "object" &&
-          (row[index + 2] as ImageCell).image === checkIcon
-            ? 1
-            : 0)
-        );
+        return acc + (row[index + 2] === "✅" ? 1 : 0);
       }, 0);
       totalRow.push(totalPresent);
     });
@@ -117,7 +97,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     return { header, rows, totalRow };
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!data || data.length === 0) {
       alert("Aucune donnée à exporter.");
       return;
@@ -126,100 +106,37 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     try {
       const { header, rows, totalRow } = generatePresenceData();
       const doc = new jsPDF({ orientation: "landscape" });
+      const title =
+        type === "training" ? "Présence Entraînements" : "Présence Matchs";
 
-      // Log pour vérifier les chemins des images
-      console.log("checkIcon path:", checkIcon);
-      console.log("crossIcon path:", crossIcon);
+      // Load custom font
+      const fontUrl = "/fonts/NotoSansSymbols-VariableFont_wght.ttf";
+      const fontResponse = await fetch(fontUrl);
+      const font = await fontResponse.arrayBuffer();
+      const fontName = "NotoSansSymbols";
+      doc.addFileToVFS(`${fontName}.ttf`, Buffer.from(font).toString('binary'));
+      doc.addFont(`${fontName}.ttf`, fontName, "normal");
 
-      // Précharger les images pour vérifier leur disponibilité
-      const testImage = (url: string): Promise<void> => {
-        return new Promise((resolve, reject) => {
-          const img = new Image();
-          img.src = url;
-          img.onload = () => resolve();
-          img.onerror = () =>
-            reject(new Error(`Échec du chargement de l'image : ${url}`));
-        });
-      };
+      doc.text(title, 14, 22);
 
-      // Utiliser l'URL de base de CodeSandbox (à ajuster si nécessaire)
-      const baseUrl = window.location.origin;
-      Promise.all([
-        testImage(`${baseUrl}${checkIcon}`),
-        testImage(`${baseUrl}${crossIcon}`),
-      ])
-        .then(() => {
-          const title =
-            type === "training" ? "Présence Entraînements" : "Présence Matchs";
-          doc.text(title, 14, 22);
+      autoTable(doc, {
+        head: [header],
+        body: [...rows, totalRow],
+        startY: 30,
+        theme: "grid",
+        headStyles: { fillColor: [220, 26, 38] },
+        styles: {
+          fontSize: 8,
+          cellPadding: 1,
+          font: fontName,
+        },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 25 },
+        },
+      });
 
-          const columnStyles: { [key: number]: { cellWidth: number } } = {
-            0: { cellWidth: 25 }, // Nom Prénom
-            1: { cellWidth: 25 }, // Équipe
-          };
-          for (let i = 2; i < header.length - 2; i++) {
-            columnStyles[i] = { cellWidth: 12 }; // Largeur pour correspondre aux dates
-          }
-
-          autoTable(doc, {
-            head: [header],
-            body: [...rows, totalRow],
-            startY: 30,
-            theme: "grid",
-            headStyles: { fillColor: [220, 26, 38] },
-            styles: {
-              fontSize: 8,
-              cellPadding: 1,
-            },
-            columnStyles,
-            didParseCell: (data) => {
-              if (
-                data.section === "body" &&
-                data.column.index >= 2 &&
-                data.column.index < header.length - 2
-              ) {
-                const cellValue = data.cell.raw as ImageCell | string | number;
-                if (
-                  typeof cellValue === "object" &&
-                  "image" in cellValue &&
-                  cellValue.image
-                ) {
-                  data.cell.text = [];
-                  data.cell.styles.textColor = [255, 255, 255];
-                  console.log("Cell text cleared for image:", cellValue.image);
-                }
-              }
-            },
-            didDrawCell: (data) => {
-              if (
-                data.section === "body" &&
-                data.column.index >= 2 &&
-                data.column.index < header.length - 2
-              ) {
-                const cellValue = data.cell.raw as ImageCell | string | number;
-                if (
-                  typeof cellValue === "object" &&
-                  "image" in cellValue &&
-                  cellValue.image
-                ) {
-                  const { image, width, height } = cellValue as ImageCell;
-                  const xOffset = data.cell.x + (data.cell.width - width) / 2;
-                  const yOffset = data.cell.y + (data.cell.height - height) / 2;
-                  console.log("Drawing image:", image, "at", xOffset, yOffset);
-                  doc.addImage(image, "PNG", xOffset, yOffset, width, height);
-                }
-              }
-            },
-          });
-
-          doc.save(`presence_${type}_${selectedSeason}.pdf`);
-        })
-        .catch((error) => {
-          console.error("Erreur lors du chargement des images:", error);
-          alert(
-            "Erreur : Impossible de charger les images pour le PDF. Vérifiez que check.png et cross.png sont dans /public/images/ et accessibles."
-          );
-        });
+      doc.save(`presence_${type}_${selectedSeason}.pdf`);
     } catch (error) {
       console.error("Erreur lors de la génération du PDF :", error);
       alert(
@@ -235,19 +152,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     }
 
     const { header, rows, totalRow } = generatePresenceData();
-    const ws = XLSX.utils.aoa_to_sheet([
-      header,
-      ...rows.map((row) =>
-        row.map((cell) =>
-          typeof cell === "object" && "image" in cell
-            ? cell.image === checkIcon
-              ? "\u2713"
-              : "\u2717"
-            : cell
-        )
-      ),
-      totalRow,
-    ]);
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totalRow]);
     const wb = XLSX.utils.book_new();
     const sheetName =
       type === "training" ? "Présences Entraînements" : "Présences Matchs";
