@@ -32,9 +32,9 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
   allPlayers,
   selectedSeason,
 }) => {
-  // Importer les images directement pour obtenir leurs URL de données
-  const checkIcon = new URL('/images/check.png', import.meta.url).href;
-  const crossIcon = new URL('/images/cross.png', import.meta.url).href;
+  // Utiliser des chemins statiques pour les images
+  const checkIcon = "/images/check.png";
+  const crossIcon = "/images/cross.png";
 
   const generatePresenceData = () => {
     const events = storage
@@ -142,11 +142,10 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
         });
       };
 
-      // Utiliser l'URL de base de CodeSandbox (à ajuster si nécessaire)
-      const baseUrl = window.location.origin;
+      // Utiliser directement les chemins statiques
       Promise.all([
-        testImage(`${baseUrl}${checkIcon}`),
-        testImage(`${baseUrl}${crossIcon}`),
+        testImage(checkIcon),
+        testImage(crossIcon),
       ])
         .then(() => {
           const title =
