@@ -107,8 +107,9 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
       const { header, rows, totalRow } = generatePresenceData();
       const doc = new jsPDF({ orientation: "landscape" });
 
-      // Définir une police prenant en charge les caractères Unicode
-      doc.setFont("Helvetica"); // Helvetica prend en charge ✔ et ✖
+      // Ajouter la police DejaVuSans
+      doc.addFont('/fonts/DejaVuSans.ttf', 'DejaVuSans', 'normal');
+      doc.setFont('DejaVuSans');
 
       const title =
         type === "training" ? "Présence Entraînements" : "Présence Matchs";
