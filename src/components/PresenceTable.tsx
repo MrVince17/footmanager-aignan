@@ -114,7 +114,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
       const fontResponse = await fetch(fontUrl);
       const font = await fontResponse.arrayBuffer();
       const fontName = "NotoSansSymbols";
-      doc.addFileToVFS(`${fontName}.ttf`, Buffer.from(font).toString('binary'));
+      doc.addFileToVFS(`${fontName}.ttf`, new Uint8Array(font).reduce((data, byte) => data + String.fromCharCode(byte), ''));
       doc.addFont(`${fontName}.ttf`, fontName, "normal");
 
       doc.text(title, 14, 22);
