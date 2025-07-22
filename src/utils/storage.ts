@@ -9,29 +9,47 @@ const STORAGE_KEYS = {
   UNAVAILABILITIES: 'football_unavailabilities'
 };
 
+const getStorage = (): Storage | null => {
+  try {
+    const testKey = 'test';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    try {
+      const testKey = 'test';
+      sessionStorage.setItem(testKey, testKey);
+      sessionStorage.removeItem(testKey);
+      console.warn('localStorage is not available. Falling back to sessionStorage.');
+      return sessionStorage;
+    } catch (e) {
+      console.warn('localStorage and sessionStorage are not available. Data will be stored in memory and will be lost on refresh.');
+      return null;
+    }
+  }
+};
+
+const storageApi = getStorage();
+let memoryStorage: { [key: string]: string } = {};
+
 export const storage = {
   // Players
   getPlayers: (): Player[] => {
-    try {
-      const data = localStorage.getItem(STORAGE_KEYS.PLAYERS);
-      console.log('Data read from localStorage:', data);
-      if (data) {
-        return JSON.parse(data);
-      }
-      return [];
-    } catch (error) {
-      console.error('Failed to read from localStorage:', error);
-      return [];
+    let data: string | null = null;
+    if (storageApi) {
+      data = storageApi.getItem(STORAGE_KEYS.PLAYERS);
+    } else {
+      data = memoryStorage[STORAGE_KEYS.PLAYERS] || null;
     }
+    return data ? JSON.parse(data) : [];
   },
 
   savePlayers: (players: Player[]) => {
-    try {
-      const dataToSave = JSON.stringify(players);
-      localStorage.setItem(STORAGE_KEYS.PLAYERS, dataToSave);
-      console.log('Data saved to localStorage:', dataToSave);
-    } catch (error) {
-      console.error('Failed to save to localStorage:', error);
+    const dataToSave = JSON.stringify(players);
+    if (storageApi) {
+      storageApi.setItem(STORAGE_KEYS.PLAYERS, dataToSave);
+    } else {
+      memoryStorage[STORAGE_KEYS.PLAYERS] = dataToSave;
     }
   },
 
