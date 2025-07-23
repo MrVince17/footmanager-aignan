@@ -50,14 +50,50 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const data = e.target?.result;
-      const workbook = XLSX.read(data, { type: 'binary' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(worksheet);
-      // Here, you would typically perform validation and transformation
-      // For now, we assume the structure matches what we need.
-      onImportPlayers(json as Player[]);
+      try {
+        const data = e.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        const expectedHeaders = [
+          'Nom complet',
+          'Date de Naissance',
+          'N° Licence',
+          'Équipes',
+          'Poste',
+          'Licence Valide',
+          'Paiement Valide',
+        ];
+
+        const header: string[] = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0] as string[];
+
+        if (JSON.stringify(header) !== JSON.stringify(expectedHeaders)) {
+          alert("Les en-têtes de colonnes du fichier importé ne correspondent pas au format attendu.");
+          return;
+        }
+
+        const json: any[] = XLSX.utils.sheet_to_json(worksheet);
+
+        const importedPlayers = json.map(row => {
+          const [lastName, ...firstNameParts] = (row['Nom complet'] || '').split(' ');
+          const firstName = firstNameParts.join(' ');
+
+          return {
+            ...row,
+            firstName,
+            lastName,
+            teams: (row['Équipes'] || '').split(',').map((t: string) => t.trim()),
+            licenseValid: row['Licence Valide'] === 'Oui',
+            paymentValid: row['Paiement Valide'] === 'Oui',
+          };
+        });
+
+        onImportPlayers(importedPlayers as Player[]);
+      } catch (error) {
+        alert("Une erreur est survenue lors de la lecture du fichier. Assurez-vous qu'il est au bon format.");
+        console.error("Erreur d'importation:", error);
+      }
     };
     reader.readAsBinaryString(file);
   };
