@@ -3,7 +3,6 @@ import { Player } from './types';
 import { storage } from './utils/storage';
 import { Dashboard } from './components/Dashboard';
 import { PlayerList } from './components/PlayerList';
-import ErrorBoundary from './components/ErrorBoundary';
 import { PlayerForm } from './components/PlayerForm';
 import { PlayerDetail } from './components/PlayerDetail';
 import { PerformanceEntry } from './components/PerformanceEntry';
@@ -25,7 +24,6 @@ import {
   FileText
 } from 'lucide-react';
 import { getAvailableSeasons } from './utils/seasonUtils';
-import * as XLSX from 'xlsx';
 
 interface MenuItem {
   id: string;
@@ -135,7 +133,6 @@ function App() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -163,42 +160,15 @@ function App() {
     navigate('/players');
   };
 
-  const handleImportPlayers = async (file: File) => {
-    setIsLoading(true);
-    try {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(worksheet);
-        const validatedData = validatePlayerData(json);
-        storage.addMultiplePlayers(validatedData);
-        refreshPlayers();
-        setIsLoading(false);
-      };
-      reader.readAsBinaryString(file);
-    } catch (error) {
-      console.error("Erreur d'importation :", error);
-      setIsLoading(false);
-    }
-  };
-
-  const validatePlayerData = (players: any[]) => {
-    return players.map(player => ({
-      ...player,
-      id: player.id || `imported-${Date.now()}-${Math.random()}`,
-      teams: player.teams && Array.isArray(player.teams) ? player.teams : [],
-      goals: player.goals || 0,
-      assists: player.assists || 0,
-      matchAttendanceRate: player.matchAttendanceRate || 0,
-      trainingAttendanceRate: player.trainingAttendanceRate || 0,
-      licenseValid: player.licenseValid || false,
-      paymentValid: player.paymentValid || false,
-      performances: player.performances || [],
-      unavailabilities: player.unavailabilities || [],
+  const handleImportPlayers = (importedPlayers: Player[]) => {
+    // Basic validation and merging logic
+    const newPlayers = importedPlayers.map(p => ({
+      ...p,
+      id: p.id || `imported-${Date.now()}-${Math.random()}`,
+      // Add other default fields if necessary
     }));
+    storage.addMultiplePlayers(newPlayers);
+    refreshPlayers();
   };
 
   const handleDeletePlayer = (playerId: string) => {
@@ -284,7 +254,7 @@ function App() {
       >
         <Routes>
           <Route path="/" element={<Dashboard players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
-          <Route path="/players" element={<ErrorBoundary>{isLoading ? <div>Chargement...</div> : <PlayerList players={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} />}</ErrorBoundary>} />
+          <Route path="/players" element={<PlayerList players={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} />} />
           <Route path="/players/add" element={<PlayerFormWrapper onSave={handleSavePlayer} players={players} />} />
           <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
           <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />

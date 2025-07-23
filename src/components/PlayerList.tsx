@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 interface PlayerListProps {
   players: Player[];
   onDeletePlayer: (playerId: string) => void;
-  onImportPlayers: (file: File) => void;
+  onImportPlayers: (importedPlayers: Player[]) => void;
 }
 
 export const PlayerList: React.FC<PlayerListProps> = ({
@@ -48,16 +48,28 @@ export const PlayerList: React.FC<PlayerListProps> = ({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    onImportPlayers(file);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = e.target?.result;
+      const workbook = XLSX.read(data, { type: 'binary' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(worksheet);
+      // Here, you would typically perform validation and transformation
+      // For now, we assume the structure matches what we need.
+      onImportPlayers(json as Player[]);
+    };
+    reader.readAsBinaryString(file);
   };
 
   const filteredPlayers = players.filter(player => {
     const matchesSearch = 
-      (player.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (player.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (player.licenseNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
+      player.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      player.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      player.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesTeam = filterTeam === 'all' || (player.teams && player.teams.includes(filterTeam as any));
+    const matchesTeam = filterTeam === 'all' || player.teams.includes(filterTeam as any);
     const matchesPosition = filterPosition === 'all' || player.position === filterPosition;
     
     return matchesSearch && matchesTeam && matchesPosition;
@@ -204,7 +216,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <Users size={16} />
-                  <span>{player.teams && Array.isArray(player.teams) ? player.teams.join(", ") : ""}</span>
+                  <span>{player.teams.join(', ')}</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -232,9 +244,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                 <div className="pt-2 border-t">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Présence matchs</span>
-                    <span className="font-medium">
-                      {player.matchAttendanceRate !== undefined ? player.matchAttendanceRate.toFixed(0) : 'N/A'}%
-                    </span>
+                    <span className="font-medium">{player.matchAttendanceRate.toFixed(0)}%</span>
                   </div>
                 </div>
               </div>
