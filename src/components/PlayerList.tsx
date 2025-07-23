@@ -75,19 +75,29 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           return;
         }
 
-        const json: any[] = XLSX.utils.sheet_to_json(worksheet);
+        const json: any[] = XLSX.utils.sheet_to_json(worksheet, { raw: false });
 
         const importedPlayers = json.map(row => {
           const [lastName, ...firstNameParts] = (row[excelHeaders[0]] || '').split(' ');
           const firstName = firstNameParts.join(' ');
 
           const licenseNumber = row[excelHeaders[2]];
+
+          const dateOfBirthRaw = row[excelHeaders[1]];
+          let dateOfBirth = dateOfBirthRaw;
+          if (typeof dateOfBirthRaw === 'number') {
+            // It's a serial number, convert it
+            const d = XLSX.SSF.parse_date_code(dateOfBirthRaw);
+            dateOfBirth = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+          }
+          // If it's already a string, assume it's in the correct format.
+
           return {
             ...row,
             id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`, // Basic unique ID
             firstName,
             lastName,
-            dateOfBirth: row[excelHeaders[1]],
+            dateOfBirth: dateOfBirth,
             licenseNumber: String(licenseNumber),
             teams: (row[excelHeaders[3]] || '').split(',').map((t: string) => t.trim()),
             position: row[excelHeaders[4]],
