@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Player } from '../types';
 import { storage } from '../utils/storage';
 import { getAvailableSeasons } from '../utils/seasonUtils';
-import { PresenceTable } from './PresenceTable';
+import PresenceTable from './PresenceTable';
 
 export const PresencePage: React.FC = () => {
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);

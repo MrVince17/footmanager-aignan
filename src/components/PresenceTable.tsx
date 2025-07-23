@@ -20,7 +20,7 @@ interface PresenceTableProps {
   selectedSeason: string;
 }
 
-export const PresenceTable: React.FC<PresenceTableProps> = ({
+const PresenceTable: React.FC<PresenceTableProps> = ({
   data,
   type,
   allPlayers,
@@ -260,3 +260,5 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     </div>
   );
 };
+
+export default PresenceTable;
