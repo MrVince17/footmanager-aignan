@@ -199,9 +199,9 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-white rounded-xl shadow-md p-6 flex flex-col">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Statut administratif</h3>
-          <div className="space-y-4">
+          <div className="flex flex-col justify-between flex-grow">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <span className="text-gray-700">Licence</span>
               <div className="flex items-center space-x-2">
@@ -229,10 +229,8 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
                 </span>
               </div>
             </div>
-          </div>
-          
 
-        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <span className="text-gray-700">Date Validation Licence</span>
               <div className="flex items-center space-x-2">
                 <span className="font-medium">
@@ -240,7 +238,8 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
                 </span>
               </div>
             </div>
-            </div>
+          </div>
+        </div>
         <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Assiduité</h3>
           <div className="space-y-4">

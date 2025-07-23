@@ -92,6 +92,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onSeasonChange,
   allPlayers,
 }) => {
+  const validatePlayerData = (players: any[]) => {
+    return players.map(player => ({
+      ...player,
+      teams: player.teams && Array.isArray(player.teams) ? player.teams : []
+    }));
+  };
+
   console.log("Dashboard props - players:", players);
   console.log("Dashboard props - selectedSeason:", selectedSeason);
   console.log("Dashboard props - allPlayers:", allPlayers);
