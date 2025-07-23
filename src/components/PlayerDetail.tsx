@@ -120,6 +120,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
 
   console.log('player.performances', player.performances);
   console.log('getMatchStats(player.performances)', getMatchStats(player.performances));
+  console.log('player.trainingAttendanceRate', player.trainingAttendanceRate);
 
   return (
     <div id="player-detail-content" className="space-y-6">

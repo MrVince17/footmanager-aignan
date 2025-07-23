@@ -157,13 +157,18 @@ export const storage = {
     const playerPresentTrainings = validPlayerTrainingPerformances.filter(p => p.present).length;
     const playerPresentMatches = validPlayerMatchPerformances.filter(p => p.present).length;
 
-    // Calculate total number of trainings for the team(s) the player might be part of
-    // Assuming trainings are common for all teams or player can attend any.
-    // If trainings were team-specific, this logic would need adjustment.
-    const totalTeamTrainings = storage.getTotalTeamEvents(allPlayers, 'training').length;
-    
-    player.trainingAttendanceRate = totalTeamTrainings > 0
-      ? (playerPresentTrainings / totalTeamTrainings) * 100
+    // Calculate total number of trainings for the specific team(s) of the player
+    const uniqueTrainingEventsForPlayer = new Set<string>();
+    player.teams.forEach(team => {
+      const teamTrainingEvents = storage.getTotalTeamEvents(allPlayers, 'training', team);
+      teamTrainingEvents.forEach(event => {
+        uniqueTrainingEventsForPlayer.add(`${event.date}`);
+      });
+    });
+    const totalTrainingsForPlayerTeams = uniqueTrainingEventsForPlayer.size;
+
+    player.trainingAttendanceRate = totalTrainingsForPlayerTeams > 0
+      ? (playerPresentTrainings / totalTrainingsForPlayerTeams) * 100
       : 0;
     
     // Calculate total number of matches for the specific team(s) of the player
