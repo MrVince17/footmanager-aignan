@@ -131,15 +131,16 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
           font: "DejaVuSans",
         },
         columnStyles: {
-          1: { cellWidth: 'auto' },
+          ...header.reduce((acc, _, index) => {
+            const maxWidth = Math.max(
+              doc.getTextWidth(header[index]),
+              ...rows.map(row => doc.getTextWidth(row[index].toString()))
+            );
+            return { ...acc, [index]: { cellWidth: maxWidth + 10 } };
+          }, {}),
           // Center align for date columns
           ...Array.from({ length: header.length - 4 }, (_, i) => i + 2).reduce((acc, i) => ({ ...acc, [i]: { halign: 'center' } }), {}),
           [header.length - 1]: { halign: 'center' },
-        },
-        didDrawPage: (data) => {
-          const table = data.table;
-          const nameColWidth = Math.max(...rows.map(row => doc.getTextWidth(row[0].toString())));
-          table.columns[0].width = nameColWidth + 10;
         },
       });
 
