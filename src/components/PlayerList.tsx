@@ -81,13 +81,14 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           const [lastName, ...firstNameParts] = (row[excelHeaders[0]] || '').split(' ');
           const firstName = firstNameParts.join(' ');
 
+          const licenseNumber = row[excelHeaders[2]];
           return {
             ...row,
-            id: row['N° Licence'] || `${Date.now()}-${Math.random()}`, // Basic unique ID
+            id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`, // Basic unique ID
             firstName,
             lastName,
             dateOfBirth: row[excelHeaders[1]],
-            licenseNumber: row[excelHeaders[2]],
+            licenseNumber: String(licenseNumber),
             teams: (row[excelHeaders[3]] || '').split(',').map((t: string) => t.trim()),
             position: row[excelHeaders[4]],
             licenseValid: row[excelHeaders[5]] === 'Oui',
