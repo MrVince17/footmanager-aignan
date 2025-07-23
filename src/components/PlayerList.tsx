@@ -83,12 +83,31 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
           return {
             ...row,
+            id: row['N° Licence'] || `${Date.now()}-${Math.random()}`, // Basic unique ID
             firstName,
             lastName,
+            dateOfBirth: row[excelHeaders[1]],
+            licenseNumber: row[excelHeaders[2]],
             teams: (row[excelHeaders[3]] || '').split(',').map((t: string) => t.trim()),
+            position: row[excelHeaders[4]],
             licenseValid: row[excelHeaders[5]] === 'Oui',
             licenseValidationDate: row[excelHeaders[6]],
             paymentValid: row[excelHeaders[7]] === 'Oui',
+            // Default values for missing stats
+            goals: 0,
+            assists: 0,
+            matchAttendanceRate: 0,
+            trainingAttendanceRate: 0,
+            totalMatches: 0,
+            totalMinutes: 0,
+            totalTrainings: 0,
+            cleanSheets: 0,
+            yellowCards: 0,
+            redCards: 0,
+            absences: [],
+            injuries: [],
+            unavailabilities: [],
+            performances: [],
           };
         });
 
