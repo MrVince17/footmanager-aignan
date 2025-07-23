@@ -109,6 +109,7 @@ export const exportPlayerStats = (player: Player) => {
     },
     'Administratif': {
       'Licence valide': player.licenseValid ? 'Oui' : 'Non',
+      'Date Validation Licence': player.licenseValidationDate ? new Date(player.licenseValidationDate).toLocaleDateString('fr-FR') : 'Non définie',
       'Paiement à jour': player.paymentValid ? 'Oui' : 'Non'
     }
   };
