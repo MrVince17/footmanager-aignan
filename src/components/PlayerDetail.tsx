@@ -202,7 +202,6 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
                 </span>
               </div>
             </div>
-            
             <div className="flex items-center space-x-3">
               <Users size={20} className="text-gray-400" />
               <div>
