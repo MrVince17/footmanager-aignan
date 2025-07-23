@@ -73,7 +73,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
     onSave(playerData);
   };
 
-  const handleTeamChange = (team: 'Seniors 1' | 'Seniors 2', checked: boolean) => {
+  const handleTeamChange = (team: string, checked: boolean) => {
     const currentTeams = formData.teams || [];
     if (checked) {
       setFormData({ ...formData, teams: [...currentTeams, team] });
@@ -103,32 +103,20 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
               <span>Informations personnelles</span>
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Prénom *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.firstName || ''}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nom *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.lastName || ''}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nom Prénom *
+              </label>
+              <input
+                type="text"
+                required
+                value={`${formData.lastName || ''} ${formData.firstName || ''}`}
+                onChange={(e) => {
+                  const [lastName, ...firstName] = e.target.value.split(' ');
+                  setFormData({ ...formData, lastName, firstName: firstName.join(' ') });
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -175,24 +163,17 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
                   Équipe(s) *
                 </label>
                 <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.teams?.includes('Seniors 1') || false}
-                      onChange={(e) => handleTeamChange('Seniors 1', e.target.checked)}
-                      className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Seniors 1</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={formData.teams?.includes('Seniors 2') || false}
-                      onChange={(e) => handleTeamChange('Seniors 2', e.target.checked)}
-                      className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Seniors 2</span>
-                  </label>
+                  {[ 'Seniors', 'U20', 'U19', 'U18', 'U13-U17', 'U6-U11', 'Arbitre', 'Dirigéant'].map(team => (
+                    <label key={team} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={formData.teams?.includes(team) || false}
+                        onChange={(e) => handleTeamChange(team, e.target.checked)}
+                        className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">{team}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
               
@@ -337,7 +318,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Statut administratif</h3>
             
-            <div className="flex space-x-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <label className="flex items-center">
                 <input
                   type="checkbox"
@@ -357,6 +338,18 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
                 />
                 <span className="ml-2 text-sm text-gray-700">Paiement à jour</span>
               </label>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Date Validation Licence
+                </label>
+                <input
+                  type="date"
+                  value={formData.licenseValidationDate || ''}
+                  onChange={(e) => setFormData({ ...formData, licenseValidationDate: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
             </div>
           </div>
 

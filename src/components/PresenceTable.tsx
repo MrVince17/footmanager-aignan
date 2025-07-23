@@ -20,22 +20,12 @@ interface PresenceTableProps {
   selectedSeason: string;
 }
 
-interface ImageCell {
-  image: string;
-  width: number;
-  height: number;
-}
-
 export const PresenceTable: React.FC<PresenceTableProps> = ({
   data,
   type,
   allPlayers,
   selectedSeason,
 }) => {
-  // Chemins des images dans /public/images/
-  const checkIcon = "/images/check.png";
-  const crossIcon = "/images/cross.png";
-
   const generatePresenceData = () => {
     const events = storage
       .getTotalTeamEvents(allPlayers, type, undefined, selectedSeason)
@@ -63,7 +53,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     ];
 
     const rows = playersWithPresence.map((player) => {
-      const row: (string | number | ImageCell)[] = [
+      const row: (string | number)[] = [
         `${player.firstName} ${player.lastName}`,
         player.teams.join(", "),
       ];
@@ -78,11 +68,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
             (p.type === "training" ||
               (p.type === "match" && (p.minutesPlayed ?? 0) > 0))
         );
-        row.push(
-          isPresent
-            ? { image: checkIcon, width: 4, height: 4 }
-            : { image: crossIcon, width: 4, height: 4 }
-        );
+        row.push(isPresent ? "\u2714" : "\u2716");
         if (isPresent) {
           presentCount++;
         }
@@ -98,16 +84,10 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
       return row;
     });
 
-    const totalRow: (string | number | ImageCell)[] = ["Total", ""];
+    const totalRow: (string | number)[] = ["Total", ""];
     eventDates.forEach((date, index) => {
       const totalPresent = rows.reduce((acc, row) => {
-        return (
-          acc +
-          (typeof row[index + 2] === "object" &&
-          (row[index + 2] as ImageCell).image === checkIcon
-            ? 1
-            : 0)
-        );
+        return acc + (row[index + 2] === "\u2714" ? 1 : 0);
       }, 0);
       totalRow.push(totalPresent);
     });
@@ -117,7 +97,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     return { header, rows, totalRow };
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!data || data.length === 0) {
       alert("Aucune donnée à exporter.");
       return;
@@ -126,100 +106,45 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     try {
       const { header, rows, totalRow } = generatePresenceData();
       const doc = new jsPDF({ orientation: "landscape" });
+      const title =
+        type === "training" ? "Présence Entraînements" : "Présence Matchs";
 
-      // Log pour vérifier les chemins des images
-      console.log("checkIcon path:", checkIcon);
-      console.log("crossIcon path:", crossIcon);
+      // Load custom font
+      const fontUrl = "/fonts/DejaVuSans.ttf";
+      const fontResponse = await fetch(fontUrl);
+      const font = await fontResponse.arrayBuffer();
+      const fontName = "DejaVuSans";
+      doc.addFileToVFS(`${fontName}.ttf`, new Uint8Array(font).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+      doc.addFont(`${fontName}.ttf`, fontName, "normal");
 
-      // Précharger les images pour vérifier leur disponibilité
-      const testImage = (url: string): Promise<void> => {
-        return new Promise((resolve, reject) => {
-          const img = new Image();
-          img.src = url;
-          img.onload = () => resolve();
-          img.onerror = () =>
-            reject(new Error(`Échec du chargement de l'image : ${url}`));
-        });
-      };
+      doc.text(title, 14, 22);
 
-      // Utiliser l'URL de base de CodeSandbox (à ajuster si nécessaire)
-      const baseUrl = window.location.origin;
-      Promise.all([
-        testImage(`${baseUrl}${checkIcon}`),
-        testImage(`${baseUrl}${crossIcon}`),
-      ])
-        .then(() => {
-          const title =
-            type === "training" ? "Présence Entraînements" : "Présence Matchs";
-          doc.text(title, 14, 22);
+      autoTable(doc, {
+        head: [header],
+        body: [...rows, totalRow],
+        startY: 30,
+        theme: "grid",
+        headStyles: { fillColor: [220, 26, 38] },
+        styles: {
+          fontSize: 8,
+          cellPadding: 1,
+          font: "DejaVuSans",
+        },
+        columnStyles: {
+          ...header.reduce((acc, _, index) => {
+            const maxWidth = Math.max(
+              doc.getTextWidth(header[index]),
+              ...rows.map(row => doc.getTextWidth(row[index].toString()))
+            );
+            return { ...acc, [index]: { cellWidth: maxWidth + 10 } };
+          }, {}),
+          // Center align for date columns
+          ...Array.from({ length: header.length - 4 }, (_, i) => i + 2).reduce((acc, i) => ({ ...acc, [i]: { halign: 'center' } }), {}),
+          [header.length - 1]: { halign: 'center' },
+        },
+      });
 
-          const columnStyles: { [key: number]: { cellWidth: number } } = {
-            0: { cellWidth: 25 }, // Nom Prénom
-            1: { cellWidth: 25 }, // Équipe
-          };
-          for (let i = 2; i < header.length - 2; i++) {
-            columnStyles[i] = { cellWidth: 12 }; // Largeur pour correspondre aux dates
-          }
-
-          autoTable(doc, {
-            head: [header],
-            body: [...rows, totalRow],
-            startY: 30,
-            theme: "grid",
-            headStyles: { fillColor: [220, 26, 38] },
-            styles: {
-              fontSize: 8,
-              cellPadding: 1,
-            },
-            columnStyles,
-            didParseCell: (data) => {
-              if (
-                data.section === "body" &&
-                data.column.index >= 2 &&
-                data.column.index < header.length - 2
-              ) {
-                const cellValue = data.cell.raw as ImageCell | string | number;
-                if (
-                  typeof cellValue === "object" &&
-                  "image" in cellValue &&
-                  cellValue.image
-                ) {
-                  data.cell.text = [];
-                  data.cell.styles.textColor = [255, 255, 255];
-                  console.log("Cell text cleared for image:", cellValue.image);
-                }
-              }
-            },
-            didDrawCell: (data) => {
-              if (
-                data.section === "body" &&
-                data.column.index >= 2 &&
-                data.column.index < header.length - 2
-              ) {
-                const cellValue = data.cell.raw as ImageCell | string | number;
-                if (
-                  typeof cellValue === "object" &&
-                  "image" in cellValue &&
-                  cellValue.image
-                ) {
-                  const { image, width, height } = cellValue as ImageCell;
-                  const xOffset = data.cell.x + (data.cell.width - width) / 2;
-                  const yOffset = data.cell.y + (data.cell.height - height) / 2;
-                  console.log("Drawing image:", image, "at", xOffset, yOffset);
-                  doc.addImage(image, "PNG", xOffset, yOffset, width, height);
-                }
-              }
-            },
-          });
-
-          doc.save(`presence_${type}_${selectedSeason}.pdf`);
-        })
-        .catch((error) => {
-          console.error("Erreur lors du chargement des images:", error);
-          alert(
-            "Erreur : Impossible de charger les images pour le PDF. Vérifiez que check.png et cross.png sont dans /public/images/ et accessibles."
-          );
-        });
+      doc.save(`presence_${type}_${selectedSeason}.pdf`);
     } catch (error) {
       console.error("Erreur lors de la génération du PDF :", error);
       alert(
@@ -235,23 +160,39 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
     }
 
     const { header, rows, totalRow } = generatePresenceData();
-    const ws = XLSX.utils.aoa_to_sheet([
-      header,
-      ...rows.map((row) =>
-        row.map((cell) =>
-          typeof cell === "object" && "image" in cell
-            ? cell.image === checkIcon
-              ? "\u2713"
-              : "\u2717"
-            : cell
-        )
-      ),
-      totalRow,
-    ]);
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totalRow]);
+
     const wb = XLSX.utils.book_new();
     const sheetName =
       type === "training" ? "Présences Entraînements" : "Présences Matchs";
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+    // Auto-fit columns
+    const cols = Object.keys(ws).filter(key => key.endsWith('1')).map(key => key.replace('1', ''));
+    const colWidths = cols.map(col => {
+      const addresses = Object.keys(ws).filter(key => key.startsWith(col) && key !== `${col}1`);
+      const maxWidth = Math.max(
+        ...addresses.map(addr => ws[addr].v?.toString().length || 0),
+        ws[`${col}1`].v?.toString().length || 0
+      );
+      return { wch: maxWidth + 2 };
+    });
+    ws['!cols'] = colWidths;
+
+    // Center align columns
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_address = { c: C, r: R };
+        const cell_ref = XLSX.utils.encode_cell(cell_address);
+        if (ws[cell_ref]) {
+          if ((C >= 2 && C < header.length - 2) || C === header.length - 2) {
+            ws[cell_ref].s = { alignment: { horizontal: 'center' } };
+          }
+        }
+      }
+    }
+
     XLSX.writeFile(wb, `presences_${type}_Saison_${selectedSeason}.xlsx`);
   };
 

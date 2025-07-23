@@ -121,17 +121,19 @@ export const storage = {
       if (teamName && !player.teams.includes(teamName)) {
         continue;
       }
-      for (const perf of player.performances) {
-        if (
-          perf.type === type &&
-          (!season || perf.season === season) &&
-          (type !== 'match' || !matchType || matchType === 'all' || perf.matchType === matchType)
-        ) {
-          const key = type === 'match'
-            ? `${perf.season}-${perf.date}-${perf.opponent || 'unknown'}`
-            : `${perf.season}-${perf.date}`;
-          if (!uniqueEvents.has(key)) {
-            uniqueEvents.set(key, { date: perf.date, opponent: perf.opponent, season: perf.season });
+      if (Array.isArray(player.performances)) {
+        for (const perf of player.performances) {
+          if (
+            perf.type === type &&
+            (!season || perf.season === season) &&
+            (type !== 'match' || !matchType || matchType === 'all' || perf.matchType === matchType)
+          ) {
+            const key = type === 'match'
+              ? `${perf.season}-${perf.date}-${perf.opponent || 'unknown'}`
+              : `${perf.season}-${perf.date}`;
+            if (!uniqueEvents.has(key)) {
+              uniqueEvents.set(key, { date: perf.date, opponent: perf.opponent, season: perf.season });
+            }
           }
         }
       }
