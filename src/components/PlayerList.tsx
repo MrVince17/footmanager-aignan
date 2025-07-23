@@ -26,8 +26,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
   const handleExport = () => {
     const dataToExport = players.map(p => ({
-      'Prénom': p.firstName,
-      'Nom': p.lastName,
+      'Nom complet': `${p.lastName} ${p.firstName}`,
       'Date de Naissance': p.dateOfBirth,
       'N° Licence': p.licenseNumber,
       'Équipes': p.teams.join(', '),
