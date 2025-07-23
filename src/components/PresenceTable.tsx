@@ -186,7 +186,7 @@ export const PresenceTable: React.FC<PresenceTableProps> = ({
         const cell_address = { c: C, r: R };
         const cell_ref = XLSX.utils.encode_cell(cell_address);
         if (ws[cell_ref]) {
-          if ((C >= 2 && C < header.length - 2) || C === header.length - 1) {
+          if ((C >= 2 && C < header.length - 2) || C === header.length - 2) {
             ws[cell_ref].s = { alignment: { horizontal: 'center' } };
           }
         }
