@@ -24,18 +24,29 @@ export const PlayerList: React.FC<PlayerListProps> = ({
   const [filterPosition, setFilterPosition] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const excelHeaders = [
+    'Nom complet',
+    'Date de Naissance',
+    'N° Licence',
+    'Équipes',
+    'Poste',
+    'Licence Valide',
+    'Date Validation Licence',
+    'Paiement Valide',
+  ];
+
   const handleExport = () => {
     const dataToExport = players.map(p => ({
-      'Prénom': p.firstName,
-      'Nom': p.lastName,
-      'Date de Naissance': p.dateOfBirth,
-      'N° Licence': p.licenseNumber,
-      'Équipes': p.teams.join(', '),
-      'Poste': p.position,
-      'Licence Valide': p.licenseValid ? 'Oui' : 'Non',
-      'Paiement Valide': p.paymentValid ? 'Oui' : 'Non',
+      [excelHeaders[0]]: `${p.lastName} ${p.firstName}`,
+      [excelHeaders[1]]: p.dateOfBirth,
+      [excelHeaders[2]]: p.licenseNumber,
+      [excelHeaders[3]]: p.teams.join(', '),
+      [excelHeaders[4]]: p.position,
+      [excelHeaders[5]]: p.licenseValid ? 'Oui' : 'Non',
+      [excelHeaders[6]]: p.licenseValidationDate,
+      [excelHeaders[7]]: p.paymentValid ? 'Oui' : 'Non',
     }));
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const ws = XLSX.utils.json_to_sheet(dataToExport, { header: excelHeaders });
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Joueurs");
     XLSX.writeFile(wb, "export_joueurs.xlsx");
@@ -51,14 +62,71 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const data = e.target?.result;
-      const workbook = XLSX.read(data, { type: 'binary' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(worksheet);
-      // Here, you would typically perform validation and transformation
-      // For now, we assume the structure matches what we need.
-      onImportPlayers(json as Player[]);
+      try {
+        const data = e.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        const header: string[] = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0] as string[];
+
+        if (JSON.stringify(header) !== JSON.stringify(excelHeaders)) {
+          alert("Les en-têtes de colonnes du fichier importé ne correspondent pas au format attendu.");
+          return;
+        }
+
+        const json: any[] = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+
+        const importedPlayers = json.map(row => {
+          const [lastName, ...firstNameParts] = (row[excelHeaders[0]] || '').split(' ');
+          const firstName = firstNameParts.join(' ');
+
+          const licenseNumber = row[excelHeaders[2]];
+
+          const dateOfBirthRaw = row[excelHeaders[1]];
+          let dateOfBirth = dateOfBirthRaw;
+          if (typeof dateOfBirthRaw === 'number') {
+            // It's a serial number, convert it
+            const d = XLSX.SSF.parse_date_code(dateOfBirthRaw);
+            dateOfBirth = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+          }
+          // If it's already a string, assume it's in the correct format.
+
+          return {
+            ...row,
+            id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`, // Basic unique ID
+            firstName,
+            lastName,
+            dateOfBirth: dateOfBirth,
+            licenseNumber: String(licenseNumber),
+            teams: (row[excelHeaders[3]] || '').split(',').map((t: string) => t.trim()),
+            position: row[excelHeaders[4]],
+            licenseValid: row[excelHeaders[5]] === 'Oui',
+            licenseValidationDate: row[excelHeaders[6]],
+            paymentValid: row[excelHeaders[7]] === 'Oui',
+            // Default values for missing stats
+            goals: 0,
+            assists: 0,
+            matchAttendanceRate: 0,
+            trainingAttendanceRate: 0,
+            totalMatches: 0,
+            totalMinutes: 0,
+            totalTrainings: 0,
+            cleanSheets: 0,
+            yellowCards: 0,
+            redCards: 0,
+            absences: [],
+            injuries: [],
+            unavailabilities: [],
+            performances: [],
+          };
+        });
+
+        onImportPlayers(importedPlayers as Player[]);
+      } catch (error) {
+        alert("Une erreur est survenue lors de la lecture du fichier. Assurez-vous qu'il est au bon format.");
+        console.error("Erreur d'importation:", error);
+      }
     };
     reader.readAsBinaryString(file);
   };
