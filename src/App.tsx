@@ -3,6 +3,7 @@ import { Player } from './types';
 import { storage } from './utils/storage';
 import { Dashboard } from './components/Dashboard';
 import { PlayerList } from './components/PlayerList';
+import ErrorBoundary from './components/ErrorBoundary';
 import { PlayerForm } from './components/PlayerForm';
 import { PlayerDetail } from './components/PlayerDetail';
 import { PerformanceEntry } from './components/PerformanceEntry';
@@ -133,6 +134,7 @@ function App() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -160,15 +162,30 @@ function App() {
     navigate('/players');
   };
 
-  const handleImportPlayers = (importedPlayers: Player[]) => {
-    // Basic validation and merging logic
-    const newPlayers = importedPlayers.map(p => ({
-      ...p,
-      id: p.id || `imported-${Date.now()}-${Math.random()}`,
-      // Add other default fields if necessary
+  const handleImportPlayers = async (file: File) => {
+    setIsLoading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const data = JSON.parse(e.target.result as string);
+        const validatedData = validatePlayerData(data);
+        storage.addMultiplePlayers(validatedData);
+        refreshPlayers();
+        setIsLoading(false);
+      };
+      reader.readAsText(file);
+    } catch (error) {
+      console.error("Erreur d'importation :", error);
+      setIsLoading(false);
+    }
+  };
+
+  const validatePlayerData = (players: any[]) => {
+    return players.map(player => ({
+      ...player,
+      id: player.id || `imported-${Date.now()}-${Math.random()}`,
+      teams: player.teams && Array.isArray(player.teams) ? player.teams : []
     }));
-    storage.addMultiplePlayers(newPlayers);
-    refreshPlayers();
   };
 
   const handleDeletePlayer = (playerId: string) => {
@@ -254,7 +271,7 @@ function App() {
       >
         <Routes>
           <Route path="/" element={<Dashboard players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
-          <Route path="/players" element={<PlayerList players={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} />} />
+          <Route path="/players" element={<ErrorBoundary>{isLoading ? <div>Chargement...</div> : <PlayerList players={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} />}</ErrorBoundary>} />
           <Route path="/players/add" element={<PlayerFormWrapper onSave={handleSavePlayer} players={players} />} />
           <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
           <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />

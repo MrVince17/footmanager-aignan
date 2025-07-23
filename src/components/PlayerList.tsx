@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 interface PlayerListProps {
   players: Player[];
   onDeletePlayer: (playerId: string) => void;
-  onImportPlayers: (importedPlayers: Player[]) => void;
+  onImportPlayers: (file: File) => void;
 }
 
 export const PlayerList: React.FC<PlayerListProps> = ({
@@ -48,19 +48,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const data = e.target?.result;
-      const workbook = XLSX.read(data, { type: 'binary' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(worksheet);
-      // Here, you would typically perform validation and transformation
-      // For now, we assume the structure matches what we need.
-      onImportPlayers(json as Player[]);
-    };
-    reader.readAsBinaryString(file);
+    onImportPlayers(file);
   };
 
   const filteredPlayers = players.filter(player => {
@@ -216,7 +204,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <Users size={16} />
-                  <span>{player.teams.join(', ')}</span>
+                  <span>{player.teams && Array.isArray(player.teams) ? player.teams.join(", ") : ""}</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
