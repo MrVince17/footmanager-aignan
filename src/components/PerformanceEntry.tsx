@@ -308,8 +308,14 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
               >
                 <option value="all">Toutes les équipes</option>
-                <option value="Seniors 1">Seniors 1</option>
-                <option value="Seniors 2">Seniors 2</option>
+                <option value="Seniors">Seniors</option>
+                <option value="U20">U20</option>
+                <option value="U19">U19</option>
+                <option value="U18">U18</option>
+                <option value="U13-U17">U13-U17</option>
+                <option value="U6-U11">U6-U11</option>
+                <option value="Arbitre">Arbitre</option>
+                <option value="Dirigeant">Dirigeant</option>
               </select>
               <button
                 type="button"
