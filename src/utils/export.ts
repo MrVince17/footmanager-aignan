@@ -158,71 +158,42 @@ export const exportPlayerStats = (player: Player) => {
   XLSX.writeFile(workbook, `stats_${player.firstName}_${player.lastName}_US_Aignan.xlsx`);
 };
 
-export const exportToPDF = async (elementId: string, filename: string = 'export_US_Aignan.pdf') => {
-  const element = document.getElementById(elementId);
-  if (!element) {
-    console.error('Element not found for PDF export');
-    return;
-  }
+import 'jspdf-autotable';
+import { getAge } from './playerUtils';
 
-  try {
-    // Create canvas from the element
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff'
-    });
+export const exportToPDF = (player: Player, filename: string) => {
+  const doc = new jsPDF();
+  doc.text('Fiche Joueur - US Aignan', 20, 20);
+  doc.text(`Nom Prénom: ${player.firstName} ${player.lastName}`, 20, 30);
 
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    
-    // Calculate dimensions to fit the page
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
-    const pageRatio = pdfWidth / pdfHeight;
-    const imgRatio = imgWidth / imgHeight;
+  // Informations générales
+  (doc as any).autoTable({
+    startY: 40,
+    head: [['Informations générales', '']],
+    body: [
+      ['Âge', `${getAge(player.dateOfBirth)} ans`],
+      ['Position', player.position],
+      ['Équipe(s)', player.teams.join(', ')],
+      ['Licence', player.licenseNumber],
+    ],
+    styles: { fontSize: 10 },
+    columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 100 } },
+  });
 
-    let finalImgWidth, finalImgHeight, imgX, imgY;
+  // Statut administratif
+  const finalY = (doc as any).lastAutoTable.finalY + 10;
+  doc.text('Statut administratif', 20, finalY);
+  (doc as any).autoTable({
+    startY: finalY + 10,
+    head: [['Statut administratif', '']],
+    body: [
+      ['Licence', player.licenseValid ? 'Valide' : 'Non valide'],
+      ['Paiement', player.paymentValid ? 'À jour' : 'En retard'],
+      ['Date Validation Licence', player.licenseValidationDate ? new Date(player.licenseValidationDate).toLocaleDateString('fr-FR') : 'Non définie'],
+    ],
+    styles: { fontSize: 10 },
+    columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 100 } },
+  });
 
-    if (imgRatio > pageRatio) { // Image is wider than page
-      finalImgWidth = pdfWidth - 20; // 10mm margin on each side
-      finalImgHeight = finalImgWidth / imgRatio;
-      imgX = 10;
-      imgY = (pdfHeight - finalImgHeight) / 2;
-    } else { // Image is taller than page or same ratio
-      finalImgHeight = pdfHeight - 45; // Adjusted for header and footer
-      finalImgWidth = finalImgHeight * imgRatio;
-      imgX = (pdfWidth - finalImgWidth) / 2;
-      imgY = 30; // Space for header
-    }
-
-    // Ensure Y is not negative if image is very tall
-    if (imgY < 30) imgY = 30;
-
-
-    // Add US Aignan header
-    pdf.setFontSize(18);
-    pdf.setTextColor(220, 38, 38); // Rouge US Aignan
-    pdf.text('US AIGNAN - Tableau de Bord', pdfWidth / 2, 15, { align: 'center' });
-    
-    pdf.setFontSize(10);
-    pdf.setTextColor(0, 0, 0);
-    pdf.text(`Saison: ${element.querySelector('#season-select') ? (element.querySelector('#season-select') as HTMLSelectElement).value : 'N/A'}`, pdfWidth / 2, 22, { align: 'center' });
-    
-    // Add the captured content
-    pdf.addImage(imgData, 'PNG', imgX, imgY, finalImgWidth, finalImgHeight);
-    
-    // Add footer
-    pdf.setFontSize(8);
-    pdf.setTextColor(128, 128, 128);
-    pdf.text(`Généré le ${new Date().toLocaleDateString('fr-FR')}`, 10, pdfHeight - 10);
-    
-    pdf.save(filename);
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    alert('Erreur lors de la génération du PDF');
-  }
+  doc.save(filename);
 };
