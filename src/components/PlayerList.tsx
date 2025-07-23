@@ -24,18 +24,29 @@ export const PlayerList: React.FC<PlayerListProps> = ({
   const [filterPosition, setFilterPosition] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const excelHeaders = [
+    'Nom complet',
+    'Date de Naissance',
+    'N° Licence',
+    'Équipes',
+    'Poste',
+    'Licence Valide',
+    'Date Validation Licence',
+    'Paiement Valide',
+  ];
+
   const handleExport = () => {
     const dataToExport = players.map(p => ({
-      'Nom complet': `${p.lastName} ${p.firstName}`,
-      'Date de Naissance': p.dateOfBirth,
-      'N° Licence': p.licenseNumber,
-      'Équipes': p.teams.join(', '),
-      'Poste': p.position,
-      'Licence Valide': p.licenseValid ? 'Oui' : 'Non',
-      'Date Validation Licence': p.licenseValidationDate,
-      'Paiement Valide': p.paymentValid ? 'Oui' : 'Non',
+      [excelHeaders[0]]: `${p.lastName} ${p.firstName}`,
+      [excelHeaders[1]]: p.dateOfBirth,
+      [excelHeaders[2]]: p.licenseNumber,
+      [excelHeaders[3]]: p.teams.join(', '),
+      [excelHeaders[4]]: p.position,
+      [excelHeaders[5]]: p.licenseValid ? 'Oui' : 'Non',
+      [excelHeaders[6]]: p.licenseValidationDate,
+      [excelHeaders[7]]: p.paymentValid ? 'Oui' : 'Non',
     }));
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const ws = XLSX.utils.json_to_sheet(dataToExport, { header: excelHeaders });
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Joueurs");
     XLSX.writeFile(wb, "export_joueurs.xlsx");
@@ -57,20 +68,9 @@ export const PlayerList: React.FC<PlayerListProps> = ({
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
 
-        const expectedHeaders = [
-          'Nom complet',
-          'Date de Naissance',
-          'N° Licence',
-          'Équipes',
-          'Poste',
-          'Licence Valide',
-          'Date Validation Licence',
-          'Paiement Valide',
-        ];
-
         const header: string[] = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0] as string[];
 
-        if (JSON.stringify(header) !== JSON.stringify(expectedHeaders)) {
+        if (JSON.stringify(header) !== JSON.stringify(excelHeaders)) {
           alert("Les en-têtes de colonnes du fichier importé ne correspondent pas au format attendu.");
           return;
         }
@@ -78,17 +78,17 @@ export const PlayerList: React.FC<PlayerListProps> = ({
         const json: any[] = XLSX.utils.sheet_to_json(worksheet);
 
         const importedPlayers = json.map(row => {
-          const [lastName, ...firstNameParts] = (row['Nom complet'] || '').split(' ');
+          const [lastName, ...firstNameParts] = (row[excelHeaders[0]] || '').split(' ');
           const firstName = firstNameParts.join(' ');
 
           return {
             ...row,
             firstName,
             lastName,
-            teams: (row['Équipes'] || '').split(',').map((t: string) => t.trim()),
-            licenseValid: row['Licence Valide'] === 'Oui',
-            licenseValidationDate: row['Date Validation Licence'],
-            paymentValid: row['Paiement Valide'] === 'Oui',
+            teams: (row[excelHeaders[3]] || '').split(',').map((t: string) => t.trim()),
+            licenseValid: row[excelHeaders[5]] === 'Oui',
+            licenseValidationDate: row[excelHeaders[6]],
+            paymentValid: row[excelHeaders[7]] === 'Oui',
           };
         });
 
