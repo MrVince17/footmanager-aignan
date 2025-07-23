@@ -2,6 +2,7 @@ import { Player } from '../types';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { getAge } from './playerUtils';
 
 export const exportToExcel = (players: Player[], filename: string = 'export_joueurs_US_Aignan.xlsx') => {
   const headers = [
@@ -159,7 +160,6 @@ export const exportPlayerStats = (player: Player) => {
 };
 
 import 'jspdf-autotable';
-import { getAge } from './playerUtils';
 
 export const exportToPDF = (player: Player, filename: string) => {
   const doc = new jsPDF();

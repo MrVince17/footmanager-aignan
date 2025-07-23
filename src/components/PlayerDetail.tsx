@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { exportPlayerStats, exportToPDF } from '../utils/export';
 import { storage } from '../utils/storage';
-import { getMatchStats } from '../utils/playerUtils';
+import { getMatchStats, getAge } from '../utils/playerUtils';
 
 interface PlayerDetailProps {
   player: Player;
@@ -39,17 +39,6 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
     type: 'injury' as 'injury' | 'personal' | 'other',
     description: ''
   });
-
-  const getAge = (dateOfBirth: string) => {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
 
   const getPositionColor = (position: string) => {
     switch (position) {
