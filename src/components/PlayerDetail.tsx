@@ -192,11 +192,6 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <span className="text-gray-700">Date Validation Licence</span>
               <div className="flex items-center space-x-2">
-                {player.licenseValid ? (
-                  <CheckCircle size={20} className="text-green-500" />
-                ) : (
-                  <AlertCircle size={20} className="text-red-500" />
-                )}
                 <span className="font-medium">
                   {player.licenseValidationDate ? new Date(player.licenseValidationDate).toLocaleDateString('fr-FR') : 'Non définie'}
                 </span>
