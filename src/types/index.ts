@@ -4,7 +4,7 @@ export interface Player {
   lastName: string;
   dateOfBirth: string;
   licenseNumber: string;
-  teams: ('Seniors 1' | 'Seniors 2')[];
+  teams: ('Seniors' | 'U20' | 'U19' | 'U18' | 'U13-U17' | 'U6-U11' | 'Arbitre' | 'Dirigéant')[];
   position: 'Gardien' | 'Défenseur' | 'Milieu' | 'Attaquant';
   
   // Statistics
@@ -21,6 +21,7 @@ export interface Player {
   
   // Administrative
   licenseValid: boolean;
+  licenseValidationDate?: string;
   paymentValid: boolean;
   
   // History

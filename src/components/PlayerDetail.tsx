@@ -135,7 +135,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             </button>
             <div>
               <h1 className="text-3xl font-bold mb-2">
-                {player.firstName} {player.lastName}
+                {player.lastName} {player.firstName}
               </h1>
               <p className="text-red-100">Fiche joueur détaillée - US Aignan</p>
             </div>
@@ -185,6 +185,14 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
                 <p className="text-sm text-gray-600">Position</p>
                 <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium border ${getPositionColor(player.position)}`}>
                   {player.position}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <span className="text-gray-700">Date Validation Licence</span>
+              <div className="flex items-center space-x-2">
+                <span className="font-medium">
+                  {player.licenseValidationDate ? new Date(player.licenseValidationDate).toLocaleDateString('fr-FR') : 'Non définie'}
                 </span>
               </div>
             </div>
