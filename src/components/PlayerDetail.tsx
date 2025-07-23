@@ -178,14 +178,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
                 </span>
               </div>
             </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-gray-700">Date Validation Licence</span>
-              <div className="flex items-center space-x-2">
-                <span className="font-medium">
-                  {player.licenseValidationDate ? new Date(player.licenseValidationDate).toLocaleDateString('fr-FR') : 'Non définie'}
-                </span>
-              </div>
-            </div>
+
             <div className="flex items-center space-x-3">
               <Users size={20} className="text-gray-400" />
               <div>
@@ -237,8 +230,17 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
               </div>
             </div>
           </div>
-        </div>
+          
 
+        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <span className="text-gray-700">Date Validation Licence</span>
+              <div className="flex items-center space-x-2">
+                <span className="font-medium">
+                  {player.licenseValidationDate ? new Date(player.licenseValidationDate).toLocaleDateString('fr-FR') : 'Non définie'}
+                </span>
+              </div>
+            </div>
+            </div>
         <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Assiduité</h3>
           <div className="space-y-4">
