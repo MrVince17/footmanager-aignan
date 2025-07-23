@@ -65,11 +65,11 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
   const filteredPlayers = players.filter(player => {
     const matchesSearch = 
-      player.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      player.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      player.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      (player.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (player.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (player.licenseNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesTeam = filterTeam === 'all' || player.teams.includes(filterTeam as any);
+    const matchesTeam = filterTeam === 'all' || (player.teams && player.teams.includes(filterTeam as any));
     const matchesPosition = filterPosition === 'all' || player.position === filterPosition;
     
     return matchesSearch && matchesTeam && matchesPosition;
