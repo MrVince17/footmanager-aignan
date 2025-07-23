@@ -189,7 +189,15 @@ function App() {
     return players.map(player => ({
       ...player,
       id: player.id || `imported-${Date.now()}-${Math.random()}`,
-      teams: player.teams && Array.isArray(player.teams) ? player.teams : []
+      teams: player.teams && Array.isArray(player.teams) ? player.teams : [],
+      goals: player.goals || 0,
+      assists: player.assists || 0,
+      matchAttendanceRate: player.matchAttendanceRate || 0,
+      trainingAttendanceRate: player.trainingAttendanceRate || 0,
+      licenseValid: player.licenseValid || false,
+      paymentValid: player.paymentValid || false,
+      performances: player.performances || [],
+      unavailabilities: player.unavailabilities || [],
     }));
   };
 
