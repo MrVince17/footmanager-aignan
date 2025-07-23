@@ -32,6 +32,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
       'Équipes': p.teams.join(', '),
       'Poste': p.position,
       'Licence Valide': p.licenseValid ? 'Oui' : 'Non',
+      'Date Validation Licence': p.licenseValidationDate,
       'Paiement Valide': p.paymentValid ? 'Oui' : 'Non',
     }));
     const ws = XLSX.utils.json_to_sheet(dataToExport);
@@ -63,6 +64,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           'Équipes',
           'Poste',
           'Licence Valide',
+          'Date Validation Licence',
           'Paiement Valide',
         ];
 
@@ -85,6 +87,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             lastName,
             teams: (row['Équipes'] || '').split(',').map((t: string) => t.trim()),
             licenseValid: row['Licence Valide'] === 'Oui',
+            licenseValidationDate: row['Date Validation Licence'],
             paymentValid: row['Paiement Valide'] === 'Oui',
           };
         });
