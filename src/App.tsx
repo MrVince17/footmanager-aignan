@@ -25,6 +25,7 @@ import {
   FileText
 } from 'lucide-react';
 import { getAvailableSeasons } from './utils/seasonUtils';
+import * as XLSX from 'xlsx';
 
 interface MenuItem {
   id: string;
@@ -167,13 +168,17 @@ function App() {
     try {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const data = JSON.parse(e.target.result as string);
-        const validatedData = validatePlayerData(data);
+        const data = e.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet);
+        const validatedData = validatePlayerData(json);
         storage.addMultiplePlayers(validatedData);
         refreshPlayers();
         setIsLoading(false);
       };
-      reader.readAsText(file);
+      reader.readAsBinaryString(file);
     } catch (error) {
       console.error("Erreur d'importation :", error);
       setIsLoading(false);
