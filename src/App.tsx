@@ -12,6 +12,7 @@ import { MatchResultsPage } from './components/MatchResultsPage';
 import { PresencePage } from './components/PresencePage';
 import { Routes, Route, Link as RouterLink, Navigate, Outlet, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Unavailability, Performance } from './types';
+import Login from './components/Login';
 
 import { 
   Home, 
@@ -135,16 +136,33 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState<string>('');
   const navigate = useNavigate();
+  const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
-    storage.initializeSampleData();
-    const allPlayers = storage.getPlayers();
-    setPlayers(allPlayers);
-    const seasons = getAvailableSeasons(allPlayers);
-    if (seasons.length > 0) {
-      setSelectedSeason(seasons[0]);
-    }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (session) {
+      storage.initializeSampleData();
+      const allPlayers = storage.getPlayers();
+      setPlayers(allPlayers);
+      const seasons = getAvailableSeasons(allPlayers);
+      if (seasons.length > 0) {
+        setSelectedSeason(seasons[0]);
+      }
+    }
+  }, [session]);
 
   const refreshPlayers = () => {
     setPlayers(storage.getPlayers());
@@ -246,6 +264,10 @@ function App() {
     { id: 'statistics', label: 'Statistiques', icon: BarChart3, path: '/statistics' },
     { id: 'results', label: 'Résultats Saison', icon: ClipboardList, path: '/results' },
   ];
+
+  if (!session) {
+    return <Login />;
+  }
 
   return (
       <AppLayout
