@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from './utils/supabase';
 import { Player } from './types';
 import { storage } from './utils/storage';
 import { Dashboard } from './components/Dashboard';
