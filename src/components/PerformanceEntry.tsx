@@ -321,7 +321,22 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                 type="button"
                 onClick={() => {
                   const visiblePlayerIds = players
-                    .filter(p => filterTeamPerformance === 'all' || p.teams.includes(filterTeamPerformance as any))
+                    .filter(p => {
+                      if (filterTeamPerformance === 'all') return true;
+                      if (filterTeamPerformance === 'Seniors') {
+                        return p.teams.includes('Seniors 1') || p.teams.includes('Seniors 2') || p.teams.includes('Seniors');
+                      }
+                      if (filterTeamPerformance === 'U13-U17') {
+                        return p.teams.some(team => team.startsWith('U13') || team.startsWith('U14') || team.startsWith('U15') || team.startsWith('U16') || team.startsWith('U17'));
+                      }
+                      if (filterTeamPerformance === 'U6-U11') {
+                        return p.teams.some(team => team.startsWith('U6') || team.startsWith('U7') || team.startsWith('U8') || team.startsWith('U9') || team.startsWith('U10') || team.startsWith('U11'));
+                      }
+                      if (filterTeamPerformance === 'Dirigeant / Dirigeante') {
+                        return p.teams.includes('Dirigeant') || p.teams.includes('Dirigeant / Dirigeante');
+                      }
+                      return p.teams.includes(filterTeamPerformance as any);
+                    })
                     .map(p => p.id);
 
                   const currentlyVisibleAndSelected = selectedPlayers.filter(id => visiblePlayerIds.includes(id));
