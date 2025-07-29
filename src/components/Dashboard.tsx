@@ -92,6 +92,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onSeasonChange,
   allPlayers,
 }) => {
+  const [filterTeam, setFilterTeam] = React.useState<'all' | 'Seniors 1' | 'Seniors 2'>('all');
   const validatePlayerData = (players: any[]) => {
     return players.map(player => ({
       ...player,
@@ -110,52 +111,54 @@ export const Dashboard: React.FC<DashboardProps> = ({
   console.log("Dashboard availableSeasons:", availableSeasons);
 
   const playersWithSeasonStats = useMemo(() => {
-    return players.map((p) => {
-      const seasonStats = getPlayerStatsForSeason(p, selectedSeason);
-      // Calculate season-specific attendance rates
-      const allTeamTrainingsForSeason = storage.getTotalTeamEvents(
-        allPlayers,
-        "training",
-        undefined,
-        selectedSeason
-      ).length;
-
-      let allTeamMatchesForPlayerForSeason = 0;
-      const uniqueMatchEventsForPlayerSeason = new Set<string>();
-      p.teams.forEach((team) => {
-        const teamMatchEvents = storage.getTotalTeamEvents(
+    return players
+      .filter(p => filterTeam === 'all' || p.teams.includes(filterTeam))
+      .map((p) => {
+        const seasonStats = getPlayerStatsForSeason(p, selectedSeason);
+        // Calculate season-specific attendance rates
+        const allTeamTrainingsForSeason = storage.getTotalTeamEvents(
           allPlayers,
-          "match",
-          team,
+          "training",
+          undefined,
           selectedSeason
-        );
-        teamMatchEvents.forEach((event) =>
-          uniqueMatchEventsForPlayerSeason.add(
-            `${event.date}-${event.opponent || "unknown"}`
-          )
-        );
+        ).length;
+
+        let allTeamMatchesForPlayerForSeason = 0;
+        const uniqueMatchEventsForPlayerSeason = new Set<string>();
+        p.teams.forEach((team) => {
+          const teamMatchEvents = storage.getTotalTeamEvents(
+            allPlayers,
+            "match",
+            team,
+            selectedSeason
+          );
+          teamMatchEvents.forEach((event) =>
+            uniqueMatchEventsForPlayerSeason.add(
+              `${event.date}-${event.opponent || "unknown"}`
+            )
+          );
+        });
+        allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
+
+        // Calculate season-specific attendance rates
+        const trainingAttendanceRate =
+          allTeamTrainingsForSeason > 0
+            ? (seasonStats.presentTrainings / allTeamTrainingsForSeason) * 100
+            : p.trainingAttendanceRate; // Fallback or 0
+        const matchAttendanceRate =
+          allTeamMatchesForPlayerForSeason > 0
+            ? (seasonStats.presentMatches / allTeamMatchesForPlayerForSeason) *
+              100
+            : p.matchAttendanceRate; // Fallback or 0
+
+        return {
+          ...p,
+          seasonStats,
+          trainingAttendanceRateSeason: trainingAttendanceRate,
+          matchAttendanceRateSeason: matchAttendanceRate,
+        };
       });
-      allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
-
-      // Calculate season-specific attendance rates
-      const trainingAttendanceRate =
-        allTeamTrainingsForSeason > 0
-          ? (seasonStats.presentTrainings / allTeamTrainingsForSeason) * 100
-          : p.trainingAttendanceRate; // Fallback or 0
-      const matchAttendanceRate =
-        allTeamMatchesForPlayerForSeason > 0
-          ? (seasonStats.presentMatches / allTeamMatchesForPlayerForSeason) *
-            100
-          : p.matchAttendanceRate; // Fallback or 0
-
-      return {
-        ...p,
-        seasonStats,
-        trainingAttendanceRateSeason: trainingAttendanceRate,
-        matchAttendanceRateSeason: matchAttendanceRate,
-      };
-    });
-  }, [players, selectedSeason, allPlayers]);
+  }, [players, selectedSeason, allPlayers, filterTeam]);
 
   const calculateTeamStats = (): TeamStats => {
     const totalPlayers = playersWithSeasonStats.length; // Should this be filtered by players active in the season?
@@ -178,16 +181,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
       0
     );
     // For totalMatches and totalTrainings, we should count unique team events for the season.
+    const teamToFilter = filterTeam === 'all' ? undefined : filterTeam;
     const uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(
       allPlayers,
       "match",
-      undefined,
+      teamToFilter,
       selectedSeason
     ).length;
     const uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(
       allPlayers,
       "training",
-      undefined,
+      teamToFilter,
       selectedSeason
     ).length;
 
@@ -222,11 +226,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const stats = useMemo(
     () => calculateTeamStats(),
-    [playersWithSeasonStats, selectedSeason, allPlayers]
+    [playersWithSeasonStats, selectedSeason, allPlayers, filterTeam]
   );
 
   // Admin issues are global, not season-specific
   const adminIssues = players.filter((p) => !p.licenseValid || !p.paymentValid);
+
+  const teamDistribution = useMemo(() => {
+    const distribution: { [key: string]: number } = {};
+    playersWithSeasonStats.forEach(player => {
+      player.teams.forEach(team => {
+        distribution[team] = (distribution[team] || 0) + 1;
+      });
+    });
+    return distribution;
+  }, [playersWithSeasonStats]);
 
   const topScorers = [...playersWithSeasonStats]
     .sort((a, b) => b.seasonStats.goals - a.seasonStats.goals)
@@ -309,27 +323,47 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Season Filter */}
+      {/* Season and Team Filter */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow flex items-center space-x-3">
         <Filter size={20} className="text-gray-600" />
-        <label
-          htmlFor="season-select"
-          className="text-sm font-medium text-gray-700"
-        >
-          Saison :
-        </label>
-        <select
-          id="season-select"
-          value={selectedSeason}
-          onChange={(e) => onSeasonChange(e.target.value)}
-          className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
-        >
-          {availableSeasons.map((season) => (
-            <option key={season} value={season}>
-              {season}
-            </option>
-          ))}
-        </select>
+        <div>
+          <label
+            htmlFor="season-select"
+            className="text-sm font-medium text-gray-700"
+          >
+            Saison :
+          </label>
+          <select
+            id="season-select"
+            value={selectedSeason}
+            onChange={(e) => onSeasonChange(e.target.value)}
+            className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
+          >
+            {availableSeasons.map((season) => (
+              <option key={season} value={season}>
+                {season}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label
+            htmlFor="team-filter-dashboard"
+            className="text-sm font-medium text-gray-700"
+          >
+            Équipe :
+          </label>
+          <select
+            id="team-filter-dashboard"
+            value={filterTeam}
+            onChange={(e) => setFilterTeam(e.target.value as 'all' | 'Seniors 1' | 'Seniors 2')}
+            className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
+          >
+            <option value="all">Toutes les équipes</option>
+            <option value="Seniors 1">Seniors 1</option>
+            <option value="Seniors 2">Seniors 2</option>
+          </select>
+        </div>
       </div>
 
       {/* Statistics Cards */}
@@ -370,48 +404,27 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Répartition par Équipe
+            Répartition par Catégorie
           </h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Seniors 1</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-32 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-red-600 h-2 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${
-                        (stats.seniors1Count / stats.totalPlayers) * 100
-                      }%`,
-                    }}
-                  ></div>
+            {Object.entries(teamDistribution).map(([team, count]) => (
+              <div key={team} className="flex items-center justify-between">
+                <span className="text-gray-600">{team}</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-32 bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-red-600 h-2 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${(count / stats.totalPlayers) * 100}%`,
+                      }}
+                    ></div>
+                  </div>
+                  <span className="font-semibold text-gray-900">{count}</span>
                 </div>
-                <span className="font-semibold text-gray-900">
-                  {stats.seniors1Count}
-                </span>
               </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Seniors 2</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-32 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-black h-2 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${
-                        (stats.seniors2Count / stats.totalPlayers) * 100
-                      }%`,
-                    }}
-                  ></div>
-                </div>
-                <span className="font-semibold text-gray-900">
-                  {stats.seniors2Count}
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
-
         <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Statistiques d'Activité
