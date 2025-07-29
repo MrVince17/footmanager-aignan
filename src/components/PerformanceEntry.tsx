@@ -378,6 +378,9 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                    if (filterTeamPerformance === 'U6-U11') {
                     return player.teams.some(team => team.startsWith('U6') || team.startsWith('U7') || team.startsWith('U8') || team.startsWith('U9') || team.startsWith('U10') || team.startsWith('U11'));
                   }
+                  if (filterTeamPerformance === 'Dirigeant / Dirigeante') {
+                    return player.teams.includes('Dirigeant') || player.teams.includes('Dirigeant / Dirigeante');
+                  }
                   return player.teams.includes(filterTeamPerformance as any);
                 })
                 .map(player => (
