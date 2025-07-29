@@ -184,7 +184,12 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     const defenseurs = currentTeamPlayers.filter(p => normalize(p.position) === 'defenseur').length;
     const milieux = currentTeamPlayers.filter(p => normalize(p.position) === 'milieu').length;
     const attaquants = currentTeamPlayers.filter(p => normalize(p.position) === 'attaquant').length;
-    const nonDefini = currentTeamPlayers.length - (gardiens + defenseurs + milieux + attaquants);
+
+    const nonJoueurs = currentTeamPlayers.filter(p =>
+      ['dirigeant', 'dirigeant / dirigeante', 'arbitre'].includes(normalize(p.position))
+    ).length;
+
+    const nonDefini = currentTeamPlayers.length - (gardiens + defenseurs + milieux + attaquants + nonJoueurs);
 
     return {
       'Gardien': gardiens,
