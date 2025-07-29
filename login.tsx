@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 
 // Configuration Firebase (remplace par tes propres clés)
 const firebaseConfig = {
@@ -13,18 +11,22 @@ const firebaseConfig = {
 };
 
 // Initialisation Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 
-const Login = ({ setUser }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
-  const [isSignUp, setIsSignUp] = useState(false);
+interface LoginProps {
+  setUser: (user: firebase.auth.User | null) => void;
+}
+
+const Login: React.FC<LoginProps> = ({ setUser }) => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSignUp, setIsSignUp] = useState<boolean>(false);
 
   // Vérifier l'état de l'utilisateur connecté
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
     });
     return () => unsubscribe();
@@ -33,9 +35,9 @@ const Login = ({ setUser }) => {
   // Gérer la connexion
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await auth.signInWithEmailAndPassword(email, password);
       setError(null);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
     }
   };
@@ -43,15 +45,15 @@ const Login = ({ setUser }) => {
   // Gérer l’inscription (optionnel)
   const handleSignUp = async () => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      await auth.createUserWithEmailAndPassword(email, password);
       setError(null);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
     }
   };
 
   // Gérer la soumission du formulaire
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isSignUp) {
       handleSignUp();
