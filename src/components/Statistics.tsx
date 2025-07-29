@@ -178,11 +178,13 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
 
   const positionStats = useMemo(() => {
     const currentTeamPlayers = filteredPlayersByTeam;
+    const normalize = (str: string | undefined) => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : '';
+
     return {
-      'Gardien': currentTeamPlayers.filter(p => p.position === 'Gardien').length,
-      'Défenseur': currentTeamPlayers.filter(p => p.position === 'Défenseur').length,
-      'Milieu': currentTeamPlayers.filter(p => p.position === 'Milieu').length,
-      'Attaquant': currentTeamPlayers.filter(p => p.position === 'Attaquant').length,
+      'Gardien': currentTeamPlayers.filter(p => normalize(p.position) === 'gardien').length,
+      'Défenseur': currentTeamPlayers.filter(p => normalize(p.position) === 'defenseur').length,
+      'Milieu': currentTeamPlayers.filter(p => normalize(p.position) === 'milieu').length,
+      'Attaquant': currentTeamPlayers.filter(p => normalize(p.position) === 'attaquant').length,
     };
   }, [filteredPlayersByTeam]);
 
