@@ -315,7 +315,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                 <option value="U13-U17">U13-U17</option>
                 <option value="U6-U11">U6-U11</option>
                 <option value="Arbitre">Arbitre</option>
-                <option value="Dirigeant">Dirigeant / Dirigeante</option>
+                <option value="Dirigeant / Dirigeante">Dirigeant / Dirigeante</option>
               </select>
               <button
                 type="button"
@@ -367,7 +367,19 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {players
-                .filter(player => filterTeamPerformance === 'all' || player.teams.includes(filterTeamPerformance as any))
+                .filter(player => {
+                  if (filterTeamPerformance === 'all') return true;
+                  if (filterTeamPerformance === 'Seniors') {
+                    return player.teams.includes('Seniors 1') || player.teams.includes('Seniors 2') || player.teams.includes('Seniors');
+                  }
+                  if (filterTeamPerformance === 'U13-U17') {
+                    return player.teams.some(team => team.startsWith('U13') || team.startsWith('U14') || team.startsWith('U15') || team.startsWith('U16') || team.startsWith('U17'));
+                  }
+                   if (filterTeamPerformance === 'U6-U11') {
+                    return player.teams.some(team => team.startsWith('U6') || team.startsWith('U7') || team.startsWith('U8') || team.startsWith('U9') || team.startsWith('U10') || team.startsWith('U11'));
+                  }
+                  return player.teams.includes(filterTeamPerformance as any);
+                })
                 .map(player => (
                 <label key={player.id} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                   <input
