@@ -105,10 +105,12 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
   const playersWithSeasonStats = useMemo(() => {
-    return players.map(p => ({
-      ...p,
-      seasonStats: getPlayerStatsForSeason(p, selectedSeason, allPlayers, filterMatchType),
-    }));
+    return players
+      .filter(p => (p.performances || []).some(perf => perf.season === selectedSeason))
+      .map(p => ({
+        ...p,
+        seasonStats: getPlayerStatsForSeason(p, selectedSeason, allPlayers, filterMatchType),
+      }));
   }, [players, selectedSeason, allPlayers, filterMatchType]);
 
   const filteredPlayersByTeam = playersWithSeasonStats.filter(player =>
