@@ -73,7 +73,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
     e.preventDefault();
     
     selectedPlayers.forEach(playerId => {
-      // Constructing without id, season, excused (handled by App.tsx and storage.ts)
+      // Constructing without id, season, excused (handled by App.tsx)
       const performanceDetails = {
         date: performanceData.date,
         type: performanceData.type,

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Player } from './types';
-import { storage } from './utils/storage';
 import { Dashboard } from './components/Dashboard';
 import { PlayerList } from './components/PlayerList';
 import { PlayerForm } from './components/PlayerForm';
@@ -24,6 +23,7 @@ import {
   FileText
 } from 'lucide-react';
 import { getAvailableSeasons } from './utils/seasonUtils';
+import { firestoreService } from './utils/firestore';
 
 interface MenuItem {
   id: string;
@@ -136,105 +136,84 @@ function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    storage.initializeSampleData();
-    const allPlayers = storage.getPlayers();
-    setPlayers(allPlayers);
-    const seasons = getAvailableSeasons(allPlayers);
-    if (seasons.length > 0) {
-      setSelectedSeason(seasons[0]);
-    }
+    const fetchPlayers = async () => {
+      const allPlayers = await firestoreService.getPlayers();
+      setPlayers(allPlayers);
+      const seasons = getAvailableSeasons(allPlayers);
+      if (seasons.length > 0) {
+        setSelectedSeason(seasons[0]);
+      }
+    };
+    fetchPlayers();
   }, []);
 
-  const refreshPlayers = () => {
-    setPlayers(storage.getPlayers());
+  const refreshPlayers = async () => {
+    const allPlayers = await firestoreService.getPlayers();
+    setPlayers(allPlayers);
   };
 
-  const handleSavePlayer = (player: Player) => {
-    const existingPlayer = players.find(p => p.id === player.id);
-    if (existingPlayer) {
-      storage.updatePlayer(player);
+  const handleSavePlayer = async (player: Player) => {
+    if (player.id) {
+      await firestoreService.updatePlayer(player.id, player);
     } else {
-      storage.addPlayer(player);
+      const { id, ...playerData } = player;
+      await firestoreService.addPlayer(playerData);
     }
-    refreshPlayers();
+    await refreshPlayers();
     navigate('/players');
   };
 
-  const handleImportPlayers = (importedPlayers: Player[]) => {
+  const handleImportPlayers = async (importedPlayers: Player[]) => {
     // Basic validation and merging logic
     const newPlayers = importedPlayers.map(p => ({
       ...p,
-      id: p.id || `imported-${Date.now()}-${Math.random()}`,
       // Add other default fields if necessary
     }));
-    storage.addMultiplePlayers(newPlayers);
-    refreshPlayers();
+    for (const player of newPlayers) {
+      const { id, ...playerData } = player;
+      await firestoreService.addPlayer(playerData);
+    }
+    await refreshPlayers();
   };
 
-  const handleDeletePlayer = (playerId: string) => {
+  const handleDeletePlayer = async (playerId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce joueur ?')) {
-      storage.deletePlayer(playerId);
-      refreshPlayers();
+      await firestoreService.deletePlayer(playerId);
+      await refreshPlayers();
       if(window.location.pathname.includes(`/players/${playerId}`)) {
         navigate('/players');
       }
     }
   };
 
-  const handleSavePerformance = (playerId: string, performanceData: Omit<Performance, 'id' | 'season' | 'excused'>) => {
-    const performanceWithSeason: Omit<Performance, 'id' | 'excused'> = {
+  const handleSavePerformance = async (playerId: string, performanceData: Omit<Performance, 'id' | 'season' | 'excused'>) => {
+    const performanceWithSeason: Omit<Performance, 'id' | 'excused' | 'season'> = {
       ...performanceData,
       season: selectedSeason,
     };
-    storage.addPerformance(playerId, performanceWithSeason);
-    refreshPlayers();
+    await firestoreService.addPerformance(playerId, performanceWithSeason);
+    await refreshPlayers();
   };
 
-  const handleUpdatePlayerStorage = (
+  const handleUpdatePlayerStorage = async (
     type: 'unavailabilityDelete' | 'unavailabilityAdd' | 'matchUpdate' | 'matchDelete',
     refData: any,
     value?: any
   ) => {
-    const currentPlayers = storage.getPlayers();
-    let updatedPlayersArray = [...currentPlayers];
-
     if (type === 'unavailabilityAdd') {
-        const { playerId, unavailability } = refData as { playerId: string, unavailability: Unavailability };
-        updatedPlayersArray = updatedPlayersArray.map(p =>
-            p.id === playerId ? { ...p, unavailabilities: [...p.unavailabilities, unavailability] } : p
-        );
+      const { playerId, unavailability } = refData as { playerId: string, unavailability: Unavailability };
+      const { id, ...unavailabilityData } = unavailability;
+      await firestoreService.addUnavailability(playerId, unavailabilityData);
     } else if (type === 'unavailabilityDelete') {
-        const { playerId, unavailabilityId } = refData as { playerId: string, unavailabilityId: string };
-        updatedPlayersArray = updatedPlayersArray.map(p =>
-            p.id === playerId ? { ...p, unavailabilities: p.unavailabilities.filter(u => u.id !== unavailabilityId) } : p
-        );
+      const { playerId, unavailabilityId } = refData as { playerId: string, unavailabilityId: string };
+      await firestoreService.deleteUnavailability(playerId, unavailabilityId);
     } else if (type === 'matchUpdate') {
-        const originalPerfRef = refData as Performance;
-        const updatedPerfData = value as Partial<Performance>;
-        updatedPlayersArray = updatedPlayersArray.map(p => ({
-            ...p,
-            performances: p.performances.map(perf => {
-                const isSameMatch = perf.type === 'match' &&
-                    perf.date === originalPerfRef.date &&
-                    perf.opponent === originalPerfRef.opponent &&
-                    perf.location === originalPerfRef.location &&
-                    (perf.scoreHome === originalPerfRef.scoreHome || (Number.isNaN(perf.scoreHome) && Number.isNaN(originalPerfRef.scoreHome))) &&
-                    (perf.scoreAway === originalPerfRef.scoreAway || (Number.isNaN(perf.scoreAway) && Number.isNaN(originalPerfRef.scoreAway)));
-
-                if (isSameMatch) {
-                    return { ...perf, ...updatedPerfData };
-                }
-                return perf;
-            })
-        }));
+      // TODO: Implement match update in Firestore
     } else if (type === 'matchDelete') {
-        const originalPerfRef = refData as Performance;
-        storage.deleteMatch(originalPerfRef);
-        updatedPlayersArray = storage.getPlayers();
+      // TODO: Implement match delete in Firestore
     }
 
-    setPlayers(updatedPlayersArray);
-    storage.savePlayers(updatedPlayersArray);
+    await refreshPlayers();
   };
 
   const menuItems: MenuItem[] = [

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Player, Unavailability } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Player, Unavailability, Performance } from '../types';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -20,17 +20,19 @@ import {
   Bus
 } from 'lucide-react';
 import { exportPlayerStats, exportToPDF } from '../utils/export';
-import { storage } from '../utils/storage';
+import { firestoreService } from '../utils/firestore';
 import { getMatchStats, getAge } from '../utils/playerUtils';
 
 interface PlayerDetailProps {
   player: Player;
   onBack: () => void;
   onEdit: (player: Player) => void;
-  onPlayerUpdate: () => void;
+  onPlayerUpdate: (type: 'unavailabilityDelete' | 'unavailabilityAdd', refData: any) => void;
 }
 
 export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEdit, onPlayerUpdate }) => {
+  const [performances, setPerformances] = useState<Performance[]>([]);
+  const [unavailabilities, setUnavailabilities] = useState<Unavailability[]>([]);
   const [showUnavailabilityForm, setShowUnavailabilityForm] = useState(false);
   const [unavailabilityForm, setUnavailabilityForm] = useState({
     startDate: '',
@@ -39,6 +41,20 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
     type: 'injury' as 'injury' | 'personal' | 'other',
     description: ''
   });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (player.id) {
+        const [performancesData, unavailabilitiesData] = await Promise.all([
+          firestoreService.getPerformances(player.id),
+          firestoreService.getUnavailabilities(player.id)
+        ]);
+        setPerformances(performancesData);
+        setUnavailabilities(unavailabilitiesData);
+      }
+    };
+    fetchData();
+  }, [player.id]);
 
   const getPositionColor = (position: string) => {
     switch (position) {
@@ -50,14 +66,13 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
     }
   };
 
-  const handleAddUnavailability = () => {
+  const handleAddUnavailability = async () => {
     if (!unavailabilityForm.startDate || !unavailabilityForm.reason) {
       alert('Veuillez remplir au minimum la date de début et la raison');
       return;
     }
 
-    const newUnavailability: Unavailability = {
-      id: Date.now().toString(),
+    const newUnavailability: Omit<Unavailability, 'id'> = {
       startDate: unavailabilityForm.startDate,
       endDate: unavailabilityForm.endDate || undefined,
       reason: unavailabilityForm.reason,
@@ -65,22 +80,27 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
       description: unavailabilityForm.description
     };
 
-    storage.addUnavailability(player.id, newUnavailability);
-    setShowUnavailabilityForm(false);
-    setUnavailabilityForm({
-      startDate: '',
-      endDate: '',
-      reason: '',
-      type: 'injury',
-      description: ''
-    });
-    onPlayerUpdate();
+    if (player.id) {
+      await firestoreService.addUnavailability(player.id, newUnavailability);
+      setShowUnavailabilityForm(false);
+      setUnavailabilityForm({
+        startDate: '',
+        endDate: '',
+        reason: '',
+        type: 'injury',
+        description: ''
+      });
+      onPlayerUpdate('unavailabilityAdd', {
+        playerId: player.id,
+        unavailability: { ...newUnavailability, id: Date.now().toString() }
+      });
+    }
   };
 
-  const handleDeleteUnavailability = (unavailabilityId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette indisponibilité ?')) {
-      storage.deleteUnavailability(player.id, unavailabilityId);
-      onPlayerUpdate();
+  const handleDeleteUnavailability = async (unavailabilityId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette indisponibilité ?') && player.id) {
+      await firestoreService.deleteUnavailability(player.id, unavailabilityId);
+      onPlayerUpdate('unavailabilityDelete', { playerId: player.id, unavailabilityId });
     }
   };
 
@@ -107,8 +127,8 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
       </div>
     );
 
-  console.log('player.performances', player.performances);
-  console.log('getMatchStats(player.performances)', getMatchStats(player.performances));
+  console.log('performances', performances);
+  console.log('getMatchStats(performances)', getMatchStats(performances));
   console.log('player.trainingAttendanceRate', player.trainingAttendanceRate);
 
   return (
@@ -280,7 +300,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             value={player.totalMatches}
             icon={<Trophy size={24} />}
             color="#DC2626"
-            stats={getMatchStats(player.performances)}
+            stats={getMatchStats(performances)}
           />
         </div>
         <div className="lg:col-span-2">
@@ -422,9 +442,9 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
           </div>
         )}
 
-        {player.unavailabilities.length > 0 ? (
+        {unavailabilities.length > 0 ? (
           <div className="space-y-3">
-            {player.unavailabilities.map((unavailability) => (
+            {unavailabilities.map((unavailability) => (
               <div key={unavailability.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
                   <div className="flex items-center space-x-2">
@@ -467,9 +487,9 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
       {/* Recent Activity */}
       <div className="bg-white rounded-xl shadow-md p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Activité récente</h3>
-        {player.performances.length > 0 ? (
+        {performances.length > 0 ? (
           <div className="space-y-3">
-            {player.performances.slice(-5).reverse().map((performance, index) => (
+            {performances.slice(-5).reverse().map((performance, index) => (
               <div key={performance.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className={`w-3 h-3 rounded-full ${

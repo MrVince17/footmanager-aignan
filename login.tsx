@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from 'react';
-
-// Configuration Firebase (remplace par tes propres clés)
-const firebaseConfig = {
-  apiKey: "AIzaSyBZPu3Y0WqRsJLPy3z1V26c-coNFHkedqo",
-  authDomain: "usaignanpresence.firebaseapp.com",
-  projectId: "usaignanpresence",
-  storageBucket: "usaignanpresence.firebasestorage.app",
-  messagingSenderId: "623909412721",
-  appId: "1:623909412721:web:48b69618d41d9d598760d0"
-};
-
-// Initialisation Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+import { auth } from './src/firebase';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  User,
+} from 'firebase/auth';
 
 interface LoginProps {
-  setUser: (user: firebase.auth.User | null) => void;
+  setUser: (user: User | null) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ setUser }) => {
@@ -26,7 +19,7 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
 
   // Vérifier l'état de l'utilisateur connecté
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
     });
     return () => unsubscribe();
@@ -35,7 +28,7 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
   // Gérer la connexion
   const handleLogin = async () => {
     try {
-      await auth.signInWithEmailAndPassword(email, password);
+      await signInWithEmailAndPassword(auth, email, password);
       setError(null);
     } catch (err: any) {
       setError(err.message);
@@ -45,7 +38,7 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
   // Gérer l’inscription (optionnel)
   const handleSignUp = async () => {
     try {
-      await auth.createUserWithEmailAndPassword(email, password);
+      await createUserWithEmailAndPassword(auth, email, password);
       setError(null);
     } catch (err: any) {
       setError(err.message);
