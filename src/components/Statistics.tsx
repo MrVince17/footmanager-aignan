@@ -178,7 +178,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
 
   const positionStats = useMemo(() => {
     const currentTeamPlayers = filteredPlayersByTeam;
-    const normalize = (str: string | undefined) => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : '';
+    const normalize = (str: string | undefined) => str ? str.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : '';
 
     const gardiens = currentTeamPlayers.filter(p => normalize(p.position) === 'gardien').length;
     const defenseurs = currentTeamPlayers.filter(p => normalize(p.position) === 'defenseur').length;
