@@ -4,12 +4,12 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, si
 
 // Configuration Firebase (remplace par tes propres clés)
 const firebaseConfig = {
-  apiKey: "VOTRE_API_KEY",
-  authDomain: "VOTRE_AUTH_DOMAIN",
-  projectId: "VOTRE_PROJECT_ID",
-  storageBucket: "VOTRE_STORAGE_BUCKET",
-  messagingSenderId: "VOTRE_MESSAGING_SENDER_ID",
-  appId: "VOTRE_APP_ID"
+  apiKey: "AIzaSyBZPu3Y0WqRsJLPy3z1V26c-coNFHkedqo",
+  authDomain: "usaignanpresence.firebaseapp.com",
+  projectId: "usaignanpresence",
+  storageBucket: "usaignanpresence.firebasestorage.app",
+  messagingSenderId: "623909412721",
+  appId: "1:623909412721:web:48b69618d41d9d598760d0"
 };
 
 // Initialisation Firebase
