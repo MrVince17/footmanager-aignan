@@ -25,7 +25,7 @@ export const PresencePage: React.FC = () => {
 
     return allTrainings.map(training => {
       const presentPlayers = allPlayers.filter(player =>
-        player.performances.some(p =>
+        player.performances && player.performances.some(p =>
           p.type === 'training' &&
           p.date === training.date &&
           p.present
@@ -49,7 +49,7 @@ export const PresencePage: React.FC = () => {
 
     return allMatches.map(match => {
       const presentPlayers = allPlayers.filter(player =>
-        player.performances.some(p =>
+        player.performances && player.performances.some(p =>
           p.type === 'match' &&
           p.date === match.date &&
           p.opponent === match.opponent &&

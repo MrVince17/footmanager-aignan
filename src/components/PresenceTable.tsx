@@ -134,7 +134,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
           ...header.reduce((acc, _, index) => {
             const maxWidth = Math.max(
               doc.getTextWidth(header[index]),
-              ...rows.map(row => doc.getTextWidth(row[index].toString()))
+              ...rows.map(row => doc.getTextWidth(row[index]?.toString() ?? ''))
             );
             return { ...acc, [index]: { cellWidth: maxWidth + 10 } };
           }, {}),
