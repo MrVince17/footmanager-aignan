@@ -458,7 +458,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
                       player.position === 'Milieu' ? 'bg-green-100 text-green-800' :
                       'bg-red-100 text-red-800'
                     }`}>
-                      {player.position.charAt(0)}
+                      {player.position ? player.position.charAt(0) : '-'}
                     </span>
                   </td>
                   <td className="px-4 py-3 font-medium">{player.seasonStats.totalMatches}</td>
