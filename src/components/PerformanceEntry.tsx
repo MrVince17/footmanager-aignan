@@ -315,7 +315,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                 <option value="U13-U17">U13-U17</option>
                 <option value="U6-U11">U6-U11</option>
                 <option value="Arbitre">Arbitre</option>
-                <option value="Dirigeant">Dirigeant</option>
+                <option value="Dirigeant">Dirigeant / Dirigeante</option>
               </select>
               <button
                 type="button"
