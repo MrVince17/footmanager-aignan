@@ -79,9 +79,40 @@ export const storage = {
   },
 
   addMultiplePlayers: (newPlayers: Player[]) => {
-    const players = storage.getPlayers();
-    // A simple merge, could be improved with more complex logic
-    const updatedPlayers = [...players, ...newPlayers];
+    const existingPlayers = storage.getPlayers();
+    const playerMap = new Map(existingPlayers.map(p => [p.licenseNumber, p]));
+
+    newPlayers.forEach(newPlayer => {
+      if (newPlayer.licenseNumber && playerMap.has(newPlayer.licenseNumber)) {
+        // Player exists, update their data
+        const existingPlayer = playerMap.get(newPlayer.licenseNumber)!;
+        const updatedPlayer = {
+          ...existingPlayer,
+          ...newPlayer,
+          // Explicitly carry over stats if they aren't in the import
+          goals: existingPlayer.goals || 0,
+          assists: existingPlayer.assists || 0,
+          matchAttendanceRate: existingPlayer.matchAttendanceRate || 0,
+          trainingAttendanceRate: existingPlayer.trainingAttendanceRate || 0,
+          totalMatches: existingPlayer.totalMatches || 0,
+          totalMinutes: existingPlayer.totalMinutes || 0,
+          totalTrainings: existingPlayer.totalTrainings || 0,
+          cleanSheets: existingPlayer.cleanSheets || 0,
+          yellowCards: existingPlayer.yellowCards || 0,
+          redCards: existingPlayer.redCards || 0,
+          absences: existingPlayer.absences || [],
+          injuries: existingPlayer.injuries || [],
+          unavailabilities: existingPlayer.unavailabilities || [],
+          performances: existingPlayer.performances || [],
+        };
+        playerMap.set(newPlayer.licenseNumber, updatedPlayer);
+      } else {
+        // New player, add them
+        playerMap.set(newPlayer.licenseNumber || newPlayer.id, newPlayer);
+      }
+    });
+
+    const updatedPlayers = Array.from(playerMap.values());
     storage.savePlayers(updatedPlayers);
   },
 
