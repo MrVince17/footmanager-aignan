@@ -234,13 +234,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const teamDistribution = useMemo(() => {
     const distribution: { [key: string]: number } = {};
-    playersWithSeasonStats.forEach(player => {
+    const filteredPlayers = playersWithSeasonStats.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam as any));
+    filteredPlayers.forEach(player => {
       player.teams.forEach(team => {
         distribution[team] = (distribution[team] || 0) + 1;
       });
     });
     return distribution;
-  }, [playersWithSeasonStats]);
+  }, [playersWithSeasonStats, filterTeam]);
 
   const topScorers = [...playersWithSeasonStats]
     .sort((a, b) => b.seasonStats.goals - a.seasonStats.goals)
