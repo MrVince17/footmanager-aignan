@@ -93,7 +93,6 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           // If it's already a string, assume it's in the correct format.
 
           return {
-            ...row,
             id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`, // Basic unique ID
             firstName,
             lastName,
