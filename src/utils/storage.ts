@@ -83,32 +83,26 @@ export const storage = {
     const playerMap = new Map(existingPlayers.map(p => [p.licenseNumber, p]));
 
     newPlayers.forEach(newPlayer => {
-      if (newPlayer.licenseNumber && playerMap.has(newPlayer.licenseNumber)) {
+      const { licenseNumber } = newPlayer;
+      if (licenseNumber && playerMap.has(licenseNumber)) {
         // Player exists, update their data
-        const existingPlayer = playerMap.get(newPlayer.licenseNumber)!;
+        const existingPlayer = playerMap.get(licenseNumber)!;
         const updatedPlayer = {
           ...existingPlayer,
           ...newPlayer,
-          // Explicitly carry over stats if they aren't in the import
-          goals: existingPlayer.goals || 0,
-          assists: existingPlayer.assists || 0,
-          matchAttendanceRate: existingPlayer.matchAttendanceRate || 0,
-          trainingAttendanceRate: existingPlayer.trainingAttendanceRate || 0,
-          totalMatches: existingPlayer.totalMatches || 0,
-          totalMinutes: existingPlayer.totalMinutes || 0,
-          totalTrainings: existingPlayer.totalTrainings || 0,
-          cleanSheets: existingPlayer.cleanSheets || 0,
-          yellowCards: existingPlayer.yellowCards || 0,
-          redCards: existingPlayer.redCards || 0,
-          absences: existingPlayer.absences || [],
-          injuries: existingPlayer.injuries || [],
-          unavailabilities: existingPlayer.unavailabilities || [],
-          performances: existingPlayer.performances || [],
+          // Preserve stats and other data not included in the import
+          ...Object.keys(existingPlayer).reduce((acc, key) => {
+            if (!Object.keys(newPlayer).includes(key)) {
+              acc[key] = existingPlayer[key];
+            }
+            return acc;
+          }, {}),
         };
-        playerMap.set(newPlayer.licenseNumber, updatedPlayer);
+        playerMap.set(licenseNumber, updatedPlayer);
       } else {
         // New player, add them
-        playerMap.set(newPlayer.licenseNumber || newPlayer.id, newPlayer);
+        const newId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        playerMap.set(licenseNumber || newId, { ...newPlayer, id: newId });
       }
     });
 
@@ -164,7 +158,7 @@ export const storage = {
   getTotalTeamEvents: (
     allPlayers: Player[],
     type: 'training' | 'match',
-    teamName?: 'Seniors 1' | 'Seniors 2',
+    teamName?: 'Senior 1' | 'Senior 2',
     season?: string, // Optional season filter
     matchType?: string // Optional match type filter
   ): { date: string, opponent?: string, season: string }[] => {
@@ -294,7 +288,7 @@ export const storage = {
           lastName: 'Dubois',
           dateOfBirth: '1995-03-15',
           licenseNumber: 'LIC001',
-          teams: ['Seniors 1'],
+          teams: ['Senior 1'],
           position: 'Gardien',
           totalMatches: 12,
           totalMinutes: 1080,
@@ -319,7 +313,7 @@ export const storage = {
           lastName: 'Martin',
           dateOfBirth: '1998-07-22',
           licenseNumber: 'LIC002',
-          teams: ['Seniors 1', 'Seniors 2'],
+          teams: ['Senior 1', 'Senior 2'],
           position: 'Attaquant',
           totalMatches: 15,
           totalMinutes: 1200,
@@ -344,7 +338,7 @@ export const storage = {
           lastName: 'Leroy',
           dateOfBirth: '1997-11-08',
           licenseNumber: 'LIC003',
-          teams: ['Seniors 2'],
+          teams: ['Senior 2'],
           position: 'Milieu',
           totalMatches: 10,
           totalMinutes: 850,
@@ -369,7 +363,7 @@ export const storage = {
           lastName: 'Rousseau',
           dateOfBirth: '1996-09-12',
           licenseNumber: 'LIC004',
-          teams: ['Seniors 1'],
+          teams: ['Senior 1'],
           position: 'Défenseur',
           totalMatches: 14,
           totalMinutes: 1260,

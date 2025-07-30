@@ -163,7 +163,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
                   Équipe(s) *
                 </label>
                 <div className="space-y-2">
-                  {[ 'Seniors', 'U20', 'U19', 'U18', 'U13-U17', 'U6-U11', 'Arbitre', 'Dirigéant'].map(team => (
+                  {[ 'Senior', 'U20', 'U19', 'U18', 'U13-U17', 'U6-U11', 'Arbitre', 'Dirigéant'].map(team => (
                     <label key={team} className="flex items-center">
                       <input
                         type="checkbox"

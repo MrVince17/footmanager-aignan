@@ -92,7 +92,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           }
           // If it's already a string, assume it's in the correct format.
 
-          return {
+          const player: Player = {
             id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`, // Basic unique ID
             firstName,
             lastName,
@@ -119,6 +119,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             unavailabilities: [],
             performances: [],
           };
+          return player;
         });
 
         onImportPlayers(importedPlayers as Player[]);
@@ -191,7 +192,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           >
             <option value="all">Toutes les équipes</option>
-            <option value="Seniors">Seniors</option>
+            <option value="Senior">Senior</option>
             <option value="U20">U20</option>
             <option value="U19">U19</option>
             <option value="U18">U18</option>

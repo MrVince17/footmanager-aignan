@@ -163,10 +163,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const calculateTeamStats = (): TeamStats => {
     const totalPlayers = playersWithSeasonStats.length; // Should this be filtered by players active in the season?
     const seniors1Count = playersWithSeasonStats.filter((p) =>
-      p.teams.includes("Seniors 1" as any)
+      p.teams.includes("Senior 1" as any)
     ).length;
     const seniors2Count = playersWithSeasonStats.filter((p) =>
-      p.teams.includes("Seniors 2" as any)
+      p.teams.includes("Senior 2" as any)
     ).length;
 
     const totalAge = playersWithSeasonStats.reduce((sum, player) => {
