@@ -9,14 +9,14 @@ interface PlayerListProps {
   players: Player[];
   onDeletePlayer: (playerId: string) => void;
   onImportPlayers: (importedPlayers: Player[]) => void;
-  onDeleteMultiple: (playerIds: string[]) => void;
 }
 
 export const PlayerList: React.FC<PlayerListProps> = ({
   players,
+  // onSelectPlayer, // Supprimé
+  // onEditPlayer, // Supprimé
   onDeletePlayer,
-  onImportPlayers,
-  onDeleteMultiple,
+  onImportPlayers
 }) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -138,14 +138,6 @@ export const PlayerList: React.FC<PlayerListProps> = ({
         ? prev.filter(id => id !== playerId)
         : [...prev, playerId]
     );
-  };
-
-  const handleSelectAll = () => {
-    if (selectedPlayers.length === filteredPlayers.length) {
-      setSelectedPlayers([]);
-    } else {
-      setSelectedPlayers(filteredPlayers.map(p => p.id));
-    }
   };
 
   const handleDeleteSelected = () => {

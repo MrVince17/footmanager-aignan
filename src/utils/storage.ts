@@ -84,36 +84,9 @@ export const storage = {
   },
 
   addMultiplePlayers: (newPlayers: Player[]) => {
-    const existingPlayers = storage.getPlayers();
-    const playerMap = new Map(existingPlayers.map(p => [p.licenseNumber, p]));
-
-    newPlayers.forEach(newPlayer => {
-      const { licenseNumber } = newPlayer;
-      if (licenseNumber) {
-        if (playerMap.has(licenseNumber)) {
-          // Player exists, update their data
-          const existingPlayer = playerMap.get(licenseNumber)!;
-          const updatedPlayer = {
-            ...existingPlayer,
-            ...newPlayer,
-            // Preserve stats and other data not included in the import
-            ...Object.keys(existingPlayer).reduce((acc, key) => {
-              if (!Object.keys(newPlayer).includes(key)) {
-                acc[key] = existingPlayer[key];
-              }
-              return acc;
-            }, {}),
-          };
-          playerMap.set(licenseNumber, updatedPlayer);
-        } else {
-          // New player, add them
-          const newId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          playerMap.set(licenseNumber, { ...newPlayer, id: newId });
-        }
-      }
-    });
-
-    const updatedPlayers = Array.from(playerMap.values());
+    const players = storage.getPlayers();
+    // A simple merge, could be improved with more complex logic
+    const updatedPlayers = [...players, ...newPlayers];
     storage.savePlayers(updatedPlayers);
   },
 
@@ -165,7 +138,7 @@ export const storage = {
   getTotalTeamEvents: (
     allPlayers: Player[],
     type: 'training' | 'match',
-    teamName?: 'Senior 1' | 'Senior 2',
+    teamName?: 'Seniors 1' | 'Seniors 2',
     season?: string, // Optional season filter
     matchType?: string // Optional match type filter
   ): { date: string, opponent?: string, season: string }[] => {
@@ -295,7 +268,7 @@ export const storage = {
           lastName: 'Dubois',
           dateOfBirth: '1995-03-15',
           licenseNumber: 'LIC001',
-          teams: ['Senior 1'],
+          teams: ['Seniors 1'],
           position: 'Gardien',
           totalMatches: 12,
           totalMinutes: 1080,
@@ -320,7 +293,7 @@ export const storage = {
           lastName: 'Martin',
           dateOfBirth: '1998-07-22',
           licenseNumber: 'LIC002',
-          teams: ['Senior 1', 'Senior 2'],
+          teams: ['Seniors 1', 'Seniors 2'],
           position: 'Attaquant',
           totalMatches: 15,
           totalMinutes: 1200,
@@ -345,7 +318,7 @@ export const storage = {
           lastName: 'Leroy',
           dateOfBirth: '1997-11-08',
           licenseNumber: 'LIC003',
-          teams: ['Senior 2'],
+          teams: ['Seniors 2'],
           position: 'Milieu',
           totalMatches: 10,
           totalMinutes: 850,
@@ -370,7 +343,7 @@ export const storage = {
           lastName: 'Rousseau',
           dateOfBirth: '1996-09-12',
           licenseNumber: 'LIC004',
-          teams: ['Senior 1'],
+          teams: ['Seniors 1'],
           position: 'Défenseur',
           totalMatches: 14,
           totalMinutes: 1260,
