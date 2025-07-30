@@ -9,6 +9,7 @@ interface PlayerListProps {
   players: Player[];
   onDeletePlayer: (playerId: string) => void;
   onImportPlayers: (importedPlayers: Player[]) => void;
+  onDeleteMultiple: (playerIds: string[]) => void;
 }
 
 export const PlayerList: React.FC<PlayerListProps> = ({
@@ -16,13 +17,15 @@ export const PlayerList: React.FC<PlayerListProps> = ({
   // onSelectPlayer, // Supprimé
   // onEditPlayer, // Supprimé
   onDeletePlayer,
-  onImportPlayers
+  onImportPlayers,
+  onDeleteMultiple
 }) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterPosition, setFilterPosition] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
 
   const excelHeaders = [
     'Nom complet',
@@ -84,13 +87,20 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           const licenseNumber = row[excelHeaders[2]];
 
           const dateOfBirthRaw = row[excelHeaders[1]];
-          let dateOfBirth = dateOfBirthRaw;
-          if (typeof dateOfBirthRaw === 'number') {
-            // It's a serial number, convert it
-            const d = XLSX.SSF.parse_date_code(dateOfBirthRaw);
-            dateOfBirth = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+          let dateOfBirth = '';
+          if (dateOfBirthRaw) {
+            if (typeof dateOfBirthRaw === 'number') {
+              // It's a serial number, convert it
+              const d = XLSX.SSF.parse_date_code(dateOfBirthRaw);
+              dateOfBirth = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+            } else if (typeof dateOfBirthRaw === 'string') {
+              // It might be a string in a different format, try to parse it
+              const d = new Date(dateOfBirthRaw);
+              if (!isNaN(d.getTime())) {
+                dateOfBirth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+              }
+            }
           }
-          // If it's already a string, assume it's in the correct format.
 
           return {
             ...row,
@@ -131,13 +141,31 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     reader.readAsBinaryString(file);
   };
 
+  const handleSelectPlayer = (playerId: string) => {
+    setSelectedPlayers(prev =>
+      prev.includes(playerId)
+        ? prev.filter(id => id !== playerId)
+        : [...prev, playerId]
+    );
+  };
+
+  const handleDeleteSelected = () => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedPlayers.length} joueur(s) ?`)) {
+      onDeleteMultiple(selectedPlayers);
+      setSelectedPlayers([]);
+    }
+  };
+
   const filteredPlayers = players.filter(player => {
     const matchesSearch = 
       player.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       player.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       player.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesTeam = filterTeam === 'all' || player.teams.includes(filterTeam as any);
+    const matchesTeam = filterTeam === 'all' ||
+      player.teams.includes(filterTeam as any) ||
+      (filterTeam === 'U13-U17' && player.teams.includes('U17')) ||
+      (filterTeam === 'Dirigeant/Dirigeante' && (player.teams.includes('Dirigeant') || player.teams.includes('Dirigeante')));
     const matchesPosition = filterPosition === 'all' || player.position === filterPosition;
     
     return matchesSearch && matchesTeam && matchesPosition;
@@ -192,12 +220,14 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           >
             <option value="all">Toutes les équipes</option>
-            <option value="Seniors">Seniors</option>
+            <option value="Senior">Senior</option>
             <option value="U20">U20</option>
             <option value="U19">U19</option>
             <option value="U18">U18</option>
             <option value="U13-U17">U13-U17</option>
             <option value="U6-U11">U6-U11</option>
+            <option value="Arbitre">Arbitre</option>
+            <option value="Dirigeant/Dirigeante">Dirigeant/Dirigeante</option>
           </select>
           
           <select
@@ -242,24 +272,44 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           </Link>
         </div>
 
-        <div className="text-sm text-gray-600 mb-4">
-          {filteredPlayers.length} joueur(s) trouvé(s)
+        <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
+          <span>{filteredPlayers.length} joueur(s) trouvé(s)</span>
+          {selectedPlayers.length > 0 && (
+            <div className="flex items-center space-x-4">
+              <span>{selectedPlayers.length} sélectionné(s)</span>
+              <button
+                onClick={handleDeleteSelected}
+                className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"
+              >
+                <Trash2 size={16} />
+                <span>Supprimer la sélection</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Players Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredPlayers.map((player) => (
-          <div key={player.id} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+          <div key={player.id} className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${selectedPlayers.includes(player.id) ? 'ring-2 ring-red-500' : ''}`}>
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    {player.firstName} {player.lastName}
-                  </h3>
+                <div className="flex items-start space-x-4">
+                  <input
+                    type="checkbox"
+                    checked={selectedPlayers.includes(player.id)}
+                    onChange={() => handleSelectPlayer(player.id)}
+                    className="mt-1 h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                  />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                      {player.firstName} {player.lastName}
+                    </h3>
                   <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
                     <Calendar size={16} />
                     <span>{getAge(player.dateOfBirth)} ans</span>
+                  </div>
                   </div>
                 </div>
                 <div className="flex space-x-2">

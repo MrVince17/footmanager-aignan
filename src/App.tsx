@@ -181,6 +181,11 @@ function App() {
     }
   };
 
+  const handleDeleteMultiplePlayers = (playerIds: string[]) => {
+    storage.deleteMultiplePlayers(playerIds);
+    refreshPlayers();
+  };
+
   const handleSavePerformance = (playerId: string, performanceData: Omit<Performance, 'id' | 'season' | 'excused'>) => {
     const performanceWithSeason: Omit<Performance, 'id' | 'excused'> = {
       ...performanceData,
@@ -254,7 +259,7 @@ function App() {
       >
         <Routes>
           <Route path="/" element={<Dashboard players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
-          <Route path="/players" element={<PlayerList players={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} />} />
+          <Route path="/players" element={<PlayerList players={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} onDeleteMultiple={handleDeleteMultiplePlayers} />} />
           <Route path="/players/add" element={<PlayerFormWrapper onSave={handleSavePlayer} players={players} />} />
           <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
           <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />

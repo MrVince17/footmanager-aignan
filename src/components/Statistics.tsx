@@ -98,7 +98,7 @@ interface StatisticsProps {
 }
 
 export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason, onSeasonChange, allPlayers }) => {
-  const [filterTeam, setFilterTeam] = useState<'all' | 'Seniors 1' | 'Seniors 2'>('all');
+  const [filterTeam, setFilterTeam] = useState<'all' | 'Senior 1' | 'Senior 2'>('all');
   const [filterMatchType, setFilterMatchType] = useState<'all' | 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS'>('all');
   const [sortBy, setSortBy] = useState<string>('goals');
 
@@ -290,12 +290,12 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
             <select
               id="team-filter-stats"
               value={filterTeam}
-              onChange={(e) => setFilterTeam(e.target.value as 'all' | 'Seniors 1' | 'Seniors 2')}
+              onChange={(e) => setFilterTeam(e.target.value as 'all' | 'Senior 1' | 'Senior 2')}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
               <option value="all">Toutes les équipes</option>
-              <option value="Seniors 1">Seniors 1</option>
-              <option value="Seniors 2">Seniors 2</option>
+              <option value="Senior 1">Senior 1</option>
+              <option value="Senior 2">Senior 2</option>
             </select>
           </div>
 

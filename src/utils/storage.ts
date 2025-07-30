@@ -78,6 +78,11 @@ export const storage = {
     storage.savePlayers(players);
   },
 
+  deleteMultiplePlayers: (playerIds: string[]) => {
+    const players = storage.getPlayers().filter(p => !playerIds.includes(p.id));
+    storage.savePlayers(players);
+  },
+
   addMultiplePlayers: (newPlayers: Player[]) => {
     const players = storage.getPlayers();
     // A simple merge, could be improved with more complex logic

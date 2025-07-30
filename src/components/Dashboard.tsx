@@ -163,10 +163,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const calculateTeamStats = (): TeamStats => {
     const totalPlayers = playersWithSeasonStats.length; // Should this be filtered by players active in the season?
     const seniors1Count = playersWithSeasonStats.filter((p) =>
-      p.teams.includes("Seniors 1" as any)
+      p.teams.includes("Senior 1" as any)
     ).length;
     const seniors2Count = playersWithSeasonStats.filter((p) =>
-      p.teams.includes("Seniors 2" as any)
+      p.teams.includes("Senior 2" as any)
     ).length;
 
     const totalAge = playersWithSeasonStats.reduce((sum, player) => {
@@ -236,13 +236,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const distribution: { [key: string]: number } = {};
     const filteredPlayers = playersWithSeasonStats.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam as any));
     filteredPlayers.forEach(player => {
-      player.teams.forEach(team => {
-        let teamName = team;
-        if (team === 'Dirigeant' || team === 'Dirigeant/Dirigeante' || team === 'Dirigeant / Dirigeante') {
-          teamName = 'Dirigeant/Dirigeante';
-        }
-        distribution[teamName] = (distribution[teamName] || 0) + 1;
-      });
+      let mainTeam = player.teams[0] || 'Non assigné';
+      if (player.teams.includes('Senior 1')) mainTeam = 'Senior 1';
+      else if (player.teams.includes('Senior 2')) mainTeam = 'Senior 2';
+      else if (player.teams.includes('U17')) mainTeam = 'U13-U17';
+      else if (player.teams.includes('Dirigeant') || player.teams.includes('Dirigeante')) mainTeam = 'Dirigeant/Dirigeante';
+      else if (player.teams.includes('Arbitre')) mainTeam = 'Arbitre';
+
+      distribution[mainTeam] = (distribution[mainTeam] || 0) + 1;
     });
     return distribution;
   }, [playersWithSeasonStats, filterTeam]);
@@ -415,7 +416,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="space-y-4">
             {Object.entries(teamDistribution)
               .sort(([teamA], [teamB]) => {
-                const order = ['Senior', 'U20', 'U19', 'U18', 'U17', 'Arbitre', 'Dirigeant/Dirigeante'];
+                const order = ['Senior', 'U20', 'U19', 'U18', 'U13-U17', 'Arbitre', 'Dirigeant/Dirigeante'];
                 const indexA = order.indexOf(teamA);
                 const indexB = order.indexOf(teamB);
 
