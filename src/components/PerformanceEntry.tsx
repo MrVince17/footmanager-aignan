@@ -333,7 +333,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                         return p.teams.some(team => team.startsWith('U6') || team.startsWith('U7') || team.startsWith('U8') || team.startsWith('U9') || team.startsWith('U10') || team.startsWith('U11'));
                       }
                       if (filterTeamPerformance === 'dirigeant') {
-                        return p.teams.includes('dirigeant');
+                        return p.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant'].includes(team));
                       }
                       return p.teams.includes(filterTeamPerformance as any);
                     })
@@ -394,7 +394,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                     return player.teams.some(team => team.startsWith('U6') || team.startsWith('U7') || team.startsWith('U8') || team.startsWith('U9') || team.startsWith('U10') || team.startsWith('U11'));
                   }
                   if (filterTeamPerformance === 'dirigeant') {
-                    return player.teams.includes('dirigeant');
+                    return player.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant'].includes(team));
                   }
                   return player.teams.includes(filterTeamPerformance as any);
                 })
