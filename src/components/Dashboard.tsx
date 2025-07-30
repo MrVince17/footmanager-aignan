@@ -236,13 +236,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const distribution: { [key: string]: number } = {};
     const filteredPlayers = playersWithSeasonStats.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam as any));
     filteredPlayers.forEach(player => {
-      player.teams.forEach(team => {
-        let teamName = team;
-        if (team === 'Dirigeant' || team === 'Dirigeant/Dirigeante' || team === 'Dirigeant / Dirigeante') {
-          teamName = 'Dirigeant/Dirigeante';
-        }
-        distribution[teamName] = (distribution[teamName] || 0) + 1;
-      });
+      let mainTeam = player.teams[0] || 'Non assigné';
+      if (player.teams.includes('Senior 1')) mainTeam = 'Senior 1';
+      else if (player.teams.includes('Senior 2')) mainTeam = 'Senior 2';
+      else if (player.teams.includes('U17')) mainTeam = 'U13-U17';
+      else if (player.teams.includes('Dirigeant') || player.teams.includes('Dirigeante')) mainTeam = 'Dirigeant/Dirigeante';
+      else if (player.teams.includes('Arbitre')) mainTeam = 'Arbitre';
+
+      distribution[mainTeam] = (distribution[mainTeam] || 0) + 1;
     });
     return distribution;
   }, [playersWithSeasonStats, filterTeam]);
