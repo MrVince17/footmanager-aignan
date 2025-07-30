@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Player } from '../types';
+import { Player, Team } from '../types';
 import { Save, X, User, Calendar, Hash, Users, MapPin } from 'lucide-react';
 
 interface PlayerFormProps {
@@ -73,7 +73,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
     onSave(playerData);
   };
 
-  const handleTeamChange = (team: string, checked: boolean) => {
+  const handleTeamChange = (team: Team, checked: boolean) => {
     const currentTeams = formData.teams || [];
     if (checked) {
       setFormData({ ...formData, teams: [...currentTeams, team] });
@@ -82,6 +82,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
     }
   };
 
+  const teams: Team[] = ['Senior 1', 'Senior 2', 'U20', 'U19', 'U18', 'U13-U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">
@@ -163,7 +164,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
                   Équipe(s) *
                 </label>
                 <div className="space-y-2">
-                  {[ 'Senior', 'U20', 'U19', 'U18', 'U13-U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'].map(team => (
+                  {teams.map(team => (
                     <label key={team} className="flex items-center">
                       <input
                         type="checkbox"

@@ -1,10 +1,12 @@
+export type Team = 'Senior 1' | 'Senior 2' | 'U20' | 'U19' | 'U18' | 'U13-U17' | 'U6-U11' | 'Arbitre' | 'Dirigeant/Dirigeante';
+
 export interface Player {
   id: string;
   firstName: string;
   lastName: string;
   dateOfBirth: string;
   licenseNumber: string;
-  teams: ('Senior' | 'U20' | 'U19' | 'U18' | 'U13-U17' | 'U6-U11' | 'Arbitre' | 'Dirigéant')[];
+  teams: Team[];
   position: 'Gardien' | 'Défenseur' | 'Milieu' | 'Attaquant';
   
   // Statistics

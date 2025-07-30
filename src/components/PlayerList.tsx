@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { Player } from '../types';
-import { Search, Plus, Edit, Trash2, Users, Upload, Download, Calendar, Award } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Users, Upload, Download, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 interface PlayerListProps {
   players: Player[];
@@ -164,7 +164,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     
     const matchesTeam = filterTeam === 'all' ||
       player.teams.includes(filterTeam as any) ||
-      (filterTeam === 'U13-U17' && player.teams.includes('U17')) ||
+      (filterTeam === 'U13-U17' && player.teams.includes('U17' as any)) ||
       (filterTeam === 'Dirigeant/Dirigeante' && player.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant'].includes(team)));
     const matchesPosition = filterPosition === 'all' || player.position === filterPosition;
     
@@ -220,7 +220,8 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           >
             <option value="all">Toutes les équipes</option>
-            <option value="Senior">Senior</option>
+            <option value="Senior 1">Senior 1</option>
+            <option value="Senior 2">Senior 2</option>
             <option value="U20">U20</option>
             <option value="U19">U19</option>
             <option value="U18">U18</option>

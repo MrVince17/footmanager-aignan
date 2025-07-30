@@ -84,8 +84,8 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
     }
   };
 
-  const StatCard: React.FC<{ title: string; value?: string | number; icon: React.ReactNode; color: string; stats?: Record<string, number> }> =
-    ({ title, value, icon, color, stats }) => (
+  const StatCard: React.FC<{ title: string; value?: string | number; color: string; stats?: Record<string, number> }> =
+    ({ title, value, color, stats }) => (
       <div className="bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow duration-300 h-full" style={{ borderLeftColor: color }}>
         <div className="flex justify-between">
           <div>
@@ -469,7 +469,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Activité récente</h3>
         {player.performances.length > 0 ? (
           <div className="space-y-3">
-            {player.performances.slice(-5).reverse().map((performance, index) => (
+            {player.performances.slice(-5).reverse().map((performance) => (
               <div key={performance.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className={`w-3 h-3 rounded-full ${
