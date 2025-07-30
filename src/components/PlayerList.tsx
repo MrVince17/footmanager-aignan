@@ -210,7 +210,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           >
             <option value="all">Toutes les équipes</option>
-            <option value="Seniors">Seniors</option>
+            <option value="Senior">Senior</option>
             <option value="U20">U20</option>
             <option value="U19">U19</option>
             <option value="U18">U18</option>
