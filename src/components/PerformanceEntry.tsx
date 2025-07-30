@@ -308,7 +308,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
               >
                 <option value="all">Toutes les équipes</option>
-                <option value="Seniors">Seniors</option>
+                <option value="Senior">Senior</option>
                 <option value="U20">U20</option>
                 <option value="U19">U19</option>
                 <option value="U18">U18</option>
@@ -323,8 +323,8 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                   const visiblePlayerIds = players
                     .filter(p => {
                       if (filterTeamPerformance === 'all') return true;
-                      if (filterTeamPerformance === 'Seniors') {
-                        return p.teams.includes('Seniors 1') || p.teams.includes('Seniors 2') || p.teams.includes('Seniors');
+                      if (filterTeamPerformance === 'Senior') {
+                        return p.teams.some(team => team.toLowerCase().includes('senior'));
                       }
                       if (filterTeamPerformance === 'U13-U17') {
                         return p.teams.some(team => team.startsWith('U13') || team.startsWith('U14') || team.startsWith('U15') || team.startsWith('U16') || team.startsWith('U17'));
@@ -384,8 +384,8 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
               {players
                 .filter(player => {
                   if (filterTeamPerformance === 'all') return true;
-                  if (filterTeamPerformance === 'Seniors') {
-                    return player.teams.includes('Seniors 1') || player.teams.includes('Seniors 2') || player.teams.includes('Seniors');
+                  if (filterTeamPerformance === 'Senior') {
+                    return player.teams.some(team => team.toLowerCase().includes('senior'));
                   }
                   if (filterTeamPerformance === 'U13-U17') {
                     return player.teams.some(team => team.startsWith('U13') || team.startsWith('U14') || team.startsWith('U15') || team.startsWith('U16') || team.startsWith('U17'));
