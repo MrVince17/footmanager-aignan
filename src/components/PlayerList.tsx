@@ -301,21 +301,6 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           )}
         </div>
 
-        <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
-          <span>{filteredPlayers.length} joueur(s) trouvé(s)</span>
-          {selectedPlayers.length > 0 && (
-            <div className="flex items-center space-x-4">
-              <span>{selectedPlayers.length} sélectionné(s)</span>
-              <button
-                onClick={handleDeleteSelected}
-                className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"
-              >
-                <Trash2 size={16} />
-                <span>Supprimer la sélection</span>
-              </button>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Players Grid */}
