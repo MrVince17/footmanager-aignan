@@ -296,6 +296,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                     <Calendar size={16} />
                     <span>{getAge(player.dateOfBirth)} ans</span>
                   </div>
+                  </div>
                 </div>
                 <div className="flex space-x-2">
                   <Link
