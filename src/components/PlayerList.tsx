@@ -87,13 +87,20 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           const licenseNumber = row[excelHeaders[2]];
 
           const dateOfBirthRaw = row[excelHeaders[1]];
-          let dateOfBirth = dateOfBirthRaw;
-          if (typeof dateOfBirthRaw === 'number') {
-            // It's a serial number, convert it
-            const d = XLSX.SSF.parse_date_code(dateOfBirthRaw);
-            dateOfBirth = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+          let dateOfBirth = '';
+          if (dateOfBirthRaw) {
+            if (typeof dateOfBirthRaw === 'number') {
+              // It's a serial number, convert it
+              const d = XLSX.SSF.parse_date_code(dateOfBirthRaw);
+              dateOfBirth = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+            } else if (typeof dateOfBirthRaw === 'string') {
+              // It might be a string in a different format, try to parse it
+              const d = new Date(dateOfBirthRaw);
+              if (!isNaN(d.getTime())) {
+                dateOfBirth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+              }
+            }
           }
-          // If it's already a string, assume it's in the correct format.
 
           return {
             ...row,
