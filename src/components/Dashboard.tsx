@@ -238,7 +238,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     filteredPlayers.forEach(player => {
       player.teams.forEach(team => {
         let teamName = team;
-        if (team === 'Dirigeant' || team === 'Dirigeant/Dirigeante') {
+        if (team === 'Dirigeant' || team === 'Dirigeant/Dirigeante' || team === 'Dirigeant / Dirigeante') {
           teamName = 'Dirigeant/Dirigeante';
         }
         distribution[teamName] = (distribution[teamName] || 0) + 1;
