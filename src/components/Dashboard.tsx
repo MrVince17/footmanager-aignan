@@ -418,16 +418,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 const order = ['Seniors', 'U20', 'U19', 'U18', 'U17', 'U13-U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
                 const indexA = order.indexOf(teamA);
                 const indexB = order.indexOf(teamB);
-                if (indexA !== -1 && indexB !== -1) {
-                  return indexA - indexB;
-                }
-                if (indexA !== -1) {
-                  return -1;
-                }
-                if (indexB !== -1) {
-                  return 1;
-                }
-                return teamA.localeCompare(teamB);
+
+                if (indexA === -1 && indexB === -1) return teamA.localeCompare(teamB);
+                if (indexA === -1) return 1;
+                if (indexB === -1) return -1;
+
+                return indexA - indexB;
               })
               .map(([team, count]) => (
               <div key={team} className="flex items-center justify-between">
