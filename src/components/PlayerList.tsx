@@ -9,6 +9,7 @@ interface PlayerListProps {
   players: Player[];
   onDeletePlayer: (playerId: string) => void;
   onImportPlayers: (importedPlayers: Player[]) => void;
+  onDeleteMultiple: (playerIds: string[]) => void;
 }
 
 export const PlayerList: React.FC<PlayerListProps> = ({
@@ -16,7 +17,8 @@ export const PlayerList: React.FC<PlayerListProps> = ({
   // onSelectPlayer, // Supprimé
   // onEditPlayer, // Supprimé
   onDeletePlayer,
-  onImportPlayers
+  onImportPlayers,
+  onDeleteMultiple
 }) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
