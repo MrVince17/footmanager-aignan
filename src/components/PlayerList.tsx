@@ -9,20 +9,21 @@ interface PlayerListProps {
   players: Player[];
   onDeletePlayer: (playerId: string) => void;
   onImportPlayers: (importedPlayers: Player[]) => void;
+  onDeleteMultiple: (playerIds: string[]) => void;
 }
 
 export const PlayerList: React.FC<PlayerListProps> = ({
   players,
-  // onSelectPlayer, // Supprimé
-  // onEditPlayer, // Supprimé
   onDeletePlayer,
-  onImportPlayers
+  onImportPlayers,
+  onDeleteMultiple,
 }) => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterPosition, setFilterPosition] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
 
   const excelHeaders = [
     'Nom complet',
@@ -139,6 +140,29 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     reader.readAsBinaryString(file);
   };
 
+  const handleSelectPlayer = (playerId: string) => {
+    setSelectedPlayers(prev =>
+      prev.includes(playerId)
+        ? prev.filter(id => id !== playerId)
+        : [...prev, playerId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedPlayers.length === filteredPlayers.length) {
+      setSelectedPlayers([]);
+    } else {
+      setSelectedPlayers(filteredPlayers.map(p => p.id));
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer ${selectedPlayers.length} joueur(s) ?`)) {
+      onDeleteMultiple(selectedPlayers);
+      setSelectedPlayers([]);
+    }
+  };
+
   const filteredPlayers = players.filter(player => {
     const matchesSearch = 
       player.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -250,21 +274,40 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           </Link>
         </div>
 
-        <div className="text-sm text-gray-600 mb-4">
-          {filteredPlayers.length} joueur(s) trouvé(s)
+        <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
+          <span>{filteredPlayers.length} joueur(s) trouvé(s)</span>
+          {selectedPlayers.length > 0 && (
+            <div className="flex items-center space-x-4">
+              <span>{selectedPlayers.length} sélectionné(s)</span>
+              <button
+                onClick={handleDeleteSelected}
+                className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"
+              >
+                <Trash2 size={16} />
+                <span>Supprimer la sélection</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Players Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredPlayers.map((player) => (
-          <div key={player.id} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+          <div key={player.id} className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${selectedPlayers.includes(player.id) ? 'ring-2 ring-red-500' : ''}`}>
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    {player.firstName} {player.lastName}
-                  </h3>
+                <div className="flex items-start space-x-4">
+                  <input
+                    type="checkbox"
+                    checked={selectedPlayers.includes(player.id)}
+                    onChange={() => handleSelectPlayer(player.id)}
+                    className="mt-1 h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                  />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                      {player.firstName} {player.lastName}
+                    </h3>
                   <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
                     <Calendar size={16} />
                     <span>{getAge(player.dateOfBirth)} ans</span>
