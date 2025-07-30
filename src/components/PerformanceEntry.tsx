@@ -315,7 +315,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                 <option value="U13-U17">U13-U17</option>
                 <option value="U6-U11">U6-U11</option>
                 <option value="Arbitre">Arbitre</option>
-                <option value="Dirigeant / Dirigeante">Dirigeant / Dirigeante</option>
+                <option value="dirigeant">Dirigeant</option>
               </select>
               <button
                 type="button"
@@ -332,8 +332,8 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                       if (filterTeamPerformance === 'U6-U11') {
                         return p.teams.some(team => team.startsWith('U6') || team.startsWith('U7') || team.startsWith('U8') || team.startsWith('U9') || team.startsWith('U10') || team.startsWith('U11'));
                       }
-                      if (filterTeamPerformance === 'Dirigeant / Dirigeante') {
-                        return p.teams.includes('Dirigeant') || p.teams.includes('Dirigeant / Dirigeante');
+                      if (filterTeamPerformance === 'dirigeant') {
+                        return p.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant'].includes(team));
                       }
                       return p.teams.includes(filterTeamPerformance as any);
                     })
@@ -393,8 +393,8 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                    if (filterTeamPerformance === 'U6-U11') {
                     return player.teams.some(team => team.startsWith('U6') || team.startsWith('U7') || team.startsWith('U8') || team.startsWith('U9') || team.startsWith('U10') || team.startsWith('U11'));
                   }
-                  if (filterTeamPerformance === 'Dirigeant / Dirigeante') {
-                    return player.teams.includes('Dirigeant') || player.teams.includes('Dirigeant / Dirigeante');
+                  if (filterTeamPerformance === 'dirigeant') {
+                    return player.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant'].includes(team));
                   }
                   return player.teams.includes(filterTeamPerformance as any);
                 })

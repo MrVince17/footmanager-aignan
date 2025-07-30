@@ -165,7 +165,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     const matchesTeam = filterTeam === 'all' ||
       player.teams.includes(filterTeam as any) ||
       (filterTeam === 'U13-U17' && player.teams.includes('U17')) ||
-      (filterTeam === 'Dirigeant/Dirigeante' && (player.teams.includes('Dirigeant') || player.teams.includes('Dirigeante')));
+      (filterTeam === 'Dirigeant/Dirigeante' && player.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant'].includes(team)));
     const matchesPosition = filterPosition === 'all' || player.position === filterPosition;
     
     return matchesSearch && matchesTeam && matchesPosition;
@@ -271,8 +271,21 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             <span>Ajouter</span>
           </Link>
         </div>
-
         <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
+            <button
+                onClick={() => {
+                    const allVisiblePlayerIds = filteredPlayers.map(p => p.id);
+                    const allVisibleSelected = selectedPlayers.length === allVisiblePlayerIds.length && allVisiblePlayerIds.every(id => selectedPlayers.includes(id));
+                    if (allVisibleSelected) {
+                        setSelectedPlayers(selectedPlayers.filter(id => !allVisiblePlayerIds.includes(id)));
+                    } else {
+                        setSelectedPlayers([...new Set([...selectedPlayers, ...allVisiblePlayerIds])]);
+                    }
+                }}
+                className="px-4 py-2 border border-red-500 text-red-600 rounded-lg hover:bg-red-50 text-sm"
+            >
+                Tout sélectionner / désélectionner (visibles)
+            </button>
           <span>{filteredPlayers.length} joueur(s) trouvé(s)</span>
           {selectedPlayers.length > 0 && (
             <div className="flex items-center space-x-4">
@@ -287,6 +300,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             </div>
           )}
         </div>
+
       </div>
 
       {/* Players Grid */}
