@@ -416,7 +416,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="space-y-4">
             {Object.entries(teamDistribution)
               .sort(([teamA], [teamB]) => {
-                const order = ['Senior', 'U20', 'U19', 'U18', 'U17', 'Arbitre', 'Dirigeant/Dirigeante'];
+                const order = ['Senior', 'U20', 'U19', 'U18', 'U13-U17', 'Arbitre', 'Dirigeant/Dirigeante'];
                 const indexA = order.indexOf(teamA);
                 const indexB = order.indexOf(teamB);
 
