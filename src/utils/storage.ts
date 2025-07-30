@@ -84,25 +84,27 @@ export const storage = {
 
     newPlayers.forEach(newPlayer => {
       const { licenseNumber } = newPlayer;
-      if (licenseNumber && playerMap.has(licenseNumber)) {
-        // Player exists, update their data
-        const existingPlayer = playerMap.get(licenseNumber)!;
-        const updatedPlayer = {
-          ...existingPlayer,
-          ...newPlayer,
-          // Preserve stats and other data not included in the import
-          ...Object.keys(existingPlayer).reduce((acc, key) => {
-            if (!Object.keys(newPlayer).includes(key)) {
-              acc[key] = existingPlayer[key];
-            }
-            return acc;
-          }, {}),
-        };
-        playerMap.set(licenseNumber, updatedPlayer);
-      } else {
-        // New player, add them
-        const newId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        playerMap.set(licenseNumber || newId, { ...newPlayer, id: newId });
+      if (licenseNumber) {
+        if (playerMap.has(licenseNumber)) {
+          // Player exists, update their data
+          const existingPlayer = playerMap.get(licenseNumber)!;
+          const updatedPlayer = {
+            ...existingPlayer,
+            ...newPlayer,
+            // Preserve stats and other data not included in the import
+            ...Object.keys(existingPlayer).reduce((acc, key) => {
+              if (!Object.keys(newPlayer).includes(key)) {
+                acc[key] = existingPlayer[key];
+              }
+              return acc;
+            }, {}),
+          };
+          playerMap.set(licenseNumber, updatedPlayer);
+        } else {
+          // New player, add them
+          const newId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          playerMap.set(licenseNumber, { ...newPlayer, id: newId });
+        }
       }
     });
 
