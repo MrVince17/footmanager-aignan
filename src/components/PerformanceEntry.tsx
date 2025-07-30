@@ -333,7 +333,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                         return p.teams.some(team => team.startsWith('U6') || team.startsWith('U7') || team.startsWith('U8') || team.startsWith('U9') || team.startsWith('U10') || team.startsWith('U11'));
                       }
                       if (filterTeamPerformance === 'Dirigeant / Dirigeante') {
-                        return p.teams.includes('Dirigeant') || p.teams.includes('Dirigeant / Dirigeante');
+                        return p.teams.includes('Dirigeant') || p.teams.includes('Dirigeant / Dirigeante') || p.teams.includes('dirigeant');
                       }
                       return p.teams.includes(filterTeamPerformance as any);
                     })
@@ -394,7 +394,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                     return player.teams.some(team => team.startsWith('U6') || team.startsWith('U7') || team.startsWith('U8') || team.startsWith('U9') || team.startsWith('U10') || team.startsWith('U11'));
                   }
                   if (filterTeamPerformance === 'Dirigeant / Dirigeante') {
-                    return player.teams.includes('Dirigeant') || player.teams.includes('Dirigeant / Dirigeante');
+                    return player.teams.includes('Dirigeant') || player.teams.includes('Dirigeant / Dirigeante') || player.teams.includes('dirigeant');
                   }
                   return player.teams.includes(filterTeamPerformance as any);
                 })
