@@ -85,24 +85,17 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           const licenseNumber = row[excelHeaders[2]];
 
           const dateOfBirthRaw = row[excelHeaders[1]];
-          let dateOfBirth = '';
-          if (dateOfBirthRaw) {
-            if (typeof dateOfBirthRaw === 'number') {
-              // It's a serial number, convert it
-              const d = XLSX.SSF.parse_date_code(dateOfBirthRaw);
-              dateOfBirth = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
-            } else if (typeof dateOfBirthRaw === 'string') {
-              // It's a string, try to parse it
-              const d = new Date(dateOfBirthRaw);
-              if (!isNaN(d.getTime())) {
-                dateOfBirth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-              }
-            }
+          let dateOfBirth = dateOfBirthRaw;
+          if (typeof dateOfBirthRaw === 'number') {
+            // It's a serial number, convert it
+            const d = XLSX.SSF.parse_date_code(dateOfBirthRaw);
+            dateOfBirth = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
           }
           // If it's already a string, assume it's in the correct format.
 
-          const player: Player = {
-            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Generate a unique ID
+          return {
+            ...row,
+            id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`, // Basic unique ID
             firstName,
             lastName,
             dateOfBirth: dateOfBirth,
@@ -128,7 +121,6 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             unavailabilities: [],
             performances: [],
           };
-          return player;
         });
 
         onImportPlayers(importedPlayers as Player[]);
@@ -224,7 +216,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           >
             <option value="all">Toutes les équipes</option>
-            <option value="Senior">Senior</option>
+            <option value="Seniors">Seniors</option>
             <option value="U20">U20</option>
             <option value="U19">U19</option>
             <option value="U18">U18</option>
