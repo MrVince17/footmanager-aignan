@@ -93,7 +93,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           // If it's already a string, assume it's in the correct format.
 
           const player: Player = {
-            id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`, // Basic unique ID
+            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Generate a unique ID
             firstName,
             lastName,
             dateOfBirth: dateOfBirth,
