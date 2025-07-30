@@ -165,7 +165,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     const matchesTeam = filterTeam === 'all' ||
       player.teams.includes(filterTeam as any) ||
       (filterTeam === 'U13-U17' && player.teams.includes('U17')) ||
-      (filterTeam === 'Dirigeant/Dirigeante' && (player.teams.includes('Dirigeant') || player.teams.includes('Dirigeante')));
+      (filterTeam === 'Dirigeant/Dirigeante' && player.teams.includes('Dirigeant/Dirigeante'));
     const matchesPosition = filterPosition === 'all' || player.position === filterPosition;
     
     return matchesSearch && matchesTeam && matchesPosition;
