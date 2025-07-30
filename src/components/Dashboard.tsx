@@ -237,7 +237,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const filteredPlayers = playersWithSeasonStats.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam as any));
     filteredPlayers.forEach(player => {
       player.teams.forEach(team => {
-        distribution[team] = (distribution[team] || 0) + 1;
+        let teamName = team;
+        if (team === 'Dirigeant' || team === 'Dirigeant/Dirigeante') {
+          teamName = 'Dirigeant/Dirigeante';
+        }
+        distribution[teamName] = (distribution[teamName] || 0) + 1;
       });
     });
     return distribution;
@@ -409,7 +413,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
             Répartition par Catégorie
           </h3>
           <div className="space-y-4">
-            {Object.entries(teamDistribution).map(([team, count]) => (
+            {Object.entries(teamDistribution)
+              .sort(([teamA], [teamB]) => {
+                const order = ['Seniors', 'U20', 'U19', 'U18', 'U13-U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
+                return order.indexOf(teamA) - order.indexOf(teamB);
+              })
+              .map(([team, count]) => (
               <div key={team} className="flex items-center justify-between">
                 <span className="text-gray-600">{team}</span>
                 <div className="flex items-center space-x-2">
