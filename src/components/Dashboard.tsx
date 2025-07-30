@@ -416,7 +416,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {Object.entries(teamDistribution)
               .sort(([teamA], [teamB]) => {
                 const order = ['Seniors', 'U20', 'U19', 'U18', 'U13-U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
-                return order.indexOf(teamA) - order.indexOf(teamB);
+                let indexA = order.indexOf(teamA);
+                let indexB = order.indexOf(teamB);
+                if (indexA === -1) indexA = order.length;
+                if (indexB === -1) indexB = order.length;
+                return indexA - indexB;
               })
               .map(([team, count]) => (
               <div key={team} className="flex items-center justify-between">
