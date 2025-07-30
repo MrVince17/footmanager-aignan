@@ -13,7 +13,29 @@ export const storage = {
   // Players
   getPlayers: (): Player[] => {
     const data = localStorage.getItem(STORAGE_KEYS.PLAYERS);
-    return data ? JSON.parse(data) : [];
+    if (!data) return [];
+
+    const players: Player[] = JSON.parse(data);
+
+    // Data migration: ensure all players have necessary fields
+    return players.map(player => ({
+      ...player,
+      teams: player.teams || [],
+      performances: player.performances || [],
+      unavailabilities: player.unavailabilities || [],
+      absences: player.absences || [],
+      injuries: player.injuries || [],
+      totalMatches: player.totalMatches || 0,
+      totalMinutes: player.totalMinutes || 0,
+      totalTrainings: player.totalTrainings || 0,
+      goals: player.goals || 0,
+      assists: player.assists || 0,
+      cleanSheets: player.cleanSheets || 0,
+      yellowCards: player.yellowCards || 0,
+      redCards: player.redCards || 0,
+      trainingAttendanceRate: player.trainingAttendanceRate || 0,
+      matchAttendanceRate: player.matchAttendanceRate || 0,
+    }));
   },
 
   savePlayers: (players: Player[]) => {

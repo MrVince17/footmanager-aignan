@@ -92,6 +92,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onSeasonChange,
   allPlayers,
 }) => {
+  const [filterTeam, setFilterTeam] = React.useState<string>('all');
   const validatePlayerData = (players: any[]) => {
     return players.map(player => ({
       ...player,
@@ -110,60 +111,62 @@ export const Dashboard: React.FC<DashboardProps> = ({
   console.log("Dashboard availableSeasons:", availableSeasons);
 
   const playersWithSeasonStats = useMemo(() => {
-    return players.map((p) => {
-      const seasonStats = getPlayerStatsForSeason(p, selectedSeason);
-      // Calculate season-specific attendance rates
-      const allTeamTrainingsForSeason = storage.getTotalTeamEvents(
-        allPlayers,
-        "training",
-        undefined,
-        selectedSeason
-      ).length;
-
-      let allTeamMatchesForPlayerForSeason = 0;
-      const uniqueMatchEventsForPlayerSeason = new Set<string>();
-      p.teams.forEach((team) => {
-        const teamMatchEvents = storage.getTotalTeamEvents(
+    return players
+      .filter(p => filterTeam === 'all' || p.teams.includes(filterTeam))
+      .map((p) => {
+        const seasonStats = getPlayerStatsForSeason(p, selectedSeason);
+        // Calculate season-specific attendance rates
+        const allTeamTrainingsForSeason = storage.getTotalTeamEvents(
           allPlayers,
-          "match",
-          team,
+          "training",
+          undefined,
           selectedSeason
-        );
-        teamMatchEvents.forEach((event) =>
-          uniqueMatchEventsForPlayerSeason.add(
-            `${event.date}-${event.opponent || "unknown"}`
-          )
-        );
+        ).length;
+
+        let allTeamMatchesForPlayerForSeason = 0;
+        const uniqueMatchEventsForPlayerSeason = new Set<string>();
+        p.teams.forEach((team) => {
+          const teamMatchEvents = storage.getTotalTeamEvents(
+            allPlayers,
+            "match",
+          team as any,
+            selectedSeason
+          );
+          teamMatchEvents.forEach((event) =>
+            uniqueMatchEventsForPlayerSeason.add(
+              `${event.date}-${event.opponent || "unknown"}`
+            )
+          );
+        });
+        allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
+
+        // Calculate season-specific attendance rates
+        const trainingAttendanceRate =
+          allTeamTrainingsForSeason > 0
+            ? (seasonStats.presentTrainings / allTeamTrainingsForSeason) * 100
+            : p.trainingAttendanceRate; // Fallback or 0
+        const matchAttendanceRate =
+          allTeamMatchesForPlayerForSeason > 0
+            ? (seasonStats.presentMatches / allTeamMatchesForPlayerForSeason) *
+              100
+            : p.matchAttendanceRate; // Fallback or 0
+
+        return {
+          ...p,
+          seasonStats,
+          trainingAttendanceRateSeason: trainingAttendanceRate,
+          matchAttendanceRateSeason: matchAttendanceRate,
+        };
       });
-      allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
-
-      // Calculate season-specific attendance rates
-      const trainingAttendanceRate =
-        allTeamTrainingsForSeason > 0
-          ? (seasonStats.presentTrainings / allTeamTrainingsForSeason) * 100
-          : p.trainingAttendanceRate; // Fallback or 0
-      const matchAttendanceRate =
-        allTeamMatchesForPlayerForSeason > 0
-          ? (seasonStats.presentMatches / allTeamMatchesForPlayerForSeason) *
-            100
-          : p.matchAttendanceRate; // Fallback or 0
-
-      return {
-        ...p,
-        seasonStats,
-        trainingAttendanceRateSeason: trainingAttendanceRate,
-        matchAttendanceRateSeason: matchAttendanceRate,
-      };
-    });
-  }, [players, selectedSeason, allPlayers]);
+  }, [players, selectedSeason, allPlayers, filterTeam]);
 
   const calculateTeamStats = (): TeamStats => {
     const totalPlayers = playersWithSeasonStats.length; // Should this be filtered by players active in the season?
     const seniors1Count = playersWithSeasonStats.filter((p) =>
-      p.teams.includes("Seniors 1")
+      p.teams.includes("Seniors 1" as any)
     ).length;
     const seniors2Count = playersWithSeasonStats.filter((p) =>
-      p.teams.includes("Seniors 2")
+      p.teams.includes("Seniors 2" as any)
     ).length;
 
     const totalAge = playersWithSeasonStats.reduce((sum, player) => {
@@ -178,16 +181,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
       0
     );
     // For totalMatches and totalTrainings, we should count unique team events for the season.
+    const teamToFilter = filterTeam === 'all' ? undefined : filterTeam as any;
     const uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(
       allPlayers,
       "match",
-      undefined,
+      teamToFilter,
       selectedSeason
     ).length;
     const uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(
       allPlayers,
       "training",
-      undefined,
+      teamToFilter,
       selectedSeason
     ).length;
 
@@ -222,11 +226,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const stats = useMemo(
     () => calculateTeamStats(),
-    [playersWithSeasonStats, selectedSeason, allPlayers]
+    [playersWithSeasonStats, selectedSeason, allPlayers, filterTeam]
   );
 
   // Admin issues are global, not season-specific
-  const adminIssues = players.filter((p) => !p.licenseValid || !p.paymentValid);
+  const adminIssues = allPlayers.filter((p) => (!p.licenseValid || !p.paymentValid) && (filterTeam === 'all' || p.teams.includes(filterTeam as any)));
+
+  const teamDistribution = useMemo(() => {
+    const distribution: { [key: string]: number } = {};
+    const filteredPlayers = playersWithSeasonStats.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam as any));
+    filteredPlayers.forEach(player => {
+      player.teams.forEach(team => {
+        let teamName = team;
+        if (team === 'Dirigeant' || team === 'Dirigeant/Dirigeante' || team === 'Dirigeant / Dirigeante') {
+          teamName = 'Dirigeant/Dirigeante';
+        }
+        distribution[teamName] = (distribution[teamName] || 0) + 1;
+      });
+    });
+    return distribution;
+  }, [playersWithSeasonStats, filterTeam]);
 
   const topScorers = [...playersWithSeasonStats]
     .sort((a, b) => b.seasonStats.goals - a.seasonStats.goals)
@@ -309,27 +328,48 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Season Filter */}
+      {/* Season and Team Filter */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow flex items-center space-x-3">
         <Filter size={20} className="text-gray-600" />
-        <label
-          htmlFor="season-select"
-          className="text-sm font-medium text-gray-700"
-        >
-          Saison :
-        </label>
-        <select
-          id="season-select"
-          value={selectedSeason}
-          onChange={(e) => onSeasonChange(e.target.value)}
-          className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
-        >
-          {availableSeasons.map((season) => (
-            <option key={season} value={season}>
-              {season}
-            </option>
-          ))}
-        </select>
+        <div>
+          <label
+            htmlFor="season-select"
+            className="text-sm font-medium text-gray-700"
+          >
+            Saison :
+          </label>
+          <select
+            id="season-select"
+            value={selectedSeason}
+            onChange={(e) => onSeasonChange(e.target.value)}
+            className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
+          >
+            {availableSeasons.map((season) => (
+              <option key={season} value={season}>
+                {season}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label
+            htmlFor="team-filter-dashboard"
+            className="text-sm font-medium text-gray-700"
+          >
+            Équipe :
+          </label>
+          <select
+            id="team-filter-dashboard"
+            value={filterTeam}
+            onChange={(e) => setFilterTeam(e.target.value)}
+            className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
+          >
+            <option value="all">Toutes les équipes</option>
+            {Object.keys(teamDistribution).map(team => (
+              <option key={team} value={team}>{team}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Statistics Cards */}
@@ -370,48 +410,39 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Répartition par Équipe
+            Répartition par Catégorie
           </h3>
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Seniors 1</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-32 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-red-600 h-2 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${
-                        (stats.seniors1Count / stats.totalPlayers) * 100
-                      }%`,
-                    }}
-                  ></div>
+            {Object.entries(teamDistribution)
+              .sort(([teamA], [teamB]) => {
+                const order = ['Senior', 'U20', 'U19', 'U18', 'U17', 'Arbitre', 'Dirigeant/Dirigeante'];
+                const indexA = order.indexOf(teamA);
+                const indexB = order.indexOf(teamB);
+
+                if (indexA === -1 && indexB === -1) return teamA.localeCompare(teamB);
+                if (indexA === -1) return 1;
+                if (indexB === -1) return -1;
+
+                return indexA - indexB;
+              })
+              .map(([team, count]) => (
+              <div key={team} className="flex items-center justify-between">
+                <span className="text-gray-600">{team}</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-32 bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-red-600 h-2 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${(count / stats.totalPlayers) * 100}%`,
+                      }}
+                    ></div>
+                  </div>
+                  <span className="font-semibold text-gray-900">{count}</span>
                 </div>
-                <span className="font-semibold text-gray-900">
-                  {stats.seniors1Count}
-                </span>
               </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Seniors 2</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-32 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-black h-2 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${
-                        (stats.seniors2Count / stats.totalPlayers) * 100
-                      }%`,
-                    }}
-                  ></div>
-                </div>
-                <span className="font-semibold text-gray-900">
-                  {stats.seniors2Count}
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
-
         <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Statistiques d'Activité
