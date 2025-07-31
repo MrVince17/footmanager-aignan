@@ -202,6 +202,8 @@ export const exportToPDF = (elementId: string, filename: string) => {
     html2canvas(input, {
       useCORS: true,
       scale: 2, // Augmente la résolution de l'image
+      height: input.scrollHeight,
+      windowHeight: input.scrollHeight,
     }).then(canvas => {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
@@ -211,9 +213,23 @@ export const exportToPDF = (elementId: string, filename: string) => {
       const canvasHeight = canvas.height;
       const ratio = canvasWidth / canvasHeight;
       const width = pdfWidth;
-      const height = width / ratio;
+      let height = width / ratio;
 
-      pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+      // Si le contenu est plus haut que la page, on le divise en plusieurs pages
+      if (height > pdfHeight) {
+        let position = 0;
+        height = pdfHeight;
+        while (position < canvas.height) {
+          pdf.addImage(imgData, 'PNG', 0, -position, width, canvas.height * width / canvas.width);
+          position += height;
+          if (position < canvas.height) {
+            pdf.addPage();
+          }
+        }
+      } else {
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+      }
+
       pdf.save(filename);
     });
   } else {
