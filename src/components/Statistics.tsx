@@ -75,7 +75,7 @@ const getPlayerStatsForSeason = (
   let allTeamMatchesForPlayerForSeason = 0;
   const uniqueMatchEventsForPlayerSeason = new Set<string>();
   player.teams.forEach(team => {
-    const teamMatchEvents = storage.getTotalTeamEvents(allPlayersForContext, 'match', team as any, season);
+    const teamMatchEvents = storage.getTotalTeamEvents(allPlayersForContext, 'match', team, season);
     teamMatchEvents.forEach(event => uniqueMatchEventsForPlayerSeason.add(`${event.date}-${event.opponent || 'unknown'}`));
   });
   allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
@@ -146,8 +146,8 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason, filterMatchType).length;
       uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
     } else {
-      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', filterTeam as any, selectedSeason, filterMatchType).length;
-      uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', filterTeam as any, selectedSeason).length;
+      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', filterTeam, selectedSeason, filterMatchType).length;
+      uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', filterTeam, selectedSeason).length;
     }
 
     const totalMinutes = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.totalMinutes, 0);
@@ -203,6 +203,25 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
   }, [filteredPlayersByTeam]);
 
 
+  const prepareDataForExport = (playersToExport: typeof filteredPlayersByTeam): ExportPlayerData[] => {
+    return playersToExport.map(p => ({
+      'Nom': `${p.firstName} ${p.lastName}`,
+      'Numéro': p.licenseNumber,
+      'Position': p.position,
+      'Équipes': p.teams.join(', '),
+      'Matchs': p.seasonStats.totalMatches,
+      'Entraînements': p.seasonStats.presentTrainings,
+      'Minutes': p.seasonStats.totalMinutes,
+      'Buts': p.seasonStats.goals,
+      'Passes': p.seasonStats.assists,
+      'Cartons Jaunes': p.seasonStats.yellowCards,
+      'Cartons Rouges': p.seasonStats.redCards,
+      'Clean Sheets': p.position === 'Gardien' ? p.seasonStats.cleanSheets : '-',
+      'Assiduité Matchs (%)': p.seasonStats.matchAttendanceRateSeason.toFixed(1),
+      'Assiduité Entraînements (%)': p.seasonStats.trainingAttendanceRateSeason.toFixed(1),
+    }));
+  };
+
   const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; color: string; subtitle?: string }> = 
     ({ title, value, icon, color, subtitle }) => (
       <div className="bg-white rounded-xl shadow-md p-6 border-l-4 hover:shadow-lg transition-shadow duration-300" style={{ borderLeftColor: color }}>
@@ -237,7 +256,10 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
               <span>PDF</span>
             </button>
             <button
-              onClick={() => exportToExcel(filteredPlayersByTeam as any, 'statistiques_US_Aignan.xlsx')}
+              onClick={() => {
+                const dataToExport = prepareDataForExport(filteredPlayersByTeam);
+                exportToExcel(dataToExport, 'statistiques_US_Aignan.xlsx');
+              }}
               className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors duration-200"
             >
               <Download size={20} />

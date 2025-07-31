@@ -1,4 +1,4 @@
-import { Player, Performance, Absence, Injury, Unavailability } from '../types';
+import { Player, Performance, Absence, Injury, Unavailability, Team } from '../types';
 import { getSeasonFromDate } from './seasonUtils';
 
 const STORAGE_KEYS = {
@@ -15,27 +15,35 @@ export const storage = {
     const data = localStorage.getItem(STORAGE_KEYS.PLAYERS);
     if (!data) return [];
 
-    const players: Player[] = JSON.parse(data);
+    let players: Player[] = JSON.parse(data);
 
-    // Data migration: ensure all players have necessary fields
-    return players.map(player => ({
-      ...player,
-      teams: player.teams || [],
-      performances: player.performances || [],
-      unavailabilities: player.unavailabilities || [],
-      absences: player.absences || [],
-      injuries: player.injuries || [],
-      totalMatches: player.totalMatches || 0,
-      totalMinutes: player.totalMinutes || 0,
-      totalTrainings: player.totalTrainings || 0,
-      goals: player.goals || 0,
-      assists: player.assists || 0,
-      cleanSheets: player.cleanSheets || 0,
-      yellowCards: player.yellowCards || 0,
-      redCards: player.redCards || 0,
-      trainingAttendanceRate: player.trainingAttendanceRate || 0,
-      matchAttendanceRate: player.matchAttendanceRate || 0,
-    }));
+    // Data migration: ensure all players have necessary fields and correct team names
+    return players.map(player => {
+      const migratedTeams = (player.teams || []).map(team => {
+        if ((team as any) === 'Seniors 1') return 'Senior 1';
+        if ((team as any) === 'Seniors 2') return 'Senior 2';
+        return team;
+      });
+
+      return {
+        ...player,
+        teams: migratedTeams,
+        performances: player.performances || [],
+        unavailabilities: player.unavailabilities || [],
+        absences: player.absences || [],
+        injuries: player.injuries || [],
+        totalMatches: player.totalMatches || 0,
+        totalMinutes: player.totalMinutes || 0,
+        totalTrainings: player.totalTrainings || 0,
+        goals: player.goals || 0,
+        assists: player.assists || 0,
+        cleanSheets: player.cleanSheets || 0,
+        yellowCards: player.yellowCards || 0,
+        redCards: player.redCards || 0,
+        trainingAttendanceRate: player.trainingAttendanceRate || 0,
+        matchAttendanceRate: player.matchAttendanceRate || 0,
+      };
+    });
   },
 
   savePlayers: (players: Player[]) => {
@@ -138,7 +146,7 @@ export const storage = {
   getTotalTeamEvents: (
     allPlayers: Player[],
     type: 'training' | 'match',
-    teamName?: 'Seniors 1' | 'Seniors 2',
+    teamName?: Team,
     season?: string, // Optional season filter
     matchType?: string // Optional match type filter
   ): { date: string, opponent?: string, season: string }[] => {
@@ -268,7 +276,7 @@ export const storage = {
           lastName: 'Dubois',
           dateOfBirth: '1995-03-15',
           licenseNumber: 'LIC001',
-          teams: ['Seniors 1'],
+          teams: ['Senior 1'],
           position: 'Gardien',
           totalMatches: 12,
           totalMinutes: 1080,
@@ -293,7 +301,7 @@ export const storage = {
           lastName: 'Martin',
           dateOfBirth: '1998-07-22',
           licenseNumber: 'LIC002',
-          teams: ['Seniors 1', 'Seniors 2'],
+          teams: ['Senior 1', 'Senior 2'],
           position: 'Attaquant',
           totalMatches: 15,
           totalMinutes: 1200,
@@ -318,7 +326,7 @@ export const storage = {
           lastName: 'Leroy',
           dateOfBirth: '1997-11-08',
           licenseNumber: 'LIC003',
-          teams: ['Seniors 2'],
+          teams: ['Senior 2'],
           position: 'Milieu',
           totalMatches: 10,
           totalMinutes: 850,
@@ -343,7 +351,7 @@ export const storage = {
           lastName: 'Rousseau',
           dateOfBirth: '1996-09-12',
           licenseNumber: 'LIC004',
-          teams: ['Seniors 1'],
+          teams: ['Senior 1'],
           position: 'Défenseur',
           totalMatches: 14,
           totalMinutes: 1260,
