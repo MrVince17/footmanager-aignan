@@ -8,8 +8,8 @@ interface PerformanceEntryProps {
 }
 
 export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onSavePerformance }) => {
-  const validPlayerTeams: Team[] = ['Senior 1', 'Senior 2', 'U20', 'U19', 'U18', 'U17'];
-  const filteredPlayers = players.filter(p => p.teams.some(team => validPlayerTeams.includes(team)));
+  const performanceTeams: Team[] = ['Senior 1', 'Senior 2', 'U20', 'U19', 'U18', 'U17'];
+  const playersToDisplay = players.filter(p => p.teams.some(team => performanceTeams.includes(team)));
 
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [filterTeamPerformance, setFilterTeamPerformance] = useState<string>('all');
@@ -125,7 +125,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
     alert('Performances enregistrées avec succès !');
   };
 
-  const selectedPlayersList = filteredPlayers.filter(p => selectedPlayers.includes(p.id));
+  const selectedPlayersList = playersToDisplay.filter(p => selectedPlayers.includes(p.id));
 
   return (
     <div className="space-y-6">
@@ -320,7 +320,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
               <button
                 type="button"
                 onClick={() => {
-                  const visiblePlayerIds = filteredPlayers
+                  const visiblePlayerIds = playersToDisplay
                     .filter(p => {
                       if (filterTeamPerformance === 'all') return true;
                       if (filterTeamPerformance === 'Senior') {
@@ -381,7 +381,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {filteredPlayers
+              {playersToDisplay
                 .filter(player => {
                   if (filterTeamPerformance === 'all') return true;
                   if (filterTeamPerformance === 'Senior') {
