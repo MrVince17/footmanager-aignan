@@ -165,7 +165,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     const matchesTeam = filterTeam === 'all' ||
       (filterTeam === 'Senior' && player.teams.some(team => team.toLowerCase().includes('senior'))) ||
       (filterTeam !== 'Senior' && player.teams.includes(filterTeam as any)) ||
-      (filterTeam === 'U13-U17' && player.teams.includes('U17' as any)) ||
+      (filterTeam === 'U17' && player.teams.includes('U17')) ||
       (filterTeam === 'Dirigeant/Dirigeante' && player.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant'].includes(team)));
     const matchesPosition = filterPosition === 'all' || player.position === filterPosition;
     
@@ -225,7 +225,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             <option value="U20">U20</option>
             <option value="U19">U19</option>
             <option value="U18">U18</option>
-            <option value="U13-U17">U13-U17</option>
+            <option value="U17">U17</option>
             <option value="U6-U11">U6-U11</option>
             <option value="Arbitre">Arbitre</option>
             <option value="Dirigeant/Dirigeante">Dirigeant/Dirigeante</option>
