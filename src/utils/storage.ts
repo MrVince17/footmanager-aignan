@@ -1,6 +1,7 @@
+// src/utils/storage.ts
 import { collection, doc, getDocs, setDoc, deleteDoc, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '../firebase'; // Import the Firestore instance
-import { Player, Performance, Unavailability } from '../types';
+import { Player, Performance } from '../types';
 
 const PLAYERS_COLLECTION = 'players';
 const playersCollectionRef = collection(db, PLAYERS_COLLECTION);
@@ -11,11 +12,10 @@ export const storage = {
     try {
       const querySnapshot = await getDocs(playersCollectionRef);
       const players = querySnapshot.docs.map(doc => doc.data() as Player);
-      // Optional: Add client-side migration/data cleanup if needed
       return players;
     } catch (error) {
       console.error("Error fetching players: ", error);
-      return []; // Return empty array on error
+      return [];
     }
   },
 
@@ -33,7 +33,8 @@ export const storage = {
   updatePlayer: async (updatedPlayer: Player): Promise<void> => {
     try {
       const playerDocRef = doc(db, PLAYERS_COLLECTION, updatedPlayer.id);
-      await setDoc(playerDocRef, updatedPlayer, { merge: true }); // Use merge to avoid overwriting all fields if not provided
+      // 'merge: true' prevents overwriting fields that are not in the updatedPlayer object
+      await setDoc(playerDocRef, updatedPlayer, { merge: true });
     } catch (error) {
       console.error("Error updating player: ", error);
     }
@@ -49,9 +50,7 @@ export const storage = {
     }
   },
 
-  // --- Batch operations for efficiency ---
-
-  // DELETE multiple players
+  // DELETE multiple players using a batch for efficiency
   deleteMultiplePlayers: async (playerIds: string[]): Promise<void> => {
     const batch = writeBatch(db);
     playerIds.forEach(id => {
@@ -65,7 +64,7 @@ export const storage = {
     }
   },
 
-  // CREATE multiple players
+  // CREATE multiple players using a batch
   addMultiplePlayers: async (newPlayers: Player[]): Promise<void> => {
     const batch = writeBatch(db);
     newPlayers.forEach(player => {
@@ -79,9 +78,7 @@ export const storage = {
     }
   },
 
-  // --- Example of updating a nested array ---
-  // Note: This requires reading the doc, updating in-memory, then writing back.
-  // Firestore doesn't have native "push to array" for complex objects without reading first.
+  // Example of updating a nested array (e.g., adding a performance)
   addPerformance: async (playerId: string, performance: Performance): Promise<void> => {
     const playerDocRef = doc(db, PLAYERS_COLLECTION, playerId);
     try {
@@ -89,20 +86,20 @@ export const storage = {
 
         if (docSnap.exists()) {
             const player = docSnap.data() as Player;
-            const updatedPerformances = [...player.performances, performance];
+            // Ensure performances array exists before spreading
+            const existingPerformances = player.performances || [];
+            const updatedPerformances = [...existingPerformances, performance];
             await setDoc(playerDocRef, { performances: updatedPerformances }, { merge: true });
         } else {
-            console.error("Player not found!");
+            console.error(`Player with id ${playerId} not found!`);
         }
     } catch (error) {
-        console.error("Error adding performance:", error)
+        console.error("Error adding performance:", error);
     }
   }
 };
 
-// Note: Functions like recalculateAttendanceRates, getTotalTeamEvents, etc.
-// remain client-side logic. They will now consume data from the async
-// getPlayers() function. For example:
-// const allPlayers = await storage.getPlayers();
-// storage.recalculateAttendanceRates(player, allPlayers);
-// await storage.updatePlayer(player); // Save changes back to Firestore
+// Note: Any functions that used to be in storage.ts but were pure data
+// manipulation (like recalculateAttendanceRates) should now be moved to a
+// separate utility file (e.g., `src/utils/playerUtils.ts`) and would
+// operate on player data fetched from Firestore.
