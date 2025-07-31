@@ -12,7 +12,7 @@ import {
   Filter,
 } from "lucide-react";
 import { exportToPDF } from "../utils/export";
-import { storage } from "../utils/storage"; // For getTotalTeamEvents
+import { getTotalTeamEvents } from "../utils/playerUtils";
 
 interface PlayerSeasonStats {
   totalMatches: number;
@@ -116,7 +116,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       .map((p) => {
         const seasonStats = getPlayerStatsForSeason(p, selectedSeason);
         // Calculate season-specific attendance rates
-        const allTeamTrainingsForSeason = storage.getTotalTeamEvents(
+        const allTeamTrainingsForSeason = getTotalTeamEvents(
           allPlayers,
           "training",
           undefined,
@@ -126,7 +126,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         let allTeamMatchesForPlayerForSeason = 0;
         const uniqueMatchEventsForPlayerSeason = new Set<string>();
         p.teams.forEach((team) => {
-          const teamMatchEvents = storage.getTotalTeamEvents(
+          const teamMatchEvents = getTotalTeamEvents(
             allPlayers,
             "match",
           team,
@@ -182,13 +182,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
     );
     // For totalMatches and totalTrainings, we should count unique team events for the season.
     const teamToFilter = filterTeam === 'all' ? undefined : filterTeam;
-    const uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(
+    const uniqueTeamMatchesForSeason = getTotalTeamEvents(
       allPlayers,
       "match",
       teamToFilter,
       selectedSeason
     ).length;
-    const uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(
+    const uniqueTeamTrainingsForSeason = getTotalTeamEvents(
       allPlayers,
       "training",
       teamToFilter,
