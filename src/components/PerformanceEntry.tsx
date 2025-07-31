@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Player, Performance } from '../types';
+import { Player, Performance, Team } from '../types';
 import { Save, Calendar, Target, Users, AlertTriangle, Home, Bus } from 'lucide-react';
 
 interface PerformanceEntryProps {
@@ -8,6 +8,9 @@ interface PerformanceEntryProps {
 }
 
 export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onSavePerformance }) => {
+  const validPlayerTeams: Team[] = ['Senior 1', 'Senior 2', 'U20', 'U19', 'U18', 'U17'];
+  const filteredPlayers = players.filter(p => p.teams.some(team => validPlayerTeams.includes(team)));
+
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [filterTeamPerformance, setFilterTeamPerformance] = useState<string>('all');
   const [performanceData, setPerformanceData] = useState({
@@ -122,7 +125,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
     alert('Performances enregistrées avec succès !');
   };
 
-  const selectedPlayersList = players.filter(p => selectedPlayers.includes(p.id));
+  const selectedPlayersList = filteredPlayers.filter(p => selectedPlayers.includes(p.id));
 
   return (
     <div className="space-y-6">
@@ -313,14 +316,11 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                 <option value="U19">U19</option>
                 <option value="U18">U18</option>
                 <option value="U17">U17</option>
-                <option value="U6-U11">U6-U11</option>
-                <option value="Arbitre">Arbitre</option>
-                <option value="Dirigeant/Dirigeante">Dirigeant/Dirigeante</option>
               </select>
               <button
                 type="button"
                 onClick={() => {
-                  const visiblePlayerIds = players
+                  const visiblePlayerIds = filteredPlayers
                     .filter(p => {
                       if (filterTeamPerformance === 'all') return true;
                       if (filterTeamPerformance === 'Senior') {
@@ -381,7 +381,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {players
+              {filteredPlayers
                 .filter(player => {
                   if (filterTeamPerformance === 'all') return true;
                   if (filterTeamPerformance === 'Senior') {
