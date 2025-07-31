@@ -75,16 +75,27 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
 
     const matchScorers: { playerId: string; minute: number }[] = [];
     const matchAssisters: { playerId: string }[] = [];
+    const matchYellowCards: { playerId: string; minute: number }[] = [];
+    const matchRedCards: { playerId: string; minute: number }[] = [];
 
     if (performanceData.type === 'match') {
       selectedPlayers.forEach(playerId => {
         const goals = performanceData.goals[playerId] || 0;
         const assists = performanceData.assists[playerId] || 0;
+        const yellowCards = performanceData.yellowCards[playerId] || 0;
+        const redCards = performanceData.redCards[playerId] || 0;
+
         for (let i = 0; i < goals; i++) {
-          matchScorers.push({ playerId: playerId, minute: 0 }); // Default minute 0, can be edited later
+          matchScorers.push({ playerId: playerId, minute: 0 }); // Default minute 0
         }
         for (let i = 0; i < assists; i++) {
           matchAssisters.push({ playerId: playerId });
+        }
+        for (let i = 0; i < yellowCards; i++) {
+          matchYellowCards.push({ playerId: playerId, minute: 0 }); // Default minute 0
+        }
+        for (let i = 0; i < redCards; i++) {
+          matchRedCards.push({ playerId: playerId, minute: 0 }); // Default minute 0
         }
       });
     }
@@ -107,8 +118,8 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
         cleanSheet: performanceData.cleanSheets[playerId] || false,
         scorers: performanceData.type === 'match' ? matchScorers : null,
         assisters: performanceData.type === 'match' ? matchAssisters : null,
-        yellowCardsDetails: performanceData.type === 'match' ? [] : null,
-        redCardsDetails: performanceData.type === 'match' ? [] : null,
+        yellowCardsDetails: performanceData.type === 'match' ? matchYellowCards : null,
+        redCardsDetails: performanceData.type === 'match' ? matchRedCards : null,
         goalsConcededDetails: performanceData.type === 'match' ? [] : null,
         matchType: performanceData.type === 'match' ? performanceData.matchType : null,
       };
