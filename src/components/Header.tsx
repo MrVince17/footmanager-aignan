@@ -15,7 +15,7 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, children }) => 
         </div>
       )}
       <div className="flex items-center gap-4 mb-2">
-        <img src="/images/logo-v2.png" alt="US Aignan Logo" className="h-12" />
+        <img src="/images/logo-v2.png" alt="US Aignan Logo" className="h-24" />
         <div>
           <h1 className="text-4xl font-bold">US AIGNAN</h1>
           <h2 className="text-2xl font-semibold">{title}</h2>

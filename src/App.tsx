@@ -66,7 +66,9 @@ const AppLayout: React.FC<{
       }`}>
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center space-x-3">
-            <img src="/logo-v2.png" alt="US Aignan Logo" className="h-10" />
+            <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-black rounded-lg flex items-center justify-center">
+              <Users className="text-white" size={24} />
+            </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">US AIGNAN</h1>
               <p className="text-sm text-gray-500">Gestion d'équipe</p>
@@ -124,7 +126,9 @@ const AppLayout: React.FC<{
               <Menu size={24} />
             </button>
             <div className="flex items-center space-x-3">
-              <img src="/logo-v2.png" alt="US Aignan Logo" className="h-8" />
+              <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-black rounded-lg flex items-center justify-center">
+                <Users className="text-white" size={20} />
+              </div>
               <span className="font-bold text-gray-900">US AIGNAN</span>
             </div>
             <div className="w-10" />
