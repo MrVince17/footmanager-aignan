@@ -40,11 +40,17 @@ export const PresencePage: React.FC = () => {
       const teams = new Set<string>();
       presentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
 
+      const sortedPresentPlayers = presentPlayers.sort((a, b) => {
+        const lastNameComparison = a.lastName.localeCompare(b.lastName);
+        if (lastNameComparison !== 0) return lastNameComparison;
+        return a.firstName.localeCompare(b.firstName);
+      });
+
       return {
         date: training.date,
         team: Array.from(teams).join(', ') || 'N/A',
-        presentCount: presentPlayers.length,
-        presentPlayers: presentPlayers.map(p => `${p.firstName} ${p.lastName}`),
+        presentCount: sortedPresentPlayers.length,
+        presentPlayers: sortedPresentPlayers.map(p => `${p.firstName} ${p.lastName}`),
       };
     });
   }, [allPlayers, selectedSeason]);
@@ -66,11 +72,17 @@ export const PresencePage: React.FC = () => {
       const teams = new Set<string>();
       presentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
 
+      const sortedPresentPlayers = presentPlayers.sort((a, b) => {
+        const lastNameComparison = a.lastName.localeCompare(b.lastName);
+        if (lastNameComparison !== 0) return lastNameComparison;
+        return a.firstName.localeCompare(b.firstName);
+      });
+
       return {
         date: match.date,
         team: Array.from(teams).join(', ') || 'N/A',
-        presentCount: presentPlayers.length,
-        presentPlayers: presentPlayers.map(p => `${p.firstName} ${p.lastName}`),
+        presentCount: sortedPresentPlayers.length,
+        presentPlayers: sortedPresentPlayers.map(p => `${p.firstName} ${p.lastName}`),
       };
     });
   }, [allPlayers, selectedSeason]);
