@@ -264,7 +264,7 @@ const PlayerFormWrapper: React.FC<{players?: Player[], onSave: (player: Player) 
   return <PlayerForm player={playerToEdit} onSave={onSave} onCancel={() => navigate('/players')} />;
 };
 
-const PlayerDetailWrapper: React.FC<{players: Player[], onPlayerUpdate: () => Promise<void>, onEditPlayerRedirect: (id: string) => void}> = ({players, onPlayerUpdate, onEditPlayerRedirect }) => {
+const PlayerDetailWrapper: React.FC<{players: Player[], onPlayerUpdate: () => Promise<void>, onDeletePlayer: (id: string) => Promise<void>, onEditPlayerRedirect: (id: string) => void}> = ({players, onPlayerUpdate, onDeletePlayer, onEditPlayerRedirect }) => {
   const { playerId } = useParams<{ playerId: string }>();
   const navigate = useNavigate();
   const player = players.find(p => p.id === playerId);
@@ -276,6 +276,7 @@ const PlayerDetailWrapper: React.FC<{players: Player[], onPlayerUpdate: () => Pr
             onBack={() => navigate('/players')}
             onEdit={() => onEditPlayerRedirect(player.id)}
             onPlayerUpdate={onPlayerUpdate}
+            onDelete={() => onDeletePlayer(player.id)}
          />;
 };
 
