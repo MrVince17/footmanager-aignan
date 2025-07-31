@@ -231,7 +231,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
   );
 
   // Admin issues are global, not season-specific
-  const adminIssues = allPlayers.filter((p) => (!p.licenseValid || !p.paymentValid) && (filterTeam === 'all' || p.teams.includes(filterTeam)));
+  const adminIssues = allPlayers
+    .filter((p) => (!p.licenseValid || !p.paymentValid) && (filterTeam === 'all' || p.teams.includes(filterTeam)))
+    .sort((a, b) => {
+      const lastNameComparison = a.lastName.localeCompare(b.lastName);
+      if (lastNameComparison !== 0) {
+        return lastNameComparison;
+      }
+      return a.firstName.localeCompare(b.firstName);
+    });
 
   const availableTeams = useMemo(() => {
     const distribution: { [key: string]: number } = {};
