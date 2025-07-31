@@ -159,9 +159,7 @@ export const exportPlayerStats = (player: Player) => {
   XLSX.writeFile(workbook, `stats_${player.firstName}_${player.lastName}_US_Aignan.xlsx`);
 };
 
-import 'jspdf-autotable';
-
-export const exportToPDF = (player: Player, filename: string) => {
+export const exportPlayerCardToPDF = (player: Player, filename: string) => {
   const doc = new jsPDF();
   doc.text('Fiche Joueur - US Aignan', 20, 20);
   doc.text(`Nom Prénom: ${player.firstName} ${player.lastName}`, 20, 30);
@@ -196,4 +194,29 @@ export const exportToPDF = (player: Player, filename: string) => {
   });
 
   doc.save(filename);
+};
+
+export const exportToPDF = (elementId: string, filename: string) => {
+  const input = document.getElementById(elementId);
+  if (input) {
+    html2canvas(input, {
+      useCORS: true,
+      scale: 2, // Augmente la résolution de l'image
+    }).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const ratio = canvasWidth / canvasHeight;
+      const width = pdfWidth;
+      const height = width / ratio;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+      pdf.save(filename);
+    });
+  } else {
+    console.error(`Element with id ${elementId} not found.`);
+  }
 };
