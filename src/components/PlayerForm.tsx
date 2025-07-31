@@ -43,8 +43,16 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Sanitize data for Firestore: convert undefined to null
+    const sanitizedData = { ...formData };
+    for (const key in sanitizedData) {
+      if (sanitizedData[key] === undefined) {
+        sanitizedData[key] = null;
+      }
+    }
+
     const playerData: Player = {
-      ...formData,
+      ...sanitizedData,
       id: player?.id || Date.now().toString(),
       firstName: formData.firstName || '',
       lastName: formData.lastName || '',
@@ -64,6 +72,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
       matchAttendanceRate: formData.matchAttendanceRate || 0,
       licenseValid: formData.licenseValid ?? true,
       paymentValid: formData.paymentValid ?? true,
+      licenseValidationDate: formData.licenseValidationDate || null, // Explicitly set to null if empty
       absences: formData.absences || [],
       injuries: formData.injuries || [],
       unavailabilities: formData.unavailabilities || [],
