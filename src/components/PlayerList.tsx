@@ -163,7 +163,8 @@ export const PlayerList: React.FC<PlayerListProps> = ({
       player.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesTeam = filterTeam === 'all' ||
-      player.teams.includes(filterTeam as any) ||
+      (filterTeam === 'Senior' && player.teams.some(team => team.toLowerCase().includes('senior'))) ||
+      (filterTeam !== 'Senior' && player.teams.includes(filterTeam as any)) ||
       (filterTeam === 'U13-U17' && player.teams.includes('U17' as any)) ||
       (filterTeam === 'Dirigeant/Dirigeante' && player.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant'].includes(team)));
     const matchesPosition = filterPosition === 'all' || player.position === filterPosition;
@@ -220,8 +221,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           >
             <option value="all">Toutes les équipes</option>
-            <option value="Senior 1">Senior 1</option>
-            <option value="Senior 2">Senior 2</option>
+            <option value="Senior">Senior</option>
             <option value="U20">U20</option>
             <option value="U19">U19</option>
             <option value="U18">U18</option>

@@ -1,4 +1,4 @@
-export type Team = 'Senior 1' | 'Senior 2' | 'U20' | 'U19' | 'U18' | 'U13-U17' | 'U6-U11' | 'Arbitre' | 'Dirigeant/Dirigeante';
+export type Team = 'Senior' | 'U20' | 'U19' | 'U18' | 'U13-U17' | 'U6-U11' | 'Arbitre' | 'Dirigeant/Dirigeante';
 
 export interface Player {
   id: string;
