@@ -257,8 +257,7 @@ function App() {
     if (type === 'matchUpdate') {
       await storage.updateMatchDetails(refData, value);
     } else if (type === 'matchDelete') {
-      // This part of the logic seems to be missing, but I will focus on the update first.
-      // A proper implementation would require a similar batch-delete.
+      await storage.deleteMatch(refData);
     }
     await refreshPlayers();
   };

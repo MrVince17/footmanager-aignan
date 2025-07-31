@@ -126,6 +126,35 @@ export const storage = {
         console.error("Error updating match details in batch:", error);
     }
   },
+
+  deleteMatch: async (originalPerf: Performance): Promise<void> => {
+    const allPlayers = await storage.getPlayers();
+    const batch = writeBatch(db);
+
+    allPlayers.forEach(player => {
+        const performances = player.performances || [];
+        let performanceDeleted = false;
+        const updatedPerformances = performances.filter(p => {
+            const isMatchToDelete = p.date === originalPerf.date && p.opponent === originalPerf.opponent && p.type === 'match';
+            if (isMatchToDelete) {
+                performanceDeleted = true;
+            }
+            return !isMatchToDelete;
+        });
+
+        if (performanceDeleted) {
+            const playerDocRef = doc(db, PLAYERS_COLLECTION, player.id);
+            batch.update(playerDocRef, { performances: updatedPerformances });
+        }
+    });
+
+    try {
+        await batch.commit();
+        console.log("Batch match delete successful!");
+    } catch (error) {
+        console.error("Error deleting match details in batch:", error);
+    }
+  },
 };
 
 // Note: Any functions that used to be in storage.ts but were pure data
