@@ -96,7 +96,36 @@ export const storage = {
     } catch (error) {
         console.error("Error adding performance:", error);
     }
-  }
+  },
+
+  updateMatchDetails: async (originalPerf: Performance, updatedData: Partial<Performance>): Promise<void> => {
+    const allPlayers = await storage.getPlayers();
+    const batch = writeBatch(db);
+
+    allPlayers.forEach(player => {
+        const performances = player.performances || [];
+        let performanceUpdated = false;
+        const updatedPerformances = performances.map(p => {
+            if (p.date === originalPerf.date && p.opponent === originalPerf.opponent && p.type === 'match') {
+                performanceUpdated = true;
+                return { ...p, ...updatedData };
+            }
+            return p;
+        });
+
+        if (performanceUpdated) {
+            const playerDocRef = doc(db, PLAYERS_COLLECTION, player.id);
+            batch.update(playerDocRef, { performances: updatedPerformances });
+        }
+    });
+
+    try {
+        await batch.commit();
+        console.log("Batch match update successful!");
+    } catch (error) {
+        console.error("Error updating match details in batch:", error);
+    }
+  },
 };
 
 // Note: Any functions that used to be in storage.ts but were pure data

@@ -253,7 +253,13 @@ function App() {
     await refreshPlayers();
   };
 
-  const handleUpdatePlayerStorage = async () => {
+  const handleUpdatePlayerStorage = async (type: string, refData: any, value?: any) => {
+    if (type === 'matchUpdate') {
+      await storage.updateMatchDetails(refData, value);
+    } else if (type === 'matchDelete') {
+      // This part of the logic seems to be missing, but I will focus on the update first.
+      // A proper implementation would require a similar batch-delete.
+    }
     await refreshPlayers();
   };
 

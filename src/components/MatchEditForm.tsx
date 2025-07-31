@@ -24,10 +24,10 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
   const [scoreAway, setScoreAway] = useState<string | number>(matchToEdit.originalPerformanceRef.scoreAway ?? '');
   const [location, setLocation] = useState<'home' | 'away' | undefined>(matchToEdit.originalPerformanceRef.location);
   const [localScorers, setLocalScorers] = useState(
-    matchToEdit.originalPerformanceRef.scorers?.map(s => ({ ...s, minute: String(s.minute) })) || []
+    matchToEdit.scorers?.map(s => ({ ...s, minute: String(s.minute) })) || []
   );
   const [localAssisters, setLocalAssisters] = useState(
-    matchToEdit.originalPerformanceRef.assisters?.map(a => ({ ...a })) || [] // Assisters usually just have playerId
+    matchToEdit.assisters?.map(a => ({ ...a })) || [] // Assisters usually just have playerId
   );
   const [localYellowCards, setLocalYellowCards] = useState(
     matchToEdit.originalPerformanceRef.yellowCardsDetails?.map(yc => ({ ...yc, minute: String(yc.minute) })) || []
@@ -44,10 +44,10 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
     setScoreAway(matchToEdit.originalPerformanceRef.scoreAway ?? '');
     setLocation(matchToEdit.originalPerformanceRef.location);
     setLocalScorers(
-      matchToEdit.originalPerformanceRef.scorers?.map(s => ({ ...s, minute: String(s.minute) })) || []
+      matchToEdit.scorers?.map(s => ({ ...s, minute: String(s.minute) })) || []
     );
     setLocalAssisters(
-      matchToEdit.originalPerformanceRef.assisters?.map(a => ({ ...a })) || []
+      matchToEdit.assisters?.map(a => ({ ...a })) || []
     );
     setLocalYellowCards(
       matchToEdit.originalPerformanceRef.yellowCardsDetails?.map(yc => ({ ...yc, minute: String(yc.minute) })) || []
