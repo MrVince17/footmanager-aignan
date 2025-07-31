@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Player } from '../types';
 import { storage } from '../utils/storage';
 import { getAvailableSeasons } from '../utils/seasonUtils';
+import { getTotalTeamEvents } from '../utils/playerUtils';
 import PresenceTable from './PresenceTable';
 
 export const PresencePage: React.FC = () => {
@@ -9,19 +10,22 @@ export const PresencePage: React.FC = () => {
   const [selectedSeason, setSelectedSeason] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'trainings' | 'matches'>('trainings');
 
-  useState(() => {
-    const players = storage.getPlayers();
-    setAllPlayers(players);
-    const seasons = getAvailableSeasons(players);
-    if (seasons.length > 0) {
-      setSelectedSeason(seasons[0]);
-    }
-  });
+  useEffect(() => {
+    const fetchPlayers = async () => {
+      const players = await storage.getPlayers();
+      setAllPlayers(players);
+      const seasons = getAvailableSeasons(players);
+      if (seasons.length > 0) {
+        setSelectedSeason(seasons[0]);
+      }
+    };
+    fetchPlayers();
+  }, []);
 
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
   const trainings = useMemo(() => {
-    const allTrainings = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason);
+    const allTrainings = getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason);
 
     return allTrainings.map(training => {
       const presentPlayers = allPlayers.filter(player =>
@@ -45,7 +49,7 @@ export const PresencePage: React.FC = () => {
   }, [allPlayers, selectedSeason]);
 
   const matches = useMemo(() => {
-    const allMatches = storage.getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason);
+    const allMatches = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason);
 
     return allMatches.map(match => {
       const presentPlayers = allPlayers.filter(player =>
