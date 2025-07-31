@@ -18,6 +18,7 @@ interface PresenceTableProps {
   type: "training" | "match";
   allPlayers: Player[];
   selectedSeason: string;
+  onDelete?: (date: string) => void;
 }
 
 const PresenceTable: React.FC<PresenceTableProps> = ({
@@ -25,6 +26,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
   type,
   allPlayers,
   selectedSeason,
+  onDelete,
 }) => {
   const generatePresenceData = () => {
     const events = storage
@@ -243,6 +245,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
             <th scope="col" className="px-6 py-3">
               Joueurs présents
             </th>
+            {type === 'training' && <th scope="col" className="px-6 py-3">Action</th>}
           </tr>
         </thead>
         <tbody>
@@ -254,6 +257,13 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
               <td className="px-6 py-4">{item.team}</td>
               <td className="px-6 py-4">{item.presentCount}</td>
               <td className="px-6 py-4">{item.presentPlayers.join(", ")}</td>
+              {type === 'training' && (
+                <td className="px-6 py-4">
+                  <button onClick={() => onDelete && onDelete(item.date)} className="text-red-600 hover:text-red-800">
+                    <Trash2 size={18} />
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

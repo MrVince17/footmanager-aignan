@@ -6,7 +6,11 @@ import { getTotalTeamEvents } from '../utils/playerUtils';
 import PresenceTable from './PresenceTable';
 import { Header } from './Header';
 
-export const PresencePage: React.FC = () => {
+interface PresencePageProps {
+  onUpdatePlayerStorage: (type: string, refData: any, value?: any) => void;
+}
+
+export const PresencePage: React.FC<PresencePageProps> = ({ onUpdatePlayerStorage }) => {
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'trainings' | 'matches'>('trainings');
@@ -135,6 +139,11 @@ export const PresencePage: React.FC = () => {
             type="training"
             allPlayers={allPlayers}
             selectedSeason={selectedSeason}
+            onDelete={(date) => {
+              if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'entraînement du ${new Date(date).toLocaleDateString('fr-FR')}?`)) {
+                onUpdatePlayerStorage('trainingDelete', date);
+              }
+            }}
           />
         )}
         {activeTab === 'matches' && (
