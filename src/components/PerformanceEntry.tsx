@@ -8,9 +8,6 @@ interface PerformanceEntryProps {
 }
 
 export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onSavePerformance }) => {
-  const performanceTeams: Team[] = ['Senior 1', 'Senior 2', 'U20', 'U19', 'U18', 'U17'];
-  const playersToDisplay = players.filter(p => p.teams.some(team => performanceTeams.includes(team)));
-
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [filterTeamPerformance, setFilterTeamPerformance] = useState<string>('all');
   const [performanceData, setPerformanceData] = useState({
@@ -125,7 +122,16 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
     alert('Performances enregistrées avec succès !');
   };
 
-  const selectedPlayersList = playersToDisplay.filter(p => selectedPlayers.includes(p.id));
+  const filteredPlayersToDisplay = players
+    .filter(player => {
+      if (filterTeamPerformance === 'all') return true;
+      if (filterTeamPerformance === 'Senior') {
+        return player.teams.some(team => team.toLowerCase().includes('senior'));
+      }
+      return player.teams.includes(filterTeamPerformance as any);
+    });
+
+  const selectedPlayersList = filteredPlayersToDisplay.filter(p => selectedPlayers.includes(p.id));
 
   return (
     <div className="space-y-6">
@@ -320,24 +326,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
               <button
                 type="button"
                 onClick={() => {
-                  const visiblePlayerIds = playersToDisplay
-                    .filter(p => {
-                      if (filterTeamPerformance === 'all') return true;
-                      if (filterTeamPerformance === 'Senior') {
-                        return p.teams.some(team => team.toLowerCase().includes('senior'));
-                      }
-                      if (filterTeamPerformance === 'U17') {
-                        return p.teams.includes('U17');
-                      }
-                      if (filterTeamPerformance === 'U6-U11') {
-                        return p.teams.some(team => team.startsWith('U6') || team.startsWith('U7') || team.startsWith('U8') || team.startsWith('U9') || team.startsWith('U10') || team.startsWith('U11'));
-                      }
-                      if (filterTeamPerformance === 'Dirigeant/Dirigeante') {
-                        return p.teams.includes('Dirigeant/Dirigeante');
-                      }
-                      return p.teams.includes(filterTeamPerformance as any);
-                    })
-                    .map(p => p.id);
+                  const visiblePlayerIds = filteredPlayersToDisplay.map(p => p.id);
 
                   const currentlyVisibleAndSelected = selectedPlayers.filter(id => visiblePlayerIds.includes(id));
 
@@ -381,24 +370,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {playersToDisplay
-                .filter(player => {
-                  if (filterTeamPerformance === 'all') return true;
-                  if (filterTeamPerformance === 'Senior') {
-                    return player.teams.some(team => team.toLowerCase().includes('senior'));
-                  }
-                  if (filterTeamPerformance === 'U17') {
-                    return player.teams.includes('U17');
-                  }
-                   if (filterTeamPerformance === 'U6-U11') {
-                    return player.teams.some(team => team.startsWith('U6') || team.startsWith('U7') || team.startsWith('U8') || team.startsWith('U9') || team.startsWith('U10') || team.startsWith('U11'));
-                  }
-                  if (filterTeamPerformance === 'Dirigeant/Dirigeante') {
-                    return player.teams.includes('Dirigeant/Dirigeante');
-                  }
-                  return player.teams.includes(filterTeamPerformance as any);
-                })
-                .map(player => (
+              {filteredPlayersToDisplay.map(player => (
                 <label key={player.id} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                   <input
                     type="checkbox"
