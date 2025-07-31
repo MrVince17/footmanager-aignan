@@ -102,41 +102,33 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             }
           }
 
-          const playerObject = {
-            ...row,
-            id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`, // Basic unique ID
-            firstName,
-            lastName,
+          const playerObject: Player = {
+            id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`,
+            firstName: firstName,
+            lastName: lastName,
             dateOfBirth: dateOfBirth,
-            licenseNumber: String(licenseNumber),
+            licenseNumber: String(licenseNumber || ''),
             teams: (row[excelHeaders[3]] || '').split(',').map((t: string) => t.trim()),
-            position: row[excelHeaders[4]],
+            position: row[excelHeaders[4]] || 'Non défini',
             licenseValid: row[excelHeaders[5]] === 'Oui',
             licenseValidationDate: row[excelHeaders[6]] || null,
             paymentValid: row[excelHeaders[7]] === 'Oui',
-            // Default values for missing stats
-            goals: 0,
-            assists: 0,
-            matchAttendanceRate: 0,
-            trainingAttendanceRate: 0,
+            // Default values for all other fields to ensure they are not undefined
             totalMatches: 0,
             totalMinutes: 0,
             totalTrainings: 0,
+            goals: 0,
+            assists: 0,
             cleanSheets: 0,
             yellowCards: 0,
             redCards: 0,
+            trainingAttendanceRate: 0,
+            matchAttendanceRate: 0,
             absences: [],
             injuries: [],
             unavailabilities: [],
             performances: [],
           };
-
-          // Sanitize for Firestore
-          for (const key in playerObject) {
-            if (playerObject[key] === undefined) {
-              playerObject[key] = null;
-            }
-          }
 
           return playerObject;
         });
