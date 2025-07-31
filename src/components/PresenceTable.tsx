@@ -168,6 +168,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
     // Auto-fit columns
+    if (!ws) return;
     const cols = Object.keys(ws).filter(key => key.endsWith('1')).map(key => key.replace('1', ''));
     const colWidths = cols.map(col => {
       const addresses = Object.keys(ws).filter(key => key.startsWith(col) && key !== `${col}1`);
