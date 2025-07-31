@@ -1,7 +1,7 @@
 import { Player } from '../types';
 import * as XLSX from 'xlsx';
+import html2pdf from 'html2pdf.js';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { getAge } from './playerUtils';
 
 export const exportToExcel = (players: Player[], filename: string = 'export_joueurs_US_Aignan.xlsx') => {
@@ -197,41 +197,36 @@ export const exportPlayerCardToPDF = (player: Player, filename: string) => {
 };
 
 export const exportToPDF = (elementId: string, filename: string) => {
-  const input = document.getElementById(elementId);
-  if (input) {
-    html2canvas(input, {
-      useCORS: true,
-      height: input.scrollHeight,
-      windowHeight: input.scrollHeight,
-    }).then(canvas => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      const ratio = canvasWidth / canvasHeight;
-      const width = pdfWidth;
-      let height = width / ratio;
+  const element = document.getElementById(elementId);
 
-      // Si le contenu est plus haut que la page, on le divise en plusieurs pages
-      if (height > pdfHeight) {
-        let position = 0;
-        height = pdfHeight;
-        while (position < canvas.height) {
-          pdf.addImage(imgData, 'PNG', 0, -position, width, canvas.height * width / canvas.width);
-          position += height;
-          if (position < canvas.height) {
-            pdf.addPage();
-          }
-        }
-      } else {
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-      }
-
-      pdf.save(filename);
-    });
-  } else {
-    console.error(`Element with id ${elementId} not found.`);
+  if (!element) {
+    console.error(`Error: Element with ID '${elementId}' not found.`);
+    return;
   }
+
+  const options = {
+    margin: 0,
+    filename: filename,
+    image: {
+      type: 'jpeg',
+      quality: 0.98
+    },
+    html2canvas: {
+      scale: 1,
+      useCORS: true
+    },
+    jsPDF: {
+      unit: 'in',
+      format: 'a4',
+      orientation: 'portrait'
+    }
+  };
+
+  html2pdf()
+    .from(element)
+    .set(options)
+    .save()
+    .catch(err => {
+      console.error("Error during PDF generation: ", err);
+    });
 };
