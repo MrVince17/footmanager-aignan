@@ -240,7 +240,28 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
 
   return (
     <div id="statistics-content" className="space-y-6">
-      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">
+      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white relative">
+        <div className="absolute top-4 right-4 flex items-center gap-3">
+          <button
+            onClick={() => exportToPDF('statistics-content', 'statistiques_US_Aignan.pdf')}
+            className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors text-white"
+            title="Exporter en PDF"
+          >
+            <Download size={20} />
+            <span>PDF</span>
+          </button>
+          <button
+            onClick={() => {
+              const dataToExport = prepareDataForExport(sortedPlayers);
+              exportToExcel(dataToExport, 'statistiques_US_Aignan.xlsx');
+            }}
+            className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors text-white"
+            title="Exporter en Excel"
+          >
+            <Download size={20} />
+            <span>Excel</span>
+          </button>
+        </div>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold mb-2">US AIGNAN</h1>
@@ -323,25 +344,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
               <option value="cleanSheets">Trier par clean sheets</option>
             </select>
           </div>
-          </div>
-          <div className="flex space-x-3">
-            <button
-              onClick={() => exportToPDF('statistics-content', 'statistiques_US_Aignan.pdf')}
-              className="flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors duration-200 text-sm"
-            >
-              <Download size={16} />
-              <span>PDF</span>
-            </button>
-            <button
-              onClick={() => {
-                const dataToExport = prepareDataForExport(sortedPlayers);
-                exportToExcel(dataToExport, 'statistiques_US_Aignan.xlsx');
-              }}
-              className="flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors duration-200 text-sm"
-            >
-              <Download size={16} />
-              <span>Excel</span>
-            </button>
           </div>
         </div>
       </div>
