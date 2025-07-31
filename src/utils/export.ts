@@ -201,7 +201,6 @@ export const exportToPDF = (elementId: string, filename: string) => {
   if (input) {
     html2canvas(input, {
       useCORS: true,
-      scale: 2, // Augmente la résolution de l'image
       height: input.scrollHeight,
       windowHeight: input.scrollHeight,
     }).then(canvas => {
