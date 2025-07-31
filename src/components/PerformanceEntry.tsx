@@ -130,7 +130,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
         return player.teams.some(team => team.toLowerCase().includes('senior'));
       }
       if (filterTeamPerformance === 'Dirigeant/Dirigeante') {
-        return player.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant', 'Dirigeante', 'dirigeante'].includes(team));
+        return player.teams.some(team => team.toLowerCase().includes('dirigeant'));
       }
       return player.teams.includes(filterTeamPerformance as any);
     })
