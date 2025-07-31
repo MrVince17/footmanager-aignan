@@ -102,7 +102,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             }
           }
 
-          return {
+          const playerObject = {
             ...row,
             id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`, // Basic unique ID
             firstName,
@@ -112,7 +112,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             teams: (row[excelHeaders[3]] || '').split(',').map((t: string) => t.trim()),
             position: row[excelHeaders[4]],
             licenseValid: row[excelHeaders[5]] === 'Oui',
-            licenseValidationDate: row[excelHeaders[6]],
+            licenseValidationDate: row[excelHeaders[6]] || null,
             paymentValid: row[excelHeaders[7]] === 'Oui',
             // Default values for missing stats
             goals: 0,
@@ -130,6 +130,15 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             unavailabilities: [],
             performances: [],
           };
+
+          // Sanitize for Firestore
+          for (const key in playerObject) {
+            if (playerObject[key] === undefined) {
+              playerObject[key] = null;
+            }
+          }
+
+          return playerObject;
         });
 
         onImportPlayers(importedPlayers as Player[]);
