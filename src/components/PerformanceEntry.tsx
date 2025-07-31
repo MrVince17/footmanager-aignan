@@ -129,6 +129,13 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
         return player.teams.some(team => team.toLowerCase().includes('senior'));
       }
       return player.teams.includes(filterTeamPerformance as any);
+    })
+    .sort((a, b) => {
+      const lastNameComparison = a.lastName.localeCompare(b.lastName);
+      if (lastNameComparison !== 0) {
+        return lastNameComparison;
+      }
+      return a.firstName.localeCompare(b.firstName);
     });
 
   const selectedPlayersList = filteredPlayersToDisplay.filter(p => selectedPlayers.includes(p.id));
