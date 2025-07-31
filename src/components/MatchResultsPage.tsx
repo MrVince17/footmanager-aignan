@@ -41,6 +41,7 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingMatch, setEditingMatch] = useState<MatchDisplayData | null>(null);
+  const [participatingPlayers, setParticipatingPlayers] = useState<Player[]>([]);
   const [filterMatchType, setFilterMatchType] = useState<'all' | 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS'>('all');
 
   const handleGenerateSummary = (match: MatchDisplayData) => {
@@ -49,7 +50,15 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
   };
 
   const handleEditMatch = (match: MatchDisplayData) => {
-    console.log('[MatchResultsPage] Editing match:', match);
+    const participants = allPlayers.filter(p =>
+      p.performances?.some(perf =>
+        perf.type === 'match' &&
+        perf.date === match.date &&
+        perf.opponent === match.opponent &&
+        perf.present
+      )
+    );
+    setParticipatingPlayers(participants);
     setEditingMatch(match);
     setShowEditModal(true);
   };
@@ -364,7 +373,7 @@ const handleExportExcel = () => {
       {showEditModal && editingMatch && (
         <MatchEditForm
           matchToEdit={editingMatch}
-          allPlayers={allPlayers}
+          allPlayers={participatingPlayers}
           onSave={handleSaveMatchUpdate}
           onClose={handleCloseEditModal}
           isVisible={showEditModal}
