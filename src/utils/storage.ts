@@ -22,6 +22,7 @@ export const storage = {
       const migratedTeams = (player.teams || []).map(team => {
         if ((team as any) === 'Seniors 1') return 'Senior 1';
         if ((team as any) === 'Seniors 2') return 'Senior 2';
+        if ((team as any) === 'U13-U17') return 'U17';
         return team;
       });
 

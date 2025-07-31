@@ -249,7 +249,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       let mainTeam = player.teams[0] || 'Non assigné';
       if (player.teams.includes('Senior 1')) mainTeam = 'Senior 1';
       else if (player.teams.includes('Senior 2')) mainTeam = 'Senior 2';
-      else if (player.teams.includes('U17')) mainTeam = 'U13-U17';
+      else if (player.teams.includes('U17')) mainTeam = 'U17';
       else if (player.teams.includes('Dirigeant') || player.teams.includes('Dirigeante')) mainTeam = 'Dirigeant/Dirigeante';
       else if (player.teams.includes('Arbitre')) mainTeam = 'Arbitre';
 
@@ -426,7 +426,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="space-y-4">
             {Object.entries(teamDistribution)
               .sort(([teamA], [teamB]) => {
-                const order = ['Senior', 'U20', 'U19', 'U18', 'U13-U17', 'Arbitre', 'Dirigeant/Dirigeante'];
+                const order = ['Senior', 'U20', 'U19', 'U18', 'U17', 'Arbitre', 'Dirigeant/Dirigeante'];
                 const indexA = order.indexOf(teamA);
                 const indexB = order.indexOf(teamB);
 
