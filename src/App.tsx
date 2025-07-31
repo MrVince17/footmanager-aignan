@@ -9,8 +9,10 @@ import { PerformanceEntry } from './components/PerformanceEntry';
 import { Statistics } from './components/Statistics';
 import { MatchResultsPage } from './components/MatchResultsPage';
 import { PresencePage } from './components/PresencePage';
-import { Routes, Route, Link as RouterLink, Navigate, Outlet, useNavigate, useParams, useLocation } from 'react-router-dom';
-import { Unavailability, Performance } from './types';
+import { Routes, Route, Link as RouterLink, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { Performance } from './types';
+import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
+import { auth } from './firebase';
 
 import { 
   Home, 
@@ -24,6 +26,7 @@ import {
   FileText
 } from 'lucide-react';
 import { getAvailableSeasons } from './utils/seasonUtils';
+import { User } from 'firebase/auth';
 
 interface MenuItem {
   id: string;
@@ -134,14 +137,11 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState<string>('');
   const navigate = useNavigate();
-  const [user, setUser] = useState<import('firebase/auth').User | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   // Effect for Firebase anonymous authentication
   useEffect(() => {
-    const { onAuthStateChanged, signInAnonymously } = require('firebase/auth');
-    const { auth } = require('./firebase');
-
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser: User | null) => {
       if (currentUser) {
         setUser(currentUser);
       } else {
@@ -211,22 +211,17 @@ function App() {
   };
 
   const handleSavePerformance = async (playerId: string, performanceData: Omit<Performance, 'id' | 'season' | 'excused'>) => {
-    const performanceWithSeason: Omit<Performance, 'id' | 'excused'> = {
+    const performance: Performance = {
       ...performanceData,
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       season: selectedSeason,
+      excused: false, // Or determine based on logic
     };
-    await storage.addPerformance(playerId, performanceWithSeason);
+    await storage.addPerformance(playerId, performance);
     await refreshPlayers();
   };
 
-  const handleUpdatePlayerStorage = async (
-    type: 'unavailabilityDelete' | 'unavailabilityAdd' | 'matchUpdate' | 'matchDelete',
-    refData: any,
-    value?: any
-  ) => {
-    // This function needs a significant refactor for async operations.
-    // For now, we will just refresh from DB after any operation.
-    // A more granular approach would be to update the player state directly.
+  const handleUpdatePlayerStorage = async () => {
     await refreshPlayers();
   };
 
@@ -269,7 +264,7 @@ const PlayerFormWrapper: React.FC<{players?: Player[], onSave: (player: Player) 
   return <PlayerForm player={playerToEdit} onSave={onSave} onCancel={() => navigate('/players')} />;
 };
 
-const PlayerDetailWrapper: React.FC<{players: Player[], onPlayerUpdate: Function, onDeletePlayer: (id: string) => void, onEditPlayerRedirect: (id: string) => void}> = ({players, onPlayerUpdate, onDeletePlayer, onEditPlayerRedirect }) => {
+const PlayerDetailWrapper: React.FC<{players: Player[], onPlayerUpdate: () => Promise<void>, onEditPlayerRedirect: (id: string) => void}> = ({players, onPlayerUpdate, onEditPlayerRedirect }) => {
   const { playerId } = useParams<{ playerId: string }>();
   const navigate = useNavigate();
   const player = players.find(p => p.id === playerId);
