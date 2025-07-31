@@ -23,7 +23,8 @@ import {
   ClipboardList,
   Menu, 
   X,
-  FileText
+  FileText,
+  LogOut
 } from 'lucide-react';
 import { getAvailableSeasons } from './utils/seasonUtils';
 import { User } from 'firebase/auth';
