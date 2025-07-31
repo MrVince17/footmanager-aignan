@@ -114,9 +114,16 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       }));
   }, [players, selectedSeason, allPlayers, filterMatchType]);
 
-  const filteredPlayersByTeam = playersWithSeasonStats.filter(player =>
-    filterTeam === 'all' || player.teams.includes(filterTeam)
-  );
+  const filteredPlayersByTeam = playersWithSeasonStats.filter(player => {
+    if (filterTeam === 'all') return true;
+    if (filterTeam === 'Senior') {
+      return player.teams.some(team => team.toLowerCase().includes('senior'));
+    }
+    if (filterTeam === 'Dirigeant/Dirigeante') {
+      return player.teams.some(team => team.toLowerCase().includes('dirigeant'));
+    }
+    return player.teams.includes(filterTeam);
+  });
 
   const sortedPlayers = [...filteredPlayersByTeam].sort((a, b) => {
     switch (sortBy) {
@@ -291,12 +298,17 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
             <select
               id="team-filter-stats"
               value={filterTeam}
-              onChange={(e) => setFilterTeam(e.target.value as 'all' | 'Senior 1' | 'Senior 2')}
+              onChange={(e) => setFilterTeam(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
               <option value="all">Toutes les équipes</option>
-              <option value="Senior 1">Senior 1</option>
-              <option value="Senior 2">Senior 2</option>
+              <option value="Senior">Senior</option>
+              <option value="U20">U20</option>
+              <option value="U19">U19</option>
+              <option value="U18">U18</option>
+              <option value="U17">U17</option>
+              <option value="Arbitre">Arbitre</option>
+              <option value="Dirigeant/Dirigeante">Dirigeant/Dirigeante</option>
             </select>
           </div>
 
