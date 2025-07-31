@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Player } from '../types';
 import { BarChart3, Download, Filter, Trophy, Target, Users, Activity } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '../utils/export';
-import { storage } from '../utils/storage';
+import { getTotalTeamEvents } from '../utils/playerUtils';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 
 interface PlayerSeasonStats {
@@ -71,11 +71,11 @@ const getPlayerStatsForSeason = (
     }
   });
 
-  const allTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayersForContext, 'training', undefined, season).length;
+  const allTeamTrainingsForSeason = getTotalTeamEvents(allPlayersForContext, 'training', undefined, season).length;
   let allTeamMatchesForPlayerForSeason = 0;
   const uniqueMatchEventsForPlayerSeason = new Set<string>();
   player.teams.forEach(team => {
-    const teamMatchEvents = storage.getTotalTeamEvents(allPlayersForContext, 'match', team, season);
+    const teamMatchEvents = getTotalTeamEvents(allPlayersForContext, 'match', team, season);
     teamMatchEvents.forEach(event => uniqueMatchEventsForPlayerSeason.add(`${event.date}-${event.opponent || 'unknown'}`));
   });
   allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
@@ -143,11 +143,11 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     let uniqueTeamTrainingsForSeason = 0;
 
     if (filterTeam === 'all') {
-      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason, filterMatchType).length;
-      uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
+      uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason, filterMatchType).length;
+      uniqueTeamTrainingsForSeason = getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
     } else {
-      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', filterTeam, selectedSeason, filterMatchType).length;
-      uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', filterTeam, selectedSeason).length;
+      uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', filterTeam, selectedSeason, filterMatchType).length;
+      uniqueTeamTrainingsForSeason = getTotalTeamEvents(allPlayers, 'training', filterTeam, selectedSeason).length;
     }
 
     const totalMinutes = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.totalMinutes, 0);
