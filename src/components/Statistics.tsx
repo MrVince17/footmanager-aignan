@@ -247,35 +247,14 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
             <h2 className="text-2xl font-semibold mb-2">Statistiques</h2>
             <p className="text-red-100">Analysez les performances de votre équipe</p>
           </div>
-          <div className="flex space-x-3">
-            <button
-              onClick={() => exportToPDF('statistics-content', 'statistiques_US_Aignan.pdf')}
-              className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors duration-200"
-            >
-              <Download size={20} />
-              <span>PDF</span>
-            </button>
-            <button
-              onClick={() => {
-                const dataToExport = prepareDataForExport(filteredPlayersByTeam);
-                exportToExcel(dataToExport, 'statistiques_US_Aignan.xlsx');
-              }}
-              className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors duration-200"
-            >
-              <Download size={20} />
-              <span>Excel</span>
-            </button>
-          </div>
         </div>
       </div>
       <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center">
-          <div className="flex items-center space-x-2">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center justify-between">
+          <div className="flex items-center space-x-2 flex-wrap gap-4">
             <Filter size={20} className="text-gray-400" />
             <span className="text-sm font-medium text-gray-700">Filtres :</span>
-          </div>
-          
-          <div>
+            <div>
             <label htmlFor="season-select-stats" className="sr-only">Saison</label>
             <select
               id="season-select-stats"
@@ -343,6 +322,26 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
               <option value="cards">Trier par cartons</option>
               <option value="cleanSheets">Trier par clean sheets</option>
             </select>
+          </div>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => exportToPDF('statistics-content', 'statistiques_US_Aignan.pdf')}
+              className="flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors duration-200 text-sm"
+            >
+              <Download size={16} />
+              <span>PDF</span>
+            </button>
+            <button
+              onClick={() => {
+                const dataToExport = prepareDataForExport(sortedPlayers);
+                exportToExcel(dataToExport, 'statistiques_US_Aignan.xlsx');
+              }}
+              className="flex items-center space-x-2 bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors duration-200 text-sm"
+            >
+              <Download size={16} />
+              <span>Excel</span>
+            </button>
           </div>
         </div>
       </div>
