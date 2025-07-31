@@ -4,6 +4,7 @@ import { storage } from '../utils/storage';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 import { getTotalTeamEvents } from '../utils/playerUtils';
 import PresenceTable from './PresenceTable';
+import { Header } from './Header';
 
 export const PresencePage: React.FC = () => {
   const [allPlayers, setAllPlayers] = useState<Player[]>([]);
@@ -76,11 +77,10 @@ export const PresencePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white relative">
-        <h1 className="text-4xl font-bold mb-2">US AIGNAN</h1>
-        <h2 className="text-2xl font-semibold mb-2">Gestion des Présences</h2>
-        <p className="text-red-100">Suivez la présence de vos joueurs aux entraînements et aux matchs.</p>
-      </div>
+      <Header
+        title="Gestion des Présences"
+        subtitle="Suivez la présence de vos joueurs aux entraînements et aux matchs."
+      />
 
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex justify-between items-center">

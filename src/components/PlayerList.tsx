@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Player } from '../types';
 import { Search, Plus, Edit, Trash2, Users, Upload, Download, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
-
+import { Header } from './Header';
 import { Link, useNavigate } from 'react-router-dom';
 
 interface PlayerListProps {
@@ -204,11 +204,10 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">
-        <h1 className="text-4xl font-bold mb-2">US AIGNAN</h1>
-        <h2 className="text-2xl font-semibold mb-2">Gestion des Joueurs</h2>
-        <p className="text-red-100">Gérez vos joueurs et consultez leurs statistiques</p>
-      </div>
+      <Header
+        title="Gestion des Joueurs"
+        subtitle="Gérez vos joueurs et consultez leurs statistiques"
+      />
 
       {/* Filters and Search */}
       <div className="bg-white rounded-xl shadow-md p-6">

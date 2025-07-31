@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Player, Performance, Team } from '../types';
 import { Save, Calendar, Target, Users, AlertTriangle, Home, Bus } from 'lucide-react';
+import { Header } from './Header';
 
 interface PerformanceEntryProps {
   players: Player[];
@@ -142,11 +143,10 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">
-        <h1 className="text-4xl font-bold mb-2">US AIGNAN</h1>
-        <h2 className="text-2xl font-semibold mb-2">Saisie des Performances</h2>
-        <p className="text-red-100">Enregistrez les performances de vos joueurs</p>
-      </div>
+      <Header
+        title="Saisie des Performances"
+        subtitle="Enregistrez les performances de vos joueurs"
+      />
 
       <div className="bg-white rounded-xl shadow-md p-8">
         <form onSubmit={handleSubmit} className="space-y-8">

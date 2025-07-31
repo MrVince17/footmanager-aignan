@@ -4,6 +4,7 @@ import { BarChart3, Download, Filter, Trophy, Target, Users, Activity } from 'lu
 import { exportToExcel, exportToPDF } from '../utils/export';
 import { getTotalTeamEvents } from '../utils/playerUtils';
 import { getAvailableSeasons } from '../utils/seasonUtils';
+import { Header } from './Header';
 
 interface PlayerSeasonStats {
   totalMatches: number;
@@ -240,39 +241,30 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
 
   return (
     <div id="statistics-content" className="space-y-6">
-      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white relative">
-        <div className="absolute top-4 right-4 flex items-center gap-3">
-          <button
-            onClick={() => exportToPDF('statistics-content', 'statistiques_US_Aignan.pdf')}
-            className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors text-white"
-            title="Exporter en PDF"
-          >
-            <Download size={20} />
-            <span>PDF</span>
-          </button>
-          <button
-            onClick={() => {
-              const dataToExport = prepareDataForExport(sortedPlayers);
-              exportToExcel(dataToExport, 'statistiques_US_Aignan.xlsx');
-            }}
-            className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors text-white"
-            title="Exporter en Excel"
-          >
-            <Download size={20} />
-            <span>Excel</span>
-          </button>
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-4 mb-2">
-              <img src="/logo-v2.png" alt="US Aignan Logo" className="h-12" />
-              <h1 className="text-4xl font-bold">US AIGNAN</h1>
-            </div>
-            <h2 className="text-2xl font-semibold mb-2">Statistiques</h2>
-            <p className="text-red-100">Analysez les performances de votre équipe</p>
-          </div>
-        </div>
-      </div>
+      <Header
+        title="Statistiques"
+        subtitle="Analysez les performances de votre équipe"
+      >
+        <button
+          onClick={() => exportToPDF('statistics-content', 'statistiques_US_Aignan.pdf')}
+          className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors text-white"
+          title="Exporter en PDF"
+        >
+          <Download size={20} />
+          <span>PDF</span>
+        </button>
+        <button
+          onClick={() => {
+            const dataToExport = prepareDataForExport(sortedPlayers);
+            exportToExcel(dataToExport, 'statistiques_US_Aignan.xlsx');
+          }}
+          className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors text-white"
+          title="Exporter en Excel"
+        >
+          <Download size={20} />
+          <span>Excel</span>
+        </button>
+      </Header>
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center justify-between">
           <div className="flex items-center space-x-2 flex-wrap gap-4">

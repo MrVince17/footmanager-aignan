@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { exportToPDF } from "../utils/export";
 import { getTotalTeamEvents } from "../utils/playerUtils";
+import { Header } from './Header';
 
 interface PlayerSeasonStats {
   totalMatches: number;
@@ -315,32 +316,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div id="dashboard-content" className="space-y-8">
-      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white relative overflow-hidden">
-        <div className="absolute top-4 right-4">
-          <button
-            onClick={() =>
-              exportToPDF("dashboard-content", "tableau_bord_US_Aignan.pdf")
-            }
-            className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors duration-200"
-          >
-            <Download size={20} />
-            <span>Export PDF</span>
-          </button>
-        </div>
-        <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-2">
-            <img src="/logo-v2.png" alt="US Aignan Logo" className="h-12" />
-            <h1 className="text-4xl font-bold">US AIGNAN</h1>
-          </div>
-          <h2 className="text-2xl font-semibold mb-2">Tableau de Bord</h2>
-          <p className="text-red-100">
-            Vue d'ensemble de votre équipe de football
-          </p>
-        </div>
-        <div className="absolute -right-8 -bottom-8 opacity-10">
-          <Users size={120} />
-        </div>
-      </div>
+      <Header
+        title="Tableau de Bord"
+        subtitle="Vue d'ensemble de votre équipe de football"
+      >
+        <button
+          onClick={() =>
+            exportToPDF("dashboard-content", "tableau_bord_US_Aignan.pdf")
+          }
+          className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors duration-200"
+        >
+          <Download size={20} />
+          <span>Export PDF</span>
+        </button>
+      </Header>
 
       {/* Season and Team Filter */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow flex items-center space-x-3">
