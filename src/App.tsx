@@ -11,7 +11,7 @@ import { MatchResultsPage } from './components/MatchResultsPage';
 import { PresencePage } from './components/PresencePage';
 import { Routes, Route, Link as RouterLink, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Performance } from './types';
-import { onAuthStateChanged, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth';
+import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { auth } from './firebase';
 
 import { 
@@ -145,9 +145,13 @@ const AppLayout: React.FC<{
 };
 
 const SignInScreen: React.FC = () => {
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     const provider = new GoogleAuthProvider();
-    signInWithRedirect(auth, provider);
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Error signing in with Google: ", error);
+    }
   };
 
   return (
@@ -181,13 +185,6 @@ function App() {
       setUser(currentUser);
       setLoadingAuth(false);
     });
-
-    // Check for redirect result
-    getRedirectResult(auth)
-      .catch((error) => {
-        console.error("Error getting redirect result: ", error);
-      });
-
     return () => unsubscribe();
   }, []);
 
