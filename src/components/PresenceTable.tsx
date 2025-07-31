@@ -85,7 +85,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
     });
 
     const totalRow: (string | number)[] = ["Total", ""];
-    eventDates.forEach((date, index) => {
+    eventDates.forEach((_, index) => {
       const totalPresent = rows.reduce((acc, row) => {
         return acc + (row[index + 2] === "\u2714" ? 1 : 0);
       }, 0);
@@ -134,7 +134,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
           ...header.reduce((acc, _, index) => {
             const maxWidth = Math.max(
               doc.getTextWidth(header[index]),
-              ...rows.map(row => doc.getTextWidth(row[index]?.toString() ?? ''))
+              ...rows.map(row => doc.getTextWidth(row[index]?.toString() || ''))
             );
             return { ...acc, [index]: { cellWidth: maxWidth + 10 } };
           }, {}),
@@ -168,6 +168,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
     // Auto-fit columns
+    if (!ws) return;
     const cols = Object.keys(ws).filter(key => key.endsWith('1')).map(key => key.replace('1', ''));
     const colWidths = cols.map(col => {
       const addresses = Object.keys(ws).filter(key => key.startsWith(col) && key !== `${col}1`);

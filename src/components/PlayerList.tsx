@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Player } from '../types';
-import { Search, Plus, Edit, Trash2, Users, Upload, Download, Calendar, Award } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Users, Upload, Download, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 import { Link, useNavigate } from 'react-router-dom';
@@ -163,8 +163,9 @@ export const PlayerList: React.FC<PlayerListProps> = ({
       player.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesTeam = filterTeam === 'all' ||
-      player.teams.includes(filterTeam as any) ||
-      (filterTeam === 'U13-U17' && player.teams.includes('U17')) ||
+      (filterTeam === 'Senior' && player.teams.some(team => team.toLowerCase().includes('senior'))) ||
+      (filterTeam !== 'Senior' && player.teams.includes(filterTeam as any)) ||
+      (filterTeam === 'U13-U17' && player.teams.includes('U17' as any)) ||
       (filterTeam === 'Dirigeant/Dirigeante' && player.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant'].includes(team)));
     const matchesPosition = filterPosition === 'all' || player.position === filterPosition;
     
