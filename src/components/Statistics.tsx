@@ -264,7 +264,10 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold mb-2">US AIGNAN</h1>
+            <div className="flex items-center gap-4 mb-2">
+              <img src="/logo-v2.png" alt="US Aignan Logo" className="h-12" />
+              <h1 className="text-4xl font-bold">US AIGNAN</h1>
+            </div>
             <h2 className="text-2xl font-semibold mb-2">Statistiques</h2>
             <p className="text-red-100">Analysez les performances de votre équipe</p>
           </div>

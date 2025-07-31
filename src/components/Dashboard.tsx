@@ -328,7 +328,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </button>
         </div>
         <div className="relative z-10">
-          <h1 className="text-4xl font-bold mb-2">US AIGNAN</h1>
+          <div className="flex items-center gap-4 mb-2">
+            <img src="/logo-v2.png" alt="US Aignan Logo" className="h-12" />
+            <h1 className="text-4xl font-bold">US AIGNAN</h1>
+          </div>
           <h2 className="text-2xl font-semibold mb-2">Tableau de Bord</h2>
           <p className="text-red-100">
             Vue d'ensemble de votre équipe de football
