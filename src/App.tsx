@@ -299,7 +299,7 @@ function App() {
         <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
         <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />
         <Route path="/performance" element={<PerformanceEntry players={players} onSavePerformance={handleSavePerformance} />} />
-        <Route path="/presence" element={<PresencePage onUpdatePlayerStorage={handleUpdatePlayerStorage} />} />
+        <Route path="/presence" element={<PresencePage allPlayers={players} onUpdatePlayerStorage={handleUpdatePlayerStorage} />} />
         <Route path="/statistics" element={<Statistics players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
         <Route path="/results" element={<MatchResultsPage allPlayers={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} onUpdatePlayerStorage={handleUpdatePlayerStorage} />} />
         <Route path="*" element={<Navigate to="/" />} />

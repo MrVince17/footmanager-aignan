@@ -1,31 +1,27 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Player } from '../types';
-import { storage } from '../utils/storage';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 import { getTotalTeamEvents } from '../utils/playerUtils';
 import PresenceTable from './PresenceTable';
 import { Header } from './Header';
 
 interface PresencePageProps {
+  allPlayers: Player[];
   onUpdatePlayerStorage: (type: string, refData: any, value?: any) => void;
 }
 
-export const PresencePage: React.FC<PresencePageProps> = ({ onUpdatePlayerStorage }) => {
-  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
+export const PresencePage: React.FC<PresencePageProps> = ({ allPlayers, onUpdatePlayerStorage }) => {
   const [selectedSeason, setSelectedSeason] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'trainings' | 'matches'>('trainings');
 
   useEffect(() => {
-    const fetchPlayers = async () => {
-      const players = await storage.getPlayers();
-      setAllPlayers(players);
-      const seasons = getAvailableSeasons(players);
-      if (seasons.length > 0) {
-        setSelectedSeason(seasons[0]);
-      }
-    };
-    fetchPlayers();
-  }, []);
+    const seasons = getAvailableSeasons(allPlayers);
+    if (seasons.length > 0 && !seasons.includes(selectedSeason)) {
+      setSelectedSeason(seasons[0]);
+    } else if (seasons.length === 0) {
+      setSelectedSeason('');
+    }
+  }, [allPlayers, selectedSeason]);
 
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
