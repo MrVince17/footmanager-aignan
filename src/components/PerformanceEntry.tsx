@@ -129,6 +129,9 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
       if (filterTeamPerformance === 'Senior') {
         return player.teams.some(team => team.toLowerCase().includes('senior'));
       }
+      if (filterTeamPerformance === 'Dirigeant/Dirigeante') {
+        return player.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant', 'Dirigeante', 'dirigeante'].includes(team));
+      }
       return player.teams.includes(filterTeamPerformance as any);
     })
     .sort((a, b) => {
@@ -329,6 +332,8 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                 <option value="U19">U19</option>
                 <option value="U18">U18</option>
                 <option value="U17">U17</option>
+                <option value="Arbitre">Arbitre</option>
+                <option value="Dirigeant/Dirigeante">Dirigeant/Dirigeante</option>
               </select>
               <button
                 type="button"
