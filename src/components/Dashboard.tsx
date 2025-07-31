@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Player, TeamStats } from "../types";
+import { Player, Team, TeamStats } from "../types";
 import {
   Users,
   Trophy,
@@ -92,7 +92,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onSeasonChange,
   allPlayers,
 }) => {
-  const [filterTeam, setFilterTeam] = React.useState<string>('all');
+  const [filterTeam, setFilterTeam] = React.useState<Team | 'all'>('all');
   const validatePlayerData = (players: any[]) => {
     return players.map(player => ({
       ...player,
@@ -129,7 +129,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           const teamMatchEvents = storage.getTotalTeamEvents(
             allPlayers,
             "match",
-          team as any,
+          team,
             selectedSeason
           );
           teamMatchEvents.forEach((event) =>
@@ -163,10 +163,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const calculateTeamStats = (): TeamStats => {
     const totalPlayers = playersWithSeasonStats.length; // Should this be filtered by players active in the season?
     const seniors1Count = playersWithSeasonStats.filter((p) =>
-      p.teams.includes("Senior 1" as any)
+      p.teams.includes("Senior 1")
     ).length;
     const seniors2Count = playersWithSeasonStats.filter((p) =>
-      p.teams.includes("Senior 2" as any)
+      p.teams.includes("Senior 2")
     ).length;
 
     const totalAge = playersWithSeasonStats.reduce((sum, player) => {
@@ -181,7 +181,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       0
     );
     // For totalMatches and totalTrainings, we should count unique team events for the season.
-    const teamToFilter = filterTeam === 'all' ? undefined : filterTeam as any;
+    const teamToFilter = filterTeam === 'all' ? undefined : filterTeam;
     const uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(
       allPlayers,
       "match",
@@ -230,11 +230,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
   );
 
   // Admin issues are global, not season-specific
-  const adminIssues = allPlayers.filter((p) => (!p.licenseValid || !p.paymentValid) && (filterTeam === 'all' || p.teams.includes(filterTeam as any)));
+  const adminIssues = allPlayers.filter((p) => (!p.licenseValid || !p.paymentValid) && (filterTeam === 'all' || p.teams.includes(filterTeam)));
+
+  const availableTeams = useMemo(() => {
+    const distribution: { [key: string]: number } = {};
+    players.forEach(player => {
+      player.teams.forEach(team => {
+        distribution[team] = (distribution[team] || 0) + 1;
+      });
+    });
+    return distribution;
+  }, [players]);
 
   const teamDistribution = useMemo(() => {
     const distribution: { [key: string]: number } = {};
-    const filteredPlayers = playersWithSeasonStats.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam as any));
+    const filteredPlayers = playersWithSeasonStats.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam));
     filteredPlayers.forEach(player => {
       let mainTeam = player.teams[0] || 'Non assigné';
       if (player.teams.includes('Senior 1')) mainTeam = 'Senior 1';
@@ -366,7 +376,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
           >
             <option value="all">Toutes les équipes</option>
-            {Object.keys(teamDistribution).map(team => (
+            {Object.keys(availableTeams).map(team => (
               <option key={team} value={team}>{team}</option>
             ))}
           </select>
