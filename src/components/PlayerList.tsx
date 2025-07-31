@@ -157,21 +157,29 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     }
   };
 
-  const filteredPlayers = players.filter(player => {
-    const matchesSearch = 
-      player.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      player.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      player.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesTeam = filterTeam === 'all' ||
-      (filterTeam === 'Senior' && player.teams.some(team => team.toLowerCase().includes('senior'))) ||
-      (filterTeam !== 'Senior' && player.teams.includes(filterTeam as any)) ||
-      (filterTeam === 'U17' && player.teams.includes('U17')) ||
-      (filterTeam === 'Dirigeant/Dirigeante' && player.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant'].includes(team)));
-    const matchesPosition = filterPosition === 'all' || player.position === filterPosition;
-    
-    return matchesSearch && matchesTeam && matchesPosition;
-  });
+  const sortedAndFilteredPlayers = players
+    .filter(player => {
+      const matchesSearch =
+        player.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        player.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        player.licenseNumber.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesTeam = filterTeam === 'all' ||
+        (filterTeam === 'Senior' && player.teams.some(team => team.toLowerCase().includes('senior'))) ||
+        (filterTeam !== 'Senior' && player.teams.includes(filterTeam as any)) ||
+        (filterTeam === 'U17' && player.teams.includes('U17')) ||
+        (filterTeam === 'Dirigeant/Dirigeante' && player.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant'].includes(team)));
+      const matchesPosition = filterPosition === 'all' || player.position === filterPosition;
+
+      return matchesSearch && matchesTeam && matchesPosition;
+    })
+    .sort((a, b) => {
+      const lastNameComparison = a.lastName.localeCompare(b.lastName);
+      if (lastNameComparison !== 0) {
+        return lastNameComparison;
+      }
+      return a.firstName.localeCompare(b.firstName);
+    });
 
   const getPositionColor = (position: string) => {
     switch (position) {
@@ -276,7 +284,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
         <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
             <button
                 onClick={() => {
-                    const allVisiblePlayerIds = filteredPlayers.map(p => p.id);
+                    const allVisiblePlayerIds = sortedAndFilteredPlayers.map(p => p.id);
                     const allVisibleSelected = selectedPlayers.length === allVisiblePlayerIds.length && allVisiblePlayerIds.every(id => selectedPlayers.includes(id));
                     if (allVisibleSelected) {
                         setSelectedPlayers(selectedPlayers.filter(id => !allVisiblePlayerIds.includes(id)));
@@ -288,7 +296,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             >
                 Tout sélectionner / désélectionner (visibles)
             </button>
-          <span>{filteredPlayers.length} joueur(s) trouvé(s)</span>
+          <span>{sortedAndFilteredPlayers.length} joueur(s) trouvé(s)</span>
           {selectedPlayers.length > 0 && (
             <div className="flex items-center space-x-4">
               <span>{selectedPlayers.length} sélectionné(s)</span>
@@ -307,7 +315,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
       {/* Players Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredPlayers.map((player) => (
+        {sortedAndFilteredPlayers.map((player) => (
           <div key={player.id} className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${selectedPlayers.includes(player.id) ? 'ring-2 ring-red-500' : ''}`}>
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
@@ -398,7 +406,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
         ))}
       </div>
 
-      {filteredPlayers.length === 0 && (
+      {sortedAndFilteredPlayers.length === 0 && (
         <div className="text-center py-12">
           <Users size={48} className="mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun joueur trouvé</h3>
