@@ -72,6 +72,22 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const matchScorers: { playerId: string; minute: number }[] = [];
+    const matchAssisters: { playerId: string }[] = [];
+
+    if (performanceData.type === 'match') {
+      selectedPlayers.forEach(playerId => {
+        const goals = performanceData.goals[playerId] || 0;
+        const assists = performanceData.assists[playerId] || 0;
+        for (let i = 0; i < goals; i++) {
+          matchScorers.push({ playerId: playerId, minute: 0 }); // Default minute 0, can be edited later
+        }
+        for (let i = 0; i < assists; i++) {
+          matchAssisters.push({ playerId: playerId });
+        }
+      });
+    }
     
     selectedPlayers.forEach(playerId => {
       // Constructing without id, season, excused (handled by App.tsx and storage.ts)
@@ -89,9 +105,8 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
         yellowCards: performanceData.yellowCards[playerId] || 0,
         redCards: performanceData.redCards[playerId] || 0,
         cleanSheet: performanceData.cleanSheets[playerId] || false,
-        // Initialize new detailed fields as empty or null for now
-        scorers: performanceData.type === 'match' ? [] : null,
-        assisters: performanceData.type === 'match' ? [] : null,
+        scorers: performanceData.type === 'match' ? matchScorers : null,
+        assisters: performanceData.type === 'match' ? matchAssisters : null,
         yellowCardsDetails: performanceData.type === 'match' ? [] : null,
         redCardsDetails: performanceData.type === 'match' ? [] : null,
         goalsConcededDetails: performanceData.type === 'match' ? [] : null,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MatchDisplayData, Player, Performance } from '../types'; // Assuming these types are defined
 
 interface MatchEditFormProps {
@@ -35,6 +35,16 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
   const [localRedCards, setLocalRedCards] = useState(
     matchToEdit.originalPerformanceRef.redCardsDetails?.map(rc => ({ ...rc, minute: String(rc.minute) })) || []
   );
+
+  const sortedPlayers = useMemo(() => {
+    return [...allPlayers].sort((a, b) => {
+      const lastNameComparison = a.lastName.localeCompare(b.lastName);
+      if (lastNameComparison !== 0) {
+        return lastNameComparison;
+      }
+      return a.firstName.localeCompare(b.firstName);
+    });
+  }, [allPlayers]);
 
   // Effect to update form state if matchToEdit changes (e.g., user opens form for a different match)
   useEffect(() => {
@@ -197,7 +207,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
                   className="flex-grow mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 >
                   <option value="" disabled>Sélectionner joueur</option>
-                  {allPlayers.map(player => (
+                  {sortedPlayers.map(player => (
                     <option key={player.id} value={player.id}>
                       {player.firstName} {player.lastName}
                     </option>
@@ -253,7 +263,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
                   className="flex-grow mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 >
                   <option value="" disabled>Sélectionner joueur</option>
-                  {allPlayers.map(player => (
+                  {sortedPlayers.map(player => (
                     <option key={player.id} value={player.id}>
                       {player.firstName} {player.lastName}
                     </option>
@@ -297,7 +307,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
                   className="flex-grow mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 >
                   <option value="" disabled>Sélectionner joueur</option>
-                  {allPlayers.map(player => (
+                  {sortedPlayers.map(player => (
                     <option key={player.id} value={player.id}>
                       {player.firstName} {player.lastName}
                     </option>
@@ -353,7 +363,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
                   className="flex-grow mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 >
                   <option value="" disabled>Sélectionner joueur</option>
-                  {allPlayers.map(player => (
+                  {sortedPlayers.map(player => (
                     <option key={player.id} value={player.id}>
                       {player.firstName} {player.lastName}
                     </option>
