@@ -29,7 +29,8 @@ export const PlayerList: React.FC<PlayerListProps> = ({
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
 
   const excelHeaders = [
-    'Nom complet',
+    'Nom',
+    'Prénom',
     'Date de Naissance',
     'N° Licence',
     'Équipes',
@@ -41,14 +42,15 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
   const handleExport = () => {
     const dataToExport = players.map(p => ({
-      [excelHeaders[0]]: `${p.lastName} ${p.firstName}`,
-      [excelHeaders[1]]: p.dateOfBirth,
-      [excelHeaders[2]]: p.licenseNumber,
-      [excelHeaders[3]]: p.teams.join(', '),
-      [excelHeaders[4]]: p.position,
-      [excelHeaders[5]]: p.licenseValid ? 'Oui' : 'Non',
-      [excelHeaders[6]]: p.licenseValidationDate,
-      [excelHeaders[7]]: p.paymentValid ? 'Oui' : 'Non',
+      [excelHeaders[0]]: p.lastName,
+      [excelHeaders[1]]: p.firstName,
+      [excelHeaders[2]]: p.dateOfBirth,
+      [excelHeaders[3]]: p.licenseNumber,
+      [excelHeaders[4]]: p.teams.join(', '),
+      [excelHeaders[5]]: p.position,
+      [excelHeaders[6]]: p.licenseValid ? 'Oui' : 'Non',
+      [excelHeaders[7]]: p.licenseValidationDate,
+      [excelHeaders[8]]: p.paymentValid ? 'Oui' : 'Non',
     }));
     const ws = XLSX.utils.json_to_sheet(dataToExport, { header: excelHeaders });
     const wb = XLSX.utils.book_new();
@@ -82,13 +84,13 @@ export const PlayerList: React.FC<PlayerListProps> = ({
         const json: any[] = XLSX.utils.sheet_to_json(worksheet, { raw: false });
 
         const importedPlayers = json.map(row => {
-          const [lastName, ...firstNameParts] = (row[excelHeaders[0]] || '').split(' ');
-          const firstName = firstNameParts.join(' ');
+          const lastName = row[excelHeaders[0]] || '';
+          const firstName = row[excelHeaders[1]] || '';
 
-          const licenseNumber = row[excelHeaders[2]];
+          const licenseNumber = row[excelHeaders[3]];
 
-          const dateOfBirth = formatDateToYYYYMMDD(row[excelHeaders[1]]);
-          const licenseValidationDate = formatDateToYYYYMMDD(row[excelHeaders[6]]);
+          const dateOfBirth = formatDateToYYYYMMDD(row[excelHeaders[2]]);
+          const licenseValidationDate = formatDateToYYYYMMDD(row[excelHeaders[7]]);
 
           const playerObject: Player = {
             id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`,
@@ -96,11 +98,11 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             lastName: lastName,
             dateOfBirth: dateOfBirth || '',
             licenseNumber: String(licenseNumber || ''),
-            teams: (row[excelHeaders[3]] || '').split(',').map((t: string) => t.trim()),
-            position: row[excelHeaders[4]] || 'Non défini',
-            licenseValid: row[excelHeaders[5]] === 'Oui',
+            teams: (row[excelHeaders[4]] || '').split(',').map((t: string) => t.trim()),
+            position: row[excelHeaders[5]] || 'Non défini',
+            licenseValid: row[excelHeaders[6]] === 'Oui',
             licenseValidationDate: licenseValidationDate,
-            paymentValid: row[excelHeaders[7]] === 'Oui',
+            paymentValid: row[excelHeaders[8]] === 'Oui',
             // Default values for all other fields to ensure they are not undefined
             totalMatches: 0,
             totalMinutes: 0,
