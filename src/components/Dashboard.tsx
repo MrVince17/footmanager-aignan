@@ -131,12 +131,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
       .map((p) => {
         const seasonStats = getPlayerStatsForSeason(p, selectedSeason);
         // Calculate season-specific attendance rates
-        const allTeamTrainingsForSeason = getTotalTeamEvents(
-          allPlayers,
-          "training",
-          undefined,
-          selectedSeason
-        ).length;
+        // Calculate season-specific attendance rates
+        let allTeamTrainingsForPlayerForSeason = 0;
+        const uniqueTrainingEventsForPlayerSeason = new Set<string>();
+        p.teams.forEach((team) => {
+          const teamTrainingEvents = getTotalTeamEvents(
+            allPlayers,
+            "training",
+            team,
+            selectedSeason
+          );
+          teamTrainingEvents.forEach((event) =>
+            uniqueTrainingEventsForPlayerSeason.add(event.date)
+          );
+        });
+        allTeamTrainingsForPlayerForSeason = uniqueTrainingEventsForPlayerSeason.size;
 
         let allTeamMatchesForPlayerForSeason = 0;
         const uniqueMatchEventsForPlayerSeason = new Set<string>();
@@ -144,7 +153,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           const teamMatchEvents = getTotalTeamEvents(
             allPlayers,
             "match",
-          team,
+            team,
             selectedSeason
           );
           teamMatchEvents.forEach((event) =>
@@ -157,14 +166,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         // Calculate season-specific attendance rates
         const trainingAttendanceRate =
-          allTeamTrainingsForSeason > 0
-            ? (seasonStats.presentTrainings / allTeamTrainingsForSeason) * 100
-            : p.trainingAttendanceRate; // Fallback or 0
+          allTeamTrainingsForPlayerForSeason > 0
+            ? (seasonStats.presentTrainings / allTeamTrainingsForPlayerForSeason) * 100
+            : 0;
         const matchAttendanceRate =
           allTeamMatchesForPlayerForSeason > 0
             ? (seasonStats.presentMatches / allTeamMatchesForPlayerForSeason) *
               100
-            : p.matchAttendanceRate; // Fallback or 0
+            : 0;
 
         return {
           ...p,
