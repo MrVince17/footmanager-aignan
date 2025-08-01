@@ -24,9 +24,9 @@ export function formatDateToYYYYMMDD(dateInput: any): string {
 
         if (year < 100) year += 2000;
 
-        if (day > 12 && month <= 12) {
-          [day, month] = [month, day];
-        }
+        // Based on user feedback, the format is M/D/YY, so part1 is month, part2 is day
+        month = part1;
+        day = part2;
         date = new Date(Date.UTC(year, month - 1, day));
       } else {
         return '';
