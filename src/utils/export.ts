@@ -213,8 +213,9 @@ export const exportToPDF = (elementId: string, filename: string) => {
       quality: 0.98
     },
     html2canvas: {
-      scale: 1,
-      useCORS: true
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff'
     },
     jsPDF: {
       unit: 'in',
