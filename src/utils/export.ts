@@ -224,7 +224,7 @@ export const exportToPDF = (elementId: string, filename: string) => {
     }
   };
 
-  html2pdf()
+  return html2pdf()
     .from(element)
     .set(options)
     .save()

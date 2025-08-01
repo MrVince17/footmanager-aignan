@@ -94,12 +94,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
   allPlayers,
 }) => {
   const [filterTeam, setFilterTeam] = React.useState<Team | 'all'>('all');
+  const [isPrinting, setIsPrinting] = React.useState(false);
   const validatePlayerData = (players: any[]) => {
     return players.map(player => ({
       ...player,
       teams: player.teams && Array.isArray(player.teams) ? player.teams : []
     }));
   };
+
+  const handleExportClick = () => {
+    setIsPrinting(true);
+  };
+
+  React.useEffect(() => {
+    if (isPrinting) {
+      exportToPDF("dashboard-export-area", "tableau_bord_US_Aignan.pdf")
+        .then(() => {
+          setIsPrinting(false);
+        });
+    }
+  }, [isPrinting]);
 
   console.log("Dashboard props - players:", players);
   console.log("Dashboard props - selectedSeason:", selectedSeason);
@@ -329,9 +343,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         subtitle="Vue d'ensemble de votre équipe de football"
       >
         <button
-          onClick={() =>
-            exportToPDF("dashboard-export-area", "tableau_bord_US_Aignan.pdf")
-          }
+          onClick={handleExportClick}
           className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors duration-200"
         >
           <Download size={20} />
@@ -340,48 +352,62 @@ export const Dashboard: React.FC<DashboardProps> = ({
       </Header>
       <div id="dashboard-export-area">
         {/* Season and Team Filter */}
-        <div className="mb-6 bg-white p-4 rounded-lg shadow flex items-center space-x-3">
-          <Filter size={20} className="text-gray-600" />
-          <div>
-            <label
-              htmlFor="season-select"
-              className="text-sm font-medium text-gray-700"
-            >
-              Saison :
-            </label>
-            <select
-              id="season-select"
-              value={selectedSeason}
-              onChange={(e) => onSeasonChange(e.target.value)}
-              className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
-            >
-              {availableSeasons.map((season) => (
-                <option key={season} value={season}>
-                  {season}
-                </option>
-              ))}
-            </select>
+        {isPrinting ? (
+          <div className="mb-6 bg-white p-4 rounded-lg shadow flex items-center space-x-3">
+            <Filter size={20} className="text-gray-600" />
+            <div>
+              <span className="text-sm font-medium text-gray-700">Saison : </span>
+              <span className="text-base font-semibold">{selectedSeason}</span>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-700">Équipe : </span>
+              <span className="text-base font-semibold">{filterTeam === 'all' ? 'Toutes les équipes' : filterTeam}</span>
+            </div>
           </div>
-          <div>
-            <label
-              htmlFor="team-filter-dashboard"
-              className="text-sm font-medium text-gray-700"
-            >
-              Équipe :
-            </label>
-            <select
-              id="team-filter-dashboard"
-              value={filterTeam}
-              onChange={(e) => setFilterTeam(e.target.value)}
-              className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
-            >
-              <option value="all">Toutes les équipes</option>
-              {Object.keys(availableTeams).map(team => (
-                <option key={team} value={team}>{team}</option>
-              ))}
-            </select>
+        ) : (
+          <div className="mb-6 bg-white p-4 rounded-lg shadow flex items-center space-x-3">
+            <Filter size={20} className="text-gray-600" />
+            <div>
+              <label
+                htmlFor="season-select"
+                className="text-sm font-medium text-gray-700"
+              >
+                Saison :
+              </label>
+              <select
+                id="season-select"
+                value={selectedSeason}
+                onChange={(e) => onSeasonChange(e.target.value)}
+                className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
+              >
+                {availableSeasons.map((season) => (
+                  <option key={season} value={season}>
+                    {season}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="team-filter-dashboard"
+                className="text-sm font-medium text-gray-700"
+              >
+                Équipe :
+              </label>
+              <select
+                id="team-filter-dashboard"
+                value={filterTeam}
+                onChange={(e) => setFilterTeam(e.target.value)}
+                className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
+              >
+                <option value="all">Toutes les équipes</option>
+                {Object.keys(availableTeams).map(team => (
+                  <option key={team} value={team}>{team}</option>
+                ))}
+              </select>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
