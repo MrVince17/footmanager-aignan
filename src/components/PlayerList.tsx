@@ -78,7 +78,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           return;
         }
 
-        const json: any[] = XLSX.utils.sheet_to_json(worksheet, { raw: true });
+        const json: any[] = XLSX.utils.sheet_to_json(worksheet, { cellDates: true, dateNF: 'yyyy-mm-dd' });
 
         const importedPlayers = json.map(row => {
           const [lastName, ...firstNameParts] = (row[excelHeaders[0]] || '').split(' ');
@@ -86,45 +86,16 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
           const licenseNumber = row[excelHeaders[2]];
 
-          const dateOfBirthRaw = row[excelHeaders[1]];
-          let dateOfBirth = '';
-          if (dateOfBirthRaw) {
-            if (typeof dateOfBirthRaw === 'number') {
-              // It's a serial number, convert it
-              const d = XLSX.SSF.parse_date_code(dateOfBirthRaw);
-              dateOfBirth = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
-            } else if (typeof dateOfBirthRaw === 'string') {
-              // It might be a string in a different format, try to parse it
-              const d = new Date(dateOfBirthRaw);
-              if (!isNaN(d.getTime())) {
-                dateOfBirth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-              }
-            }
-          }
-
-          const licenseValidationDateRaw = row[excelHeaders[6]];
-          let licenseValidationDate = null;
-          if (licenseValidationDateRaw) {
-            if (typeof licenseValidationDateRaw === 'number') {
-              const d = XLSX.SSF.parse_date_code(licenseValidationDateRaw);
-              licenseValidationDate = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
-            } else if (typeof licenseValidationDateRaw === 'string') {
-              const d = new Date(licenseValidationDateRaw);
-              if (!isNaN(d.getTime())) {
-                licenseValidationDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-              }
-            }
-          }
           const playerObject: Player = {
             id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`,
             firstName: firstName,
             lastName: lastName,
-            dateOfBirth: dateOfBirth,
+            dateOfBirth: row[excelHeaders[1]] || '',
             licenseNumber: String(licenseNumber || ''),
             teams: (row[excelHeaders[3]] || '').split(',').map((t: string) => t.trim()),
             position: row[excelHeaders[4]] || 'Non défini',
             licenseValid: row[excelHeaders[5]] === 'Oui',
-            licenseValidationDate: licenseValidationDate,
+            licenseValidationDate: row[excelHeaders[6]] || null,
             paymentValid: row[excelHeaders[7]] === 'Oui',
             // Default values for all other fields to ensure they are not undefined
             totalMatches: 0,
