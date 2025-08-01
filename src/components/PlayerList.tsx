@@ -36,7 +36,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     'Équipes',
     'Poste',
     'Licence Valide',
-    'Date Validation Licence',
+    'Date_Validation_Licence',
     'Paiement Valide',
   ];
 
