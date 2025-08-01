@@ -22,7 +22,11 @@ export function formatDateToYYYYMMDD(dateInput: any): string {
       let year = parseInt(parts[3], 10);
 
       if (year < 100) {
-        year += 2000; // Assume 21st century for 2-digit years
+        const currentYear = new Date().getFullYear();
+        year += 2000;
+        if (year > currentYear) {
+          year -= 100;
+        }
       }
 
       // Create date in UTC to avoid timezone issues
