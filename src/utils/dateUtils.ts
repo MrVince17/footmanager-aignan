@@ -13,33 +13,39 @@ export function formatDateToYYYYMMDD(dateInput: any): string {
     date = new Date(excelEpoch.getTime() + dateInput * 86400000);
   } else {
     const s = String(dateInput).trim();
-    // Match formats like 7/1/2025, 07-01-25 etc.
-    const parts = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
 
+    // Try parsing YYYY-MM-DD
+    let parts = s.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
     if (parts) {
-      const day = parseInt(parts[1], 10);
+      const year = parseInt(parts[1], 10);
       const month = parseInt(parts[2], 10);
-      let year = parseInt(parts[3], 10);
-
-      if (year < 100) {
-        const currentYear = new Date().getFullYear();
-        year += 2000;
-        if (year > currentYear) {
-          year -= 100;
-        }
-      }
-
-      // Create date in UTC to avoid timezone issues
+      const day = parseInt(parts[3], 10);
       date = new Date(Date.UTC(year, month - 1, day));
     } else {
-      // Fallback for other formats that new Date() can parse
-      const d = new Date(s);
-      if (!isNaN(d.getTime())) {
-        // Adjust for timezone to get correct UTC date
-        const timezoneOffset = d.getTimezoneOffset() * 60000;
-        date = new Date(d.getTime() + timezoneOffset);
+      // Try parsing DD/MM/YYYY or DD-MM-YYYY
+      parts = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+      if (parts) {
+        const day = parseInt(parts[1], 10);
+        const month = parseInt(parts[2], 10);
+        let year = parseInt(parts[3], 10);
+
+        if (year < 100) {
+          const currentYear = new Date().getFullYear();
+          year += 2000;
+          if (year > currentYear) {
+            year -= 100;
+          }
+        }
+        date = new Date(Date.UTC(year, month - 1, day));
       } else {
-        return ''; // Return empty if parsing fails
+        // Fallback for other formats
+        const d = new Date(s);
+        if (!isNaN(d.getTime())) {
+          const timezoneOffset = d.getTimezoneOffset() * 60000;
+          date = new Date(d.getTime() + timezoneOffset);
+        } else {
+          return ''; // Return empty if parsing fails
+        }
       }
     }
   }
