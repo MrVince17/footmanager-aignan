@@ -568,7 +568,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       {player.firstName} {player.lastName}
                     </span>
                   </div>
-                  <span className="font-bold text-lg">{player.goals}</span>
+                  <span className="font-bold text-lg">{player.seasonStats.goals}</span>
                 </div>
               ))}
             </div>
