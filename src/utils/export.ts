@@ -1,6 +1,6 @@
 import { Player } from '../types';
 import * as XLSX from 'xlsx';
-import html2pdf from 'html2pdf.js';
+import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { getAge } from './playerUtils';
@@ -197,7 +197,7 @@ export const exportPlayerCardToPDF = (player: Player, filename: string) => {
   doc.save(filename);
 };
 
-export const exportToPDF = (elementId: string, filename: string) => {
+export const exportToPDF = async (elementId: string, filename: string) => {
   const element = document.getElementById(elementId);
 
   if (!element) {
@@ -205,30 +205,42 @@ export const exportToPDF = (elementId: string, filename: string) => {
     return;
   }
 
-  const options = {
-    margin: 0,
-    filename: filename,
-    image: {
-      type: 'jpeg',
-      quality: 0.98
-    },
-    html2canvas: {
+  try {
+    const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
       backgroundColor: '#ffffff'
-    },
-    jsPDF: {
-      unit: 'in',
-      format: 'a4',
-      orientation: 'landscape'
-    }
-  };
-
-  return html2pdf()
-    .from(element)
-    .set(options)
-    .save()
-    .catch(err => {
-      console.error("Error during PDF generation: ", err);
     });
+
+    const imgData = canvas.toDataURL('image/png');
+
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const ratio = imgWidth / imgHeight;
+
+    let newImgWidth = pdfWidth;
+    let newImgHeight = newImgWidth / ratio;
+
+    if (newImgHeight > pdfHeight) {
+      newImgHeight = pdfHeight;
+      newImgWidth = newImgHeight * ratio;
+    }
+
+    const x = (pdfWidth - newImgWidth) / 2;
+    const y = (pdfHeight - newImgHeight) / 2;
+
+    pdf.addImage(imgData, 'PNG', x, y, newImgWidth, newImgHeight);
+    pdf.save(filename);
+
+  } catch (err) {
+    console.error("Error during PDF generation: ", err);
+  }
 };
