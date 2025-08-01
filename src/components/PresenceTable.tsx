@@ -4,7 +4,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { Player } from "../types";
-import { storage } from "../utils/storage";
+import { getTotalTeamEvents } from '../utils/playerUtils';
 
 interface PresenceData {
   date: string;
@@ -29,8 +29,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
   onDelete,
 }) => {
   const generatePresenceData = () => {
-    const events = storage
-      .getTotalTeamEvents(allPlayers, type, undefined, selectedSeason)
+    const events = getTotalTeamEvents(allPlayers, type, undefined, selectedSeason)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     const eventDates = events.map((e) => e.date);

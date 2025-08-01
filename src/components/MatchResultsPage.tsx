@@ -6,7 +6,7 @@ import { MatchEditForm } from './MatchEditForm';
 import { exportMatchSummaryToWord } from './MatchSummaryGenerator';
 import { Info, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { getPlayerById } from '../utils/playerUtils';
 import { getAvailableSeasons } from '../utils/seasonUtils';
@@ -217,7 +217,7 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
         tableRows.push(row);
     });
 
-    (doc as any).autoTable({
+    autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
         startY: 30 + (summaryText.length * 5) + 5,
