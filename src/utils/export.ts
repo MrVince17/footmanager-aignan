@@ -219,7 +219,7 @@ export const exportToPDF = (elementId: string, filename: string) => {
     jsPDF: {
       unit: 'in',
       format: 'a4',
-      orientation: 'portrait'
+      orientation: 'landscape'
     }
   };
 
