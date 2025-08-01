@@ -36,6 +36,9 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
 
   useEffect(() => {
     if (player) {
+      console.log('Player data received in form:', player);
+      console.log('dateOfBirth:', player.dateOfBirth);
+      console.log('licenseValidationDate:', player.licenseValidationDate);
       setFormData(player);
     }
   }, [player]);

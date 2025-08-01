@@ -12,41 +12,48 @@ export const parseDateString = (dateStr: string | number): string | null => {
 
   if (typeof dateStr === 'number') {
     // Handle Excel serial date number
-    const d = new Date(Math.round((dateStr - 25569) * 86400 * 1000));
-    // Adjust for timezone offset
-    d.setMinutes(d.getMinutes() + d.getTimezoneOffset());
-    date = d;
+    // The epoch for Excel is 1899-12-30T00:00:00Z
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const excelDate = new Date(excelEpoch.getTime() + dateStr * 86400000);
+    date = excelDate;
   } else {
     // Handle string dates
-    const parts = String(dateStr).match(/(\d+)/g);
-    if (!parts || parts.length < 3) {
-      // Try parsing with new Date() as a fallback
-      const d = new Date(dateStr);
+    const s = String(dateStr).trim();
+    // Match formats like 25/12/2023, 25-12-2023, 2023-12-25 etc.
+    const parts = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+
+    if (parts) {
+      let day, month, year;
+      const part1 = parseInt(parts[1], 10);
+      const part2 = parseInt(parts[2], 10);
+      let part3 = parseInt(parts[3], 10);
+
+      if (part3 < 100) {
+        part3 += 2000; // Assume 21st century for 2-digit years
+      }
+      year = part3;
+
+      // Assuming DD/MM/YYYY for fr-FR locale
+      day = part1;
+      month = part2;
+
+      // Basic check for MM/DD/YYYY if month > 12
+      if (part1 > 12 && part2 <= 12) {
+        day = part2;
+        month = part1;
+      }
+
+      date = new Date(Date.UTC(year, month - 1, day));
+    } else {
+      // Fallback for other formats like "Jan 1, 2023" or ISO strings
+      const d = new Date(s);
+      // If it's a valid date, we need to adjust for timezone as `new Date(string)` uses local time
       if (!isNaN(d.getTime())) {
-        date = d;
+        const timezoneOffset = d.getTimezoneOffset() * 60000;
+        date = new Date(d.getTime() + timezoneOffset); // Convert to UTC
       } else {
         return null;
       }
-    } else {
-      let day, month, year;
-      // d/m/yy or dd/mm/yy
-      if (parts[2].length === 2) {
-        year = parseInt(parts[2], 10) + 2000;
-      } else {
-        year = parseInt(parts[2], 10);
-      }
-
-      // Assume dd/mm/yyyy or d/m/yyyy
-      day = parseInt(parts[0], 10);
-      month = parseInt(parts[1], 10) - 1;
-
-      // Check for mm/dd/yyyy format by checking if month > 12
-      if (month >= 12) {
-        day = parseInt(parts[1], 10);
-        month = parseInt(parts[0], 10) - 1;
-      }
-
-      date = new Date(year, month, day);
     }
   }
 
@@ -54,9 +61,9 @@ export const parseDateString = (dateStr: string | number): string | null => {
     return null;
   }
 
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
 
   return `${year}-${month}-${day}`;
 };
