@@ -68,7 +68,7 @@ const getPlayerStatsForSeason = (
 
   seasonPerformances.forEach((p) => {
     if (p.present) {
-      if (p.type === "match") {
+      if (p.type === "match" && (p.minutesPlayed ?? 0) > 0) {
         stats.totalMatches++;
         stats.presentMatches++;
         stats.totalMinutes += p.minutesPlayed || 0;
