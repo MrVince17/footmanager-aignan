@@ -1,6 +1,6 @@
 /**
  * Takes a date string or number and returns it in YYYY-MM-DD format.
- * Handles various formats like d/m/yy, m/d/yy, and Excel serial numbers.
+ * Handles various formats like m/d/yy, and Excel serial numbers.
  */
 export function formatDateToYYYYMMDD(dateInput: any): string {
   if (!dateInput) return '';
@@ -8,33 +8,41 @@ export function formatDateToYYYYMMDD(dateInput: any): string {
   let date: Date;
 
   if (typeof dateInput === 'number') {
+    // Handle Excel serial date number
     const excelEpoch = new Date(Date.UTC(1899, 11, 30));
     date = new Date(excelEpoch.getTime() + dateInput * 86400000);
   } else {
     const s = String(dateInput).trim();
-    let d = new Date(s);
-    if (!isNaN(d.getTime())) {
-      date = d;
+    // Match formats like 7/1/2025, 07-01-25 etc.
+    const parts = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+
+    if (parts) {
+      const month = parseInt(parts[1], 10);
+      const day = parseInt(parts[2], 10);
+      let year = parseInt(parts[3], 10);
+
+      if (year < 100) {
+        year += 2000; // Assume 21st century for 2-digit years
+      }
+
+      // Create date in UTC to avoid timezone issues
+      date = new Date(Date.UTC(year, month - 1, day));
     } else {
-      const parts = s.match(/(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/);
-      if (parts) {
-        let day = parseInt(parts[1], 10);
-        let month = parseInt(parts[2], 10);
-        let year = parseInt(parts[3], 10);
-
-        if (year < 100) year += 2000;
-
-        // Based on user feedback, the format is M/D/YY, so part1 is month, part2 is day
-        month = part1;
-        day = part2;
-        date = new Date(Date.UTC(year, month - 1, day));
+      // Fallback for other formats that new Date() can parse
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        // Adjust for timezone to get correct UTC date
+        const timezoneOffset = d.getTimezoneOffset() * 60000;
+        date = new Date(d.getTime() + timezoneOffset);
       } else {
-        return '';
+        return ''; // Return empty if parsing fails
       }
     }
   }
 
-  if (isNaN(date.getTime())) return '';
+  if (isNaN(date.getTime())) {
+    return '';
+  }
 
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, '0');
