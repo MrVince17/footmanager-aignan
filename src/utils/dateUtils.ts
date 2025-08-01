@@ -17,8 +17,8 @@ export function formatDateToYYYYMMDD(dateInput: any): string {
     const parts = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
 
     if (parts) {
-      const month = parseInt(parts[1], 10);
-      const day = parseInt(parts[2], 10);
+      const day = parseInt(parts[1], 10);
+      const month = parseInt(parts[2], 10);
       let year = parseInt(parts[3], 10);
 
       if (year < 100) {
