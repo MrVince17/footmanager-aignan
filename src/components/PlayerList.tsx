@@ -102,6 +102,19 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             }
           }
 
+          const licenseValidationDateRaw = row[excelHeaders[6]];
+          let licenseValidationDate = null;
+          if (licenseValidationDateRaw) {
+            if (typeof licenseValidationDateRaw === 'number') {
+              const d = XLSX.SSF.parse_date_code(licenseValidationDateRaw);
+              licenseValidationDate = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+            } else if (typeof licenseValidationDateRaw === 'string') {
+              const d = new Date(licenseValidationDateRaw);
+              if (!isNaN(d.getTime())) {
+                licenseValidationDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+              }
+            }
+          }
           const playerObject: Player = {
             id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`,
             firstName: firstName,
@@ -111,7 +124,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             teams: (row[excelHeaders[3]] || '').split(',').map((t: string) => t.trim()),
             position: row[excelHeaders[4]] || 'Non défini',
             licenseValid: row[excelHeaders[5]] === 'Oui',
-            licenseValidationDate: row[excelHeaders[6]] || null,
+            licenseValidationDate: licenseValidationDate,
             paymentValid: row[excelHeaders[7]] === 'Oui',
             // Default values for all other fields to ensure they are not undefined
             totalMatches: 0,
