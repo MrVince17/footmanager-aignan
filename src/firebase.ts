@@ -4,12 +4,12 @@ import { getAuth } from "firebase/auth";
 
 // TODO: Replace with your actual Firebase configuration
 const firebaseConfig = {
-  apiKey: "VOTRE_API_KEY",
-  authDomain: "VOTRE_AUTH_DOMAIN",
-  projectId: "VOTRE_PROJECT_ID",
-  storageBucket: "VOTRE_STORAGE_BUCKET",
-  messagingSenderId: "VOTRE_MESSAGING_SENDER_ID",
-  appId: "VOTRE_APP_ID"
+  apiKey: "AIzaSyCY1jFW7BNp8fLoRxeflIS8c2BFAI28FII",
+  authDomain: "gestion-equipe-football.firebaseapp.com",
+  projectId: "gestion-equipe-football",
+  storageBucket: "gestion-equipe-football.firebasestorage.app",
+  messagingSenderId: "714709524979",
+  appId: "1:714709524979:web:3bd368ddd08f59098fb286"
 };
 
 // Initialize Firebase
