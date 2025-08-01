@@ -5,27 +5,33 @@
 export function formatDateToYYYYMMDD(dateInput: any): string {
   if (!dateInput) return '';
 
-  const s = String(dateInput).trim();
-  const parts = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+  let date: Date;
 
-  if (!parts) {
-    return ''; // Return empty if format is not DD/MM/YYYY
-  }
+  if (typeof dateInput === 'number') {
+    // Handle Excel serial date number
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    date = new Date(excelEpoch.getTime() + dateInput * 86400000);
+  } else {
+    const s = String(dateInput).trim();
+    const parts = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
 
-  const day = parseInt(parts[1], 10);
-  const month = parseInt(parts[2], 10);
-  let year = parseInt(parts[3], 10);
-
-  if (year < 100) {
-    const currentYear = new Date().getFullYear();
-    year += 2000;
-    if (year > currentYear) {
-      year -= 100;
+    if (!parts) {
+      return ''; // Return empty if format is not DD/MM/YYYY
     }
-  }
 
-  // Create date in UTC to avoid timezone issues
-  const date = new Date(Date.UTC(year, month - 1, day));
+    const day = parseInt(parts[1], 10);
+    const month = parseInt(parts[2], 10);
+    let year = parseInt(parts[3], 10);
+
+    if (year < 100) {
+      const currentYear = new Date().getFullYear();
+      year += 2000;
+      if (year > currentYear) {
+        year -= 100;
+      }
+    }
+    date = new Date(Date.UTC(year, month - 1, day));
+  }
 
   if (isNaN(date.getTime())) {
     return '';
