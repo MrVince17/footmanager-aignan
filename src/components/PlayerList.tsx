@@ -4,7 +4,7 @@ import { Search, Plus, Edit, Trash2, Users, Upload, Download, Calendar } from 'l
 import * as XLSX from 'xlsx';
 import { Header } from './Header';
 import { Link, useNavigate } from 'react-router-dom';
-import { parseDateString } from '../utils/dateUtils';
+import { formatDateToYYYYMMDD } from '../utils/dateUtils';
 
 interface PlayerListProps {
   players: Player[];
@@ -87,8 +87,8 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
           const licenseNumber = row[excelHeaders[2]];
 
-          const dateOfBirth = parseDateString(row[excelHeaders[1]]);
-          const licenseValidationDate = parseDateString(row[excelHeaders[6]]);
+          const dateOfBirth = formatDateToYYYYMMDD(row[excelHeaders[1]]);
+          const licenseValidationDate = formatDateToYYYYMMDD(row[excelHeaders[6]]);
 
           const playerObject: Player = {
             id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`,
