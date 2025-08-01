@@ -4,6 +4,7 @@ import { Search, Plus, Edit, Trash2, Users, Upload, Download, Calendar } from 'l
 import * as XLSX from 'xlsx';
 import { Header } from './Header';
 import { Link, useNavigate } from 'react-router-dom';
+import { parseDateString } from '../utils/dateUtils';
 
 interface PlayerListProps {
   players: Player[];
@@ -78,7 +79,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           return;
         }
 
-        const json: any[] = XLSX.utils.sheet_to_json(worksheet, { cellDates: true, dateNF: 'yyyy-mm-dd' });
+        const json: any[] = XLSX.utils.sheet_to_json(worksheet, { raw: false });
 
         const importedPlayers = json.map(row => {
           const [lastName, ...firstNameParts] = (row[excelHeaders[0]] || '').split(' ');
@@ -86,16 +87,19 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
           const licenseNumber = row[excelHeaders[2]];
 
+          const dateOfBirth = parseDateString(row[excelHeaders[1]]);
+          const licenseValidationDate = parseDateString(row[excelHeaders[6]]);
+
           const playerObject: Player = {
             id: licenseNumber ? String(licenseNumber) : `${Date.now()}-${Math.random()}`,
             firstName: firstName,
             lastName: lastName,
-            dateOfBirth: row[excelHeaders[1]] || '',
+            dateOfBirth: dateOfBirth || '',
             licenseNumber: String(licenseNumber || ''),
             teams: (row[excelHeaders[3]] || '').split(',').map((t: string) => t.trim()),
             position: row[excelHeaders[4]] || 'Non défini',
             licenseValid: row[excelHeaders[5]] === 'Oui',
-            licenseValidationDate: row[excelHeaders[6]] || null,
+            licenseValidationDate: licenseValidationDate,
             paymentValid: row[excelHeaders[7]] === 'Oui',
             // Default values for all other fields to ensure they are not undefined
             totalMatches: 0,
