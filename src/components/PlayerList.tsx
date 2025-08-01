@@ -78,7 +78,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           return;
         }
 
-        const json: any[] = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+        const json: any[] = XLSX.utils.sheet_to_json(worksheet, { raw: true });
 
         const importedPlayers = json.map(row => {
           const [lastName, ...firstNameParts] = (row[excelHeaders[0]] || '').split(' ');
