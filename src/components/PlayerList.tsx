@@ -14,14 +14,14 @@ interface PlayerListProps {
   onDeleteMultiple: (playerIds: string[]) => void;
 }
 
-export const PlayerList: React.FC<PlayerListProps> = ({
+export function PlayerList({
   players,
   // onSelectPlayer, // Supprimé
   // onEditPlayer, // Supprimé
   onDeletePlayer,
   onImportPlayers,
   onDeleteMultiple
-}) => {
+}: PlayerListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterPosition, setFilterPosition] = useState<string>('all');
@@ -430,4 +430,4 @@ export const PlayerList: React.FC<PlayerListProps> = ({
       )}
     </div>
   );
-};
+}

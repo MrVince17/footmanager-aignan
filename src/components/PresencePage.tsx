@@ -39,7 +39,7 @@ export const PresencePage: React.FC<PresencePageProps> = ({ allPlayers, onUpdate
 
       const teams = new Set<string>();
       presentPlayers.forEach(p => {
-        const processedTeams = p.teams.map(t => t.startsWith('Senior') ? 'Senior' : t);
+        const processedTeams = p.teams.map((t: string) => t.startsWith('Senior') ? 'Senior' : t);
         processedTeams.forEach(t => teams.add(t));
       });
 
@@ -74,7 +74,7 @@ export const PresencePage: React.FC<PresencePageProps> = ({ allPlayers, onUpdate
 
       const teams = new Set<string>();
       presentPlayers.forEach(p => {
-        const processedTeams = p.teams.map(t => t.startsWith('Senior') ? 'Senior' : t);
+        const processedTeams = p.teams.map((t: string) => t.startsWith('Senior') ? 'Senior' : t);
         processedTeams.forEach(t => teams.add(t));
       });
 
