@@ -257,7 +257,12 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
         subtitle="Analysez les performances de votre équipe"
       >
         <button
-          onClick={() => exportToPDF('statistics-content', 'statistiques_US_Aignan.pdf', 'landscape')}
+          onClick={() => exportToPDF(
+            'statistics-content',
+            'statistiques_US_Aignan.pdf',
+            'landscape',
+            { margin: 5, tempClass: 'pdf-export-font-small' }
+          )}
           className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors text-white"
           title="Exporter en PDF"
         >

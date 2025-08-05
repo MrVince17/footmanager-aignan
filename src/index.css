@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+.pdf-export-font-small {
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+}
+
+.pdf-export-font-small th,
+.pdf-export-font-small td {
+  padding: 2px 4px !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

@@ -197,16 +197,25 @@ export const exportPlayerCardToPDF = (player: Player, filename: string) => {
   doc.save(filename);
 };
 
-export const exportToPDF = (elementId: string, filename: string, orientation: 'portrait' | 'landscape' = 'portrait') => {
+export const exportToPDF = (
+  elementId: string,
+  filename: string,
+  orientation: 'portrait' | 'landscape' = 'portrait',
+  exportOptions?: { margin?: number; tempClass?: string }
+) => {
   const element = document.getElementById(elementId);
 
   if (!element) {
     console.error(`Error: Element with ID '${elementId}' not found.`);
-    return;
+    return Promise.reject(`Element with ID '${elementId}' not found.`);
+  }
+
+  if (exportOptions?.tempClass) {
+    element.classList.add(exportOptions.tempClass);
   }
 
   const options = {
-    margin: 10,
+    margin: exportOptions?.margin ?? 10,
     filename: filename,
     image: {
       type: 'jpeg',
@@ -227,7 +236,16 @@ export const exportToPDF = (elementId: string, filename: string, orientation: 'p
     .from(element)
     .set(options)
     .save()
+    .then(() => {
+      if (exportOptions?.tempClass) {
+        element.classList.remove(exportOptions.tempClass);
+      }
+    })
     .catch(err => {
       console.error("Error during PDF generation: ", err);
+      if (exportOptions?.tempClass) {
+        element.classList.remove(exportOptions.tempClass);
+      }
+      throw err;
     });
 };
