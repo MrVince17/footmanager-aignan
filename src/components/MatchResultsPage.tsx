@@ -119,11 +119,11 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
       .map(([id, performances]) => {
         if (performances.length === 0) return null;
         const refPerf = performances[0];
-        const allScorers = Array.from(new Set(performances.flatMap(p => p.scorers || []).map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
-        const allAssisters = Array.from(new Set(performances.flatMap(p => p.assisters || []).map(a => JSON.stringify(a)))).map(a => JSON.parse(a));
-        const allYellowCards = Array.from(new Set(performances.flatMap(p => p.yellowCardsDetails || []).map(yc => JSON.stringify(yc)))).map(yc => JSON.parse(yc));
-        const allRedCards = Array.from(new Set(performances.flatMap(p => p.redCardsDetails || []).map(rc => JSON.stringify(rc)))).map(rc => JSON.parse(rc));
-        const allGoalsConceded = Array.from(new Set(performances.flatMap(p => p.goalsConcededDetails || []).map(gc => JSON.stringify(gc)))).map(gc => JSON.parse(gc));
+        const allScorers = Array.from(new Map(performances.flatMap(p => p.scorers || []).map(s => [`${s.playerId}-${s.minute}`, s])).values());
+        const allAssisters = Array.from(new Map(performances.flatMap(p => p.assisters || []).map(a => [a.playerId, a])).values());
+        const allYellowCards = Array.from(new Map(performances.flatMap(p => p.yellowCardsDetails || []).map(yc => [`${yc.playerId}-${yc.minute}`, yc])).values());
+        const allRedCards = Array.from(new Map(performances.flatMap(p => p.redCardsDetails || []).map(rc => [`${rc.playerId}-${rc.minute}`, rc])).values());
+        const allGoalsConceded = Array.from(new Map(performances.flatMap(p => p.goalsConcededDetails || []).map(gc => [gc.minute, gc])).values());
 
         return {
           id,
