@@ -196,14 +196,16 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
     ws['!cols'] = colWidths;
 
     // Center align columns
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cell_address = { c: C, r: R };
-        const cell_ref = XLSX.utils.encode_cell(cell_address);
-        if (ws[cell_ref]) {
-          if ((C >= 2 && C < header.length - 2) || C === header.length - 2) {
-            ws[cell_ref].s = { alignment: { horizontal: 'center' } };
+    if (ws['!ref']) {
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cell_address = { c: C, r: R };
+          const cell_ref = XLSX.utils.encode_cell(cell_address);
+          if (ws[cell_ref]) {
+            if ((C >= 2 && C < header.length - 2) || C === header.length - 2) {
+              ws[cell_ref].s = { alignment: { horizontal: 'center' } };
+            }
           }
         }
       }
