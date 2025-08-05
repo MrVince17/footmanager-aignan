@@ -635,7 +635,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     </span>
                   </div>
                   <span className="font-bold text-lg">
-                    {player.trainingAttendanceRate.toFixed(0)}%
+                    {player.trainingAttendanceRateSeason.toFixed(0)}%
                   </span>
                 </div>
               ))}
