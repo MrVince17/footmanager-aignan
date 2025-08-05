@@ -30,6 +30,10 @@
   margin-bottom: 1rem !important;
 }
 
+.pdf-export-font-small .p-3.rounded-full {
+  display: none !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
