@@ -38,7 +38,10 @@ export const PresencePage: React.FC<PresencePageProps> = ({ allPlayers, onUpdate
       );
 
       const teams = new Set<string>();
-      presentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
+      presentPlayers.forEach(p => {
+        const processedTeams = p.teams.map(t => t.startsWith('Senior') ? 'Senior' : t);
+        processedTeams.forEach(t => teams.add(t));
+      });
 
       const sortedPresentPlayers = presentPlayers.sort((a, b) => {
         const lastNameComparison = a.lastName.localeCompare(b.lastName);
@@ -70,7 +73,10 @@ export const PresencePage: React.FC<PresencePageProps> = ({ allPlayers, onUpdate
       );
 
       const teams = new Set<string>();
-      presentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
+      presentPlayers.forEach(p => {
+        const processedTeams = p.teams.map(t => t.startsWith('Senior') ? 'Senior' : t);
+        processedTeams.forEach(t => teams.add(t));
+      });
 
       const sortedPresentPlayers = presentPlayers.sort((a, b) => {
         const lastNameComparison = a.lastName.localeCompare(b.lastName);
