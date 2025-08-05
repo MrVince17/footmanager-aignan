@@ -85,8 +85,8 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
     }
   };
 
-  const StatCard: React.FC<{ title: string; value?: string | number; color: string; stats?: Record<string, number> }> =
-    ({ title, value, color, stats }) => (
+  const StatCard: React.FC<{ title: string; value?: string | number; color: string; icon?: React.ReactNode; stats?: Record<string, number> }> =
+    ({ title, value, color, icon, stats }) => (
       <div className="bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow duration-300 h-full" style={{ borderLeftColor: color }}>
         <div className="flex justify-between">
           <div>
@@ -94,6 +94,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             <p className="text-xl font-bold text-gray-900 mt-1">{value}</p>
           </div>
           <div className="flex flex-col items-center">
+            {icon}
             {stats && (
               <div className="mt-1 space-y-0.5">
                 {Object.entries(stats).map(([matchType, count]) => (

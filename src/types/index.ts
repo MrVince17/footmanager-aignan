@@ -23,7 +23,7 @@ export interface Player {
   
   // Administrative
   licenseValid: boolean;
-  licenseValidationDate?: string;
+  licenseValidationDate?: string | null;
   paymentValid: boolean;
   
   // History

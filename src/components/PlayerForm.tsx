@@ -47,7 +47,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
     e.preventDefault();
     
     // Sanitize data for Firestore: convert undefined to null
-    const sanitizedData = { ...formData };
+    const sanitizedData: { [key: string]: any } = { ...formData };
     for (const key in sanitizedData) {
       if (sanitizedData[key] === undefined) {
         sanitizedData[key] = null;
@@ -94,7 +94,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
     }
   };
 
-  const teams: Team[] = ['Senior', 'U20', 'U19', 'U18', 'U13-U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
+  const teams: Team[] = ['Senior 1', 'Senior 2', 'U20', 'U19', 'U18', 'U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">

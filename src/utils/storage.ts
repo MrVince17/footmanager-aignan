@@ -1,7 +1,7 @@
 // src/utils/storage.ts
 import { collection, doc, getDocs, setDoc, deleteDoc, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '../firebase'; // Import the Firestore instance
-import { Player, Performance } from '../types';
+import { Player, Performance, Unavailability } from '../types';
 
 const PLAYERS_COLLECTION = 'players';
 const playersCollectionRef = collection(db, PLAYERS_COLLECTION);
@@ -75,6 +75,43 @@ export const storage = {
       await batch.commit();
     } catch (error) {
       console.error("Error adding multiple players: ", error);
+    }
+  },
+
+  // Add an unavailability to a player
+  addUnavailability: async (playerId: string, unavailability: Unavailability): Promise<void> => {
+    const playerDocRef = doc(db, PLAYERS_COLLECTION, playerId);
+    try {
+        const docSnap = await getDoc(playerDocRef);
+
+        if (docSnap.exists()) {
+            const player = docSnap.data() as Player;
+            const existingUnavailabilities = player.unavailabilities || [];
+            const updatedUnavailabilities = [...existingUnavailabilities, unavailability];
+            await setDoc(playerDocRef, { unavailabilities: updatedUnavailabilities }, { merge: true });
+        } else {
+            console.error(`Player with id ${playerId} not found!`);
+        }
+    } catch (error) {
+        console.error("Error adding unavailability:", error);
+    }
+  },
+
+  // Delete an unavailability from a player
+  deleteUnavailability: async (playerId: string, unavailabilityId: string): Promise<void> => {
+    const playerDocRef = doc(db, PLAYERS_COLLECTION, playerId);
+    try {
+        const docSnap = await getDoc(playerDocRef);
+
+        if (docSnap.exists()) {
+            const player = docSnap.data() as Player;
+            const updatedUnavailabilities = (player.unavailabilities || []).filter(u => u.id !== unavailabilityId);
+            await setDoc(playerDocRef, { unavailabilities: updatedUnavailabilities }, { merge: true });
+        } else {
+            console.error(`Player with id ${playerId} not found!`);
+        }
+    } catch (error) {
+        console.error("Error deleting unavailability:", error);
     }
   },
 
