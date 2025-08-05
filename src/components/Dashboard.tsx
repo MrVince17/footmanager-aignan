@@ -110,8 +110,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   React.useEffect(() => {
     if (isPrinting) {
-      exportToPDF("dashboard-export-area", "tableau_bord_US_Aignan.pdf")
-        .then(() => {
+      exportToPDF(
+        "dashboard-export-area",
+        "tableau_bord_US_Aignan.pdf",
+        'portrait',
+        { margin: 5, tempClass: 'pdf-export-font-small' }
+      ).then(() => {
           setIsPrinting(false);
         });
     }
