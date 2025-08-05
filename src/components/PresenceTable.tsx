@@ -34,11 +34,19 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
 
     const eventDates = events.map((e) => e.date);
 
-    const playersWithPresence = allPlayers.filter((p) =>
-      p.performances.some(
-        (perf) => perf.type === type && perf.season === selectedSeason
+    const playersWithPresence = allPlayers
+      .filter((p) =>
+        p.performances.some(
+          (perf) => perf.type === type && perf.season === selectedSeason
+        )
       )
-    );
+      .sort((a, b) => {
+        const lastNameDiff = a.lastName.localeCompare(b.lastName);
+        if (lastNameDiff !== 0) {
+          return lastNameDiff;
+        }
+        return a.firstName.localeCompare(b.firstName);
+      });
 
     const header = [
       "Nom Prénom",
