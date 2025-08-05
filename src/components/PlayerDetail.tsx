@@ -12,6 +12,7 @@ import {
   CheckCircle,
   Download,
   Edit,
+  Trash2,
   Activity,
   Plus,
   X,
@@ -29,9 +30,10 @@ interface PlayerDetailProps {
   onBack: () => void;
   onEdit: (player: Player) => void;
   onPlayerUpdate: () => void;
+  onDelete?: () => void;
 }
 
-export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEdit, onPlayerUpdate }) => {
+export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEdit, onPlayerUpdate, onDelete }) => {
   const [showUnavailabilityForm, setShowUnavailabilityForm] = useState(false);
   const [unavailabilityForm, setUnavailabilityForm] = useState({
     startDate: '',
@@ -154,6 +156,15 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
               <Edit size={20} />
               <span>Modifier</span>
             </button>
+            {onDelete && (
+              <button
+                onClick={onDelete}
+                className="flex items-center space-x-2 bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+              >
+                <Trash2 size={20} />
+                <span>Supprimer</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

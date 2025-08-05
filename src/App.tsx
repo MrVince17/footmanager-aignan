@@ -17,7 +17,6 @@ import { auth } from './firebase';
 import { 
   Home, 
   Users, 
-  Plus, 
   Activity, 
   BarChart3,
   ClipboardList,
@@ -297,7 +296,7 @@ function App() {
         <Route path="/players" element={<PlayerList players={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} onDeleteMultiple={handleDeleteMultiplePlayers} />} />
         <Route path="/players/add" element={<PlayerFormWrapper onSave={handleSavePlayer} players={players} />} />
         <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
-        <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />
+        <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={refreshPlayers} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />
         <Route path="/performance" element={<PerformanceEntry players={players} onSavePerformance={handleSavePerformance} />} />
         <Route path="/presence" element={<PresencePage allPlayers={players} onUpdatePlayerStorage={handleUpdatePlayerStorage} />} />
         <Route path="/statistics" element={<Statistics players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />

@@ -182,8 +182,8 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
     const colWidths = cols.map(col => {
       const addresses = Object.keys(ws).filter(key => key.startsWith(col) && key !== `${col}1`);
       const maxWidth = Math.max(
-        ...addresses.map(addr => ws[addr].v?.toString().length || 0),
-        ws[`${col}1`].v?.toString().length || 0
+        ...addresses.map(addr => (ws[addr].v?.toString() || '').length),
+        (ws[`${col}1`].v?.toString() || '').length
       );
       return { wch: maxWidth + 2 };
     });

@@ -97,14 +97,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onSeasonChange,
   allPlayers,
 }) => {
-  const [filterTeam, setFilterTeam] = React.useState<Team | 'all'>('all');
+  const [filterTeam, setFilterTeam] = React.useState<string>('all');
   const [isPrinting, setIsPrinting] = React.useState(false);
-  const validatePlayerData = (players: any[]) => {
-    return players.map(player => ({
-      ...player,
-      teams: player.teams && Array.isArray(player.teams) ? player.teams : []
-    }));
-  };
 
   const handleExportClick = () => {
     setIsPrinting(true);
@@ -338,7 +332,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       if (player.teams.includes('Senior 1')) mainTeam = 'Senior 1';
       else if (player.teams.includes('Senior 2')) mainTeam = 'Senior 2';
       else if (player.teams.includes('U17')) mainTeam = 'U17';
-      else if (player.teams.includes('Dirigeant') || player.teams.includes('Dirigeante')) mainTeam = 'Dirigeant/Dirigeante';
+      else if (player.teams.includes('Dirigeant/Dirigeante')) mainTeam = 'Dirigeant/Dirigeante';
       else if (player.teams.includes('Arbitre')) mainTeam = 'Arbitre';
 
       distribution[mainTeam] = (distribution[mainTeam] || 0) + 1;

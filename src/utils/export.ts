@@ -227,7 +227,7 @@ export const exportToPDF = (
         element.classList.remove(exportOptions.tempClass);
       }
     })
-    .catch(err => {
+    .catch((err: any) => {
       console.error("Error during PDF generation: ", err);
       if (exportOptions?.tempClass) {
         element.classList.remove(exportOptions.tempClass);
