@@ -196,7 +196,9 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
               <Users size={20} className="text-gray-400" />
               <div>
                 <p className="text-sm text-gray-600">Équipe(s)</p>
-                <p className="font-medium">{player.teams.join(', ')}</p>
+                <p className="font-medium">{
+                  [...new Set(player.teams.map(team => team.startsWith('Senior') ? 'Senior' : team))].join(', ')
+                }</p>
               </div>
             </div>
             
