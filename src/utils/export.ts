@@ -86,6 +86,30 @@ export const exportToExcel = (players: Player[], filename: string = 'export_joue
   XLSX.writeFile(workbook, filename);
 };
 
+export const exportStatsToExcel = (data: any[], filename: string) => {
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Statistiques');
+
+  // Style the header row
+  const headerRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+  for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+    if (!worksheet[cellAddress]) continue;
+    worksheet[cellAddress].s = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "DC2626" } },
+      alignment: { horizontal: "center" }
+    };
+  }
+
+  // Auto-size columns
+  const colWidths = Object.keys(data[0]).map(key => ({ wch: Math.max(key.length, 20) }));
+  worksheet['!cols'] = colWidths;
+
+  XLSX.writeFile(workbook, filename);
+}
+
 export const exportPlayerStats = (player: Player) => {
   const data = {
     'Informations générales': {

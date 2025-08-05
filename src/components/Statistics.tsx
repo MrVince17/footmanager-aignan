@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Player } from '../types';
 import { BarChart3, Download, Filter, Trophy, Target, Users, Activity } from 'lucide-react';
-import { exportToExcel, exportToPDF } from '../utils/export';
+import { exportStatsToExcel, exportToPDF } from '../utils/export';
 import { getTotalTeamEvents } from '../utils/playerUtils';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 import { Header } from './Header';
@@ -272,7 +272,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
         <button
           onClick={() => {
             const dataToExport = prepareDataForExport(sortedPlayers);
-            exportToExcel(dataToExport, 'statistiques_US_Aignan.xlsx');
+            exportStatsToExcel(dataToExport, 'statistiques_US_Aignan.xlsx');
           }}
           className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors text-white"
           title="Exporter en Excel"
