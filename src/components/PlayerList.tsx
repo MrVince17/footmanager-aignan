@@ -364,7 +364,9 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <Users size={16} />
-                  <span>{player.teams.join(', ')}</span>
+                  <span>{
+                    [...new Set(player.teams.map(team => team.startsWith('Senior') ? 'Senior' : team))].join(', ')
+                  }</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
