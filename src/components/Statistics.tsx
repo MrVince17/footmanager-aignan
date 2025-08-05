@@ -134,10 +134,14 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     const trainingsDiff = b.seasonStats.presentTrainings - a.seasonStats.presentTrainings;
     if (trainingsDiff !== 0) return trainingsDiff;
 
-    const lastNameDiff = a.lastName.localeCompare(b.lastName);
+    const lastNameA = a.lastName.trim();
+    const lastNameB = b.lastName.trim();
+    const lastNameDiff = lastNameA.localeCompare(lastNameB);
     if (lastNameDiff !== 0) return lastNameDiff;
 
-    return a.firstName.localeCompare(b.firstName);
+    const firstNameA = a.firstName.trim();
+    const firstNameB = b.firstName.trim();
+    return firstNameA.localeCompare(firstNameB);
   });
 
   const teamStats = useMemo(() => {
