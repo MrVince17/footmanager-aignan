@@ -3,7 +3,7 @@ import { Player } from '../types';
 import { Search, Plus, Edit, Trash2, Users, Upload, Download, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Header } from './Header';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { formatDateToYYYYMMDD } from '../utils/dateUtils';
 import { getPlayerStats } from '../utils/playerUtils';
 
@@ -22,7 +22,6 @@ export const PlayerList: React.FC<PlayerListProps> = ({
   onImportPlayers,
   onDeleteMultiple
 }) => {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterPosition, setFilterPosition] = useState<string>('all');
@@ -99,7 +98,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           const licenseNumber = row[3];
           let teams = (row[4] || '').split(',').map((t: string) => t.trim());
           if (teams.includes('Senior')) {
-            teams = teams.filter(t => t !== 'Senior');
+            teams = teams.filter((t: string) => t !== 'Senior');
             teams.push('Senior 1', 'Senior 2');
           }
           const position = row[5] || 'Non défini';
