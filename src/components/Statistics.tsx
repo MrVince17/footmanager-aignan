@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Player, Team } from '../types';
 import { BarChart3, Download, Filter, Trophy, Target, Users, Activity } from 'lucide-react';
 import { exportStatsToExcel, exportToPDF } from '../utils/export';
-import { getTotalTeamEvents } from '../utils/playerUtils';
+import { getTotalTeamEvents, getPlayerStats } from '../utils/playerUtils';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 import { Header } from './Header';
 
@@ -37,7 +37,6 @@ interface ExportPlayerData {
   'Assiduité Entraînements (%)': string;
 }
 
-
 const getPlayerStatsForSeason = (
   player: Player,
   season: string,
@@ -47,29 +46,18 @@ const getPlayerStatsForSeason = (
     p.season === season
   );
 
-  let stats: Omit<PlayerSeasonStats, 'trainingAttendanceRateSeason' | 'matchAttendanceRateSeason'> = {
-    totalMatches: 0, totalMinutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, cleanSheets: 0, presentTrainings: 0, presentMatches: 0
-  };
+  const playerWithSeasonPerformances = { ...player, performances: seasonPerformances };
+  const stats = getPlayerStats(playerWithSeasonPerformances);
+
+  let presentTrainings = 0;
+  let presentMatches = 0;
 
   seasonPerformances.forEach(p => {
     if (p.present) {
       if (p.type === 'match') {
-        stats.totalMatches++;
-        stats.presentMatches++;
-        stats.totalMinutes += p.minutesPlayed || 0;
-        if (p.scorers) {
-          stats.goals += p.scorers.filter(s => s.playerId === player.id).length;
-        }
-        if (p.assisters) {
-          stats.assists += p.assisters.filter(a => a.playerId === player.id).length;
-        }
-        stats.yellowCards += p.yellowCards || 0;
-        stats.redCards += p.redCards || 0;
-        if (p.cleanSheet && player.position === 'Gardien') {
-          stats.cleanSheets++;
-        }
+        presentMatches++;
       } else if (p.type === 'training') {
-        stats.presentTrainings++;
+        presentTrainings++;
       }
     }
   });
@@ -84,13 +72,13 @@ const getPlayerStatsForSeason = (
   allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
 
   const trainingAttendanceRateSeason = allTeamTrainingsForSeason > 0
-    ? (stats.presentTrainings / allTeamTrainingsForSeason) * 100
+    ? (presentTrainings / allTeamTrainingsForSeason) * 100
     : player.trainingAttendanceRate;
   const matchAttendanceRateSeason = allTeamMatchesForPlayerForSeason > 0
-    ? (stats.presentMatches / allTeamMatchesForPlayerForSeason) * 100
+    ? (presentMatches / allTeamMatchesForPlayerForSeason) * 100
     : player.matchAttendanceRate;
 
-  return { ...stats, trainingAttendanceRateSeason, matchAttendanceRateSeason };
+  return { ...stats, presentTrainings, presentMatches, trainingAttendanceRateSeason, matchAttendanceRateSeason };
 };
 
 interface StatisticsProps {

@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { exportPlayerStats, exportToPDF } from '../utils/export';
 import { storage } from '../utils/storage';
-import { getMatchStats, getAge } from '../utils/playerUtils';
+import { getPlayerStats, getAge } from '../utils/playerUtils';
 import { formatDateToDDMMYYYY } from '../utils/dateUtils';
 
 interface PlayerDetailProps {
@@ -111,9 +111,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
       </div>
     );
 
-  console.log('player.performances', player.performances);
-  console.log('getMatchStats(player.performances)', getMatchStats(player.performances));
-  console.log('player.trainingAttendanceRate', player.trainingAttendanceRate);
+  const playerStats = getPlayerStats(player);
 
   return (
     <div id="player-detail-content" className="space-y-6">
@@ -292,7 +290,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
         <div className="lg:col-span-1">
           <StatCard
             title="Matchs joués"
-            value={player.totalMatches}
+            value={playerStats.totalMatches}
             icon={<Trophy size={24} />}
             color="#DC2626"
             stats={getMatchStats(player.performances)}
@@ -308,39 +306,39 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             />
             <StatCard
               title="Minutes jouées"
-              value={player.totalMinutes}
+              value={playerStats.totalMinutes}
               icon={<Clock size={24} />}
               color="#DC2626"
             />
             <StatCard
               title="Buts marqués"
-              value={player.goals}
+              value={playerStats.goals}
               icon={<Target size={24} />}
               color="#000000"
             />
             <StatCard
               title="Passes décisives"
-              value={player.assists}
+              value={playerStats.assists}
               icon={<Users size={24} />}
               color="#DC2626"
             />
             {player.position === 'Gardien' && (
               <StatCard
                 title="Clean Sheets"
-                value={player.cleanSheets}
+                value={playerStats.cleanSheets}
                 icon={<CheckCircle size={24} />}
                 color="#000000"
               />
             )}
             <StatCard
               title="Cartons jaunes"
-              value={player.yellowCards}
+              value={playerStats.yellowCards}
               icon={<AlertCircle size={24} />}
               color="#F59E0B"
             />
             <StatCard
               title="Cartons rouges"
-              value={player.redCards}
+              value={playerStats.redCards}
               icon={<AlertCircle size={24} />}
               color="#EF4444"
             />

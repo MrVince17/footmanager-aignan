@@ -7,6 +7,40 @@ export const getPlayerById = (allPlayers: Player[], playerId: string): Player | 
   return allPlayers.find(p => p.id === playerId);
 };
 
+export const getPlayerStats = (player: Player) => {
+  const stats = {
+    totalMatches: 0,
+    totalMinutes: 0,
+    goals: 0,
+    assists: 0,
+    yellowCards: 0,
+    redCards: 0,
+    cleanSheets: 0,
+  };
+
+  if (player.performances) {
+    player.performances.forEach(p => {
+      if (p.type === 'match' && p.present) {
+        stats.totalMatches++;
+        stats.totalMinutes += p.minutesPlayed || 0;
+        stats.yellowCards += p.yellowCards || 0;
+        stats.redCards += p.redCards || 0;
+        if (p.cleanSheet && player.position === 'Gardien') {
+          stats.cleanSheets++;
+        }
+        if (p.scorers) {
+          stats.goals += p.scorers.filter(s => s.playerId === player.id).length;
+        }
+        if (p.assisters) {
+          stats.assists += p.assisters.filter(a => a.playerId === player.id).length;
+        }
+      }
+    });
+  }
+
+  return stats;
+};
+
 export const getMatchStats = (performances: Performance[]): Record<string, number> => {
   const matchTypes = ['D2', 'R2', 'CdF', 'CO', 'CR', 'ChD', 'CG', 'CS', 'Match Amical'];
   const matchStats: Record<string, number> = {};
@@ -15,13 +49,19 @@ export const getMatchStats = (performances: Performance[]): Record<string, numbe
     matchStats[type] = 0;
   });
 
+  const processedMatches = new Set<string>();
+
   performances.forEach(performance => {
     if (performance.type === 'match' && performance.present) {
-      const matchType = performance.matchType || 'N/A';
-      if (matchStats.hasOwnProperty(matchType)) {
-        matchStats[matchType]++;
-      } else {
-        matchStats[matchType] = 1;
+      const matchId = `${performance.date}-${performance.opponent}`;
+      if (!processedMatches.has(matchId)) {
+        const matchType = performance.matchType || 'N/A';
+        if (matchStats.hasOwnProperty(matchType)) {
+          matchStats[matchType]++;
+        } else {
+          matchStats[matchType] = 1;
+        }
+        processedMatches.add(matchId);
       }
     }
   });

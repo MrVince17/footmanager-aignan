@@ -119,6 +119,12 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
       .map(([id, performances]) => {
         if (performances.length === 0) return null;
         const refPerf = performances[0];
+        const allScorers = performances.flatMap(p => p.scorers || []);
+        const allAssisters = performances.flatMap(p => p.assisters || []);
+        const allYellowCards = performances.flatMap(p => p.yellowCardsDetails || []);
+        const allRedCards = performances.flatMap(p => p.redCardsDetails || []);
+        const allGoalsConceded = performances.flatMap(p => p.goalsConcededDetails || []);
+
         return {
           id,
           date: refPerf.date,
@@ -126,11 +132,11 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
           scoreHome: refPerf.scoreHome,
           scoreAway: refPerf.scoreAway,
           location: refPerf.location,
-          scorers: refPerf.scorers || [],
-          assisters: refPerf.assisters || [],
-          yellowCardsDetails: refPerf.yellowCardsDetails || [],
-          redCardsDetails: refPerf.redCardsDetails || [],
-          goalsConcededDetails: refPerf.goalsConcededDetails || [],
+          scorers: allScorers,
+          assisters: allAssisters,
+          yellowCardsDetails: allYellowCards,
+          redCardsDetails: allRedCards,
+          goalsConcededDetails: allGoalsConceded,
           originalPerformanceRef: refPerf,
           matchType: refPerf.matchType,
         };
