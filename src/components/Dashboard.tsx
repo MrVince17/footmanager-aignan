@@ -388,297 +388,299 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </button>
       </Header>
       <div id="dashboard-export-area">
-        {isPrinting && (
-          <Header
-            title="Tableau de Bord"
-            subtitle="Vue d'ensemble de votre équipe de football"
-          />
-        )}
-        {/* Season and Team Filter */}
-        {isPrinting ? (
-          <div className="my-6 bg-white p-4 rounded-lg shadow flex items-center space-x-3">
-            <Filter size={20} className="text-gray-600" />
-            <div>
-              <span className="text-sm font-medium text-gray-700">Saison : </span>
-              <span className="text-base font-semibold">{selectedSeason}</span>
-            </div>
-            <div>
-              <span className="text-sm font-medium text-gray-700">Équipe : </span>
-              <span className="text-base font-semibold">{filterTeam === 'all' ? 'Toutes les équipes' : filterTeam}</span>
-            </div>
-          </div>
-        ) : (
-          <div className="mb-6 bg-white p-4 rounded-lg shadow flex items-center space-x-3">
-            <Filter size={20} className="text-gray-600" />
-            <div>
-              <label
-                htmlFor="season-select"
-                className="text-sm font-medium text-gray-700"
-              >
-                Saison :
-              </label>
-              <select
-                id="season-select"
-                value={selectedSeason}
-                onChange={(e) => onSeasonChange(e.target.value)}
-                className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
-              >
-                {availableSeasons.map((season) => (
-                  <option key={season} value={season}>
-                    {season}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="team-filter-dashboard"
-                className="text-sm font-medium text-gray-700"
-              >
-                Équipe :
-              </label>
-              <select
-                id="team-filter-dashboard"
-                value={filterTeam}
-                onChange={(e) => setFilterTeam(e.target.value)}
-                className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
-              >
-                <option value="all">Toutes les équipes</option>
-                {Object.keys(availableTeams).map(team => (
-                  <option key={team} value={team}>{team}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        )}
-
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          <StatCard
-            title="Total Joueurs"
-            value={stats.totalPlayers}
-            icon={<Users size={24} />}
-            color="#DC2626"
-          />
-          <StatCard
-            title="Âge Moyen"
-            value={`${stats.averageAge.toFixed(1)} ans`}
-            icon={<Calendar size={24} />}
-            color="#000000"
-          />
-          <StatCard
-            title="Total Buts"
-            value={stats.totalGoals}
-            icon={<Target size={24} />}
-            color="#DC2626"
-          />
-          <StatCard
-            title="Présence Matchs"
-            value={`${stats.averageMatchAttendance.toFixed(1)}%`}
-            icon={<Trophy size={24} />}
-            color="#000000"
-          />
-          <StatCard
-            title="Présence Entraînements"
-            value={`${stats.averageTrainingAttendance.toFixed(1)}%`}
-            icon={<Activity size={24} />}
-            color="#DC2626"
-          />
-        </div>
-
-        {/* Team Distribution and Training Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Répartition par Catégorie
-            </h3>
-            <div className="space-y-4">
-              {Object.entries(teamDistribution)
-                .sort(([teamA], [teamB]) => {
-                  const order = ['Senior', 'U20', 'U19', 'U18', 'U17', 'Arbitre', 'Dirigeant/Dirigeante'];
-                  const indexA = order.indexOf(teamA);
-                  const indexB = order.indexOf(teamB);
-
-                  if (indexA === -1 && indexB === -1) return teamA.localeCompare(teamB);
-                  if (indexA === -1) return 1;
-                  if (indexB === -1) return -1;
-
-                  return indexA - indexB;
-                })
-                .map(([team, count]) => (
-                <div key={team} className="flex items-center justify-between">
-                  <span className="text-gray-600">{team}</span>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-32 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-red-600 h-2 rounded-full transition-all duration-500"
-                        style={{
-                          width: `${(count / stats.totalPlayers) * 100}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <span className="font-semibold text-gray-900">{count}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Statistiques d'Activité
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <Trophy className="text-red-600" size={20} />
-                  <span className="text-gray-700">Total Matchs</span>
-                </div>
-                <span className="font-semibold text-gray-900">
-                  {stats.totalMatches}
-                </span>
+        <div className="space-y-6">
+          {isPrinting && (
+            <Header
+              title="Tableau de Bord"
+              subtitle="Vue d'ensemble de votre équipe de football"
+            />
+          )}
+          {/* Season and Team Filter */}
+          {isPrinting ? (
+            <div className="bg-white p-4 rounded-lg shadow flex items-center space-x-3">
+              <Filter size={20} className="text-gray-600" />
+              <div>
+                <span className="text-sm font-medium text-gray-700">Saison : </span>
+                <span className="text-base font-semibold">{selectedSeason}</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <Activity className="text-black" size={20} />
-                  <span className="text-gray-700">Total Entraînements</span>
-                </div>
-                <span className="font-semibold text-gray-900">
-                  {stats.totalTrainings}
-                </span>
+              <div>
+                <span className="text-sm font-medium text-gray-700">Équipe : </span>
+                <span className="text-base font-semibold">{filterTeam === 'all' ? 'Toutes les équipes' : filterTeam}</span>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Administrative Status */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Statut Administratif
-          </h3>
-          {adminIssues.length === 0 ? (
-            <div className="flex items-center space-x-2 text-green-600">
-              <CheckCircle size={20} />
-              <span>Tous les dossiers sont à jour</span>
             </div>
           ) : (
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2 text-red-600 mb-3">
-                <AlertCircle size={20} />
-                <span>
-                  {adminIssues.length} dossier(s) nécessite(nt) une attention
-                </span>
+            <div className="bg-white p-4 rounded-lg shadow flex items-center space-x-3">
+              <Filter size={20} className="text-gray-600" />
+              <div>
+                <label
+                  htmlFor="season-select"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Saison :
+                </label>
+                <select
+                  id="season-select"
+                  value={selectedSeason}
+                  onChange={(e) => onSeasonChange(e.target.value)}
+                  className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
+                >
+                  {availableSeasons.map((season) => (
+                    <option key={season} value={season}>
+                      {season}
+                    </option>
+                  ))}
+                </select>
               </div>
-              {adminIssues.map((player) => (
-                <div key={player.id} className="text-sm text-gray-600 pl-6">
-                  {player.firstName} {player.lastName} -
-                  {!player.licenseValid && " Licence"}
-                  {!player.licenseValid && !player.paymentValid && " et"}
-                  {!player.paymentValid && " Paiement"}
-                </div>
-              ))}
+              <div>
+                <label
+                  htmlFor="team-filter-dashboard"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Équipe :
+                </label>
+                <select
+                  id="team-filter-dashboard"
+                  value={filterTeam}
+                  onChange={(e) => setFilterTeam(e.target.value)}
+                  className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
+                >
+                  <option value="all">Toutes les équipes</option>
+                  {Object.keys(availableTeams).map(team => (
+                    <option key={team} value={team}>{team}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Top Performers */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Meilleurs Buteurs
-            </h3>
-            <div className="space-y-3">
-              {topScorers.map((player, index) => (
-                <div
-                  key={player.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                        index === 0
-                          ? "bg-yellow-500"
-                          : index === 1
-                          ? "bg-gray-400"
-                          : "bg-orange-400"
-                      }`}
-                    >
-                      {index + 1}
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <StatCard
+              title="Total Joueurs"
+              value={stats.totalPlayers}
+              icon={<Users size={24} />}
+              color="#DC2626"
+            />
+            <StatCard
+              title="Âge Moyen"
+              value={`${stats.averageAge.toFixed(1)} ans`}
+              icon={<Calendar size={24} />}
+              color="#000000"
+            />
+            <StatCard
+              title="Total Buts"
+              value={stats.totalGoals}
+              icon={<Target size={24} />}
+              color="#DC2626"
+            />
+            <StatCard
+              title="Présence Matchs"
+              value={`${stats.averageMatchAttendance.toFixed(1)}%`}
+              icon={<Trophy size={24} />}
+              color="#000000"
+            />
+            <StatCard
+              title="Présence Entraînements"
+              value={`${stats.averageTrainingAttendance.toFixed(1)}%`}
+              icon={<Activity size={24} />}
+              color="#DC2626"
+            />
+          </div>
+
+          {/* Team Distribution and Training Stats */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Répartition par Catégorie
+              </h3>
+              <div className="space-y-4">
+                {Object.entries(teamDistribution)
+                  .sort(([teamA], [teamB]) => {
+                    const order = ['Senior', 'U20', 'U19', 'U18', 'U17', 'Arbitre', 'Dirigeant/Dirigeante'];
+                    const indexA = order.indexOf(teamA);
+                    const indexB = order.indexOf(teamB);
+
+                    if (indexA === -1 && indexB === -1) return teamA.localeCompare(teamB);
+                    if (indexA === -1) return 1;
+                    if (indexB === -1) return -1;
+
+                    return indexA - indexB;
+                  })
+                  .map(([team, count]) => (
+                  <div key={team} className="flex items-center justify-between">
+                    <span className="text-gray-600">{team}</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-32 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-red-600 h-2 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${(count / stats.totalPlayers) * 100}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <span className="font-semibold text-gray-900">{count}</span>
                     </div>
-                    <span className="font-medium">
-                      {player.firstName} {player.lastName}
-                    </span>
                   </div>
-                  <span className="font-bold text-lg">{player.seasonStats.goals}</span>
+                ))}
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Statistiques d'Activité
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Trophy className="text-red-600" size={20} />
+                    <span className="text-gray-700">Total Matchs</span>
+                  </div>
+                  <span className="font-semibold text-gray-900">
+                    {stats.totalMatches}
+                  </span>
                 </div>
-              ))}
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Activity className="text-black" size={20} />
+                    <span className="text-gray-700">Total Entraînements</span>
+                  </div>
+                  <span className="font-semibold text-gray-900">
+                    {stats.totalTrainings}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Administrative Status */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Meilleure Assiduité Matchs
+              Statut Administratif
             </h3>
-            <div className="space-y-3">
-              {bestMatchAttendance.map((player, index) => (
-                <div
-                  key={player.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                        index === 0
-                          ? "bg-red-600"
-                          : index === 1
-                          ? "bg-black"
-                          : "bg-gray-500"
-                      }`}
-                    >
-                      {index + 1}
-                    </div>
-                    <span className="font-medium">
-                      {player.firstName} {player.lastName}
-                    </span>
-                  </div>
-                  <span className="font-bold text-lg">
-                    {player.matchAttendanceRateSeason.toFixed(0)}%
+            {adminIssues.length === 0 ? (
+              <div className="flex items-center space-x-2 text-green-600">
+                <CheckCircle size={20} />
+                <span>Tous les dossiers sont à jour</span>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2 text-red-600 mb-3">
+                  <AlertCircle size={20} />
+                  <span>
+                    {adminIssues.length} dossier(s) nécessite(nt) une attention
                   </span>
                 </div>
-              ))}
-            </div>
+                {adminIssues.map((player) => (
+                  <div key={player.id} className="text-sm text-gray-600 pl-6">
+                    {player.firstName} {player.lastName} -
+                    {!player.licenseValid && " Licence"}
+                    {!player.licenseValid && !player.paymentValid && " et"}
+                    {!player.paymentValid && " Paiement"}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Meilleure Assiduité Entraînements
-            </h3>
-            <div className="space-y-3">
-              {bestTrainingAttendance.map((player, index) => (
-                <div
-                  key={player.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                        index === 0
-                          ? "bg-red-600"
-                          : index === 1
-                          ? "bg-black"
-                          : "bg-gray-500"
-                      }`}
-                    >
-                      {index + 1}
+          {/* Top Performers */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Meilleurs Buteurs
+              </h3>
+              <div className="space-y-3">
+                {topScorers.map((player, index) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                          index === 0
+                            ? "bg-yellow-500"
+                            : index === 1
+                            ? "bg-gray-400"
+                            : "bg-orange-400"
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                      <span className="font-medium">
+                        {player.firstName} {player.lastName}
+                      </span>
                     </div>
-                    <span className="font-medium">
-                      {player.firstName} {player.lastName}
+                    <span className="font-bold text-lg">{player.seasonStats.goals}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Meilleure Assiduité Matchs
+              </h3>
+              <div className="space-y-3">
+                {bestMatchAttendance.map((player, index) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                          index === 0
+                            ? "bg-red-600"
+                            : index === 1
+                            ? "bg-black"
+                            : "bg-gray-500"
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                      <span className="font-medium">
+                        {player.firstName} {player.lastName}
+                      </span>
+                    </div>
+                    <span className="font-bold text-lg">
+                      {player.matchAttendanceRateSeason.toFixed(0)}%
                     </span>
                   </div>
-                  <span className="font-bold text-lg">
-                    {player.trainingAttendanceRateSeason.toFixed(0)}%
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Meilleure Assiduité Entraînements
+              </h3>
+              <div className="space-y-3">
+                {bestTrainingAttendance.map((player, index) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                          index === 0
+                            ? "bg-red-600"
+                            : index === 1
+                            ? "bg-black"
+                            : "bg-gray-500"
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                      <span className="font-medium">
+                        {player.firstName} {player.lastName}
+                      </span>
+                    </div>
+                    <span className="font-bold text-lg">
+                      {player.trainingAttendanceRateSeason.toFixed(0)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
