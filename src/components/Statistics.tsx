@@ -41,12 +41,10 @@ interface ExportPlayerData {
 const getPlayerStatsForSeason = (
   player: Player,
   season: string,
-  allPlayersForContext: Player[],
-  matchTypeFilter: string
+  allPlayersForContext: Player[]
 ): PlayerSeasonStats => {
   const seasonPerformances = (player.performances || []).filter(p =>
-    p.season === season &&
-    (matchTypeFilter === 'all' || p.matchType === matchTypeFilter)
+    p.season === season
   );
 
   let stats: Omit<PlayerSeasonStats, 'trainingAttendanceRateSeason' | 'matchAttendanceRateSeason'> = {
@@ -100,7 +98,6 @@ interface StatisticsProps {
 
 export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason, onSeasonChange, allPlayers }) => {
   const [filterTeam, setFilterTeam] = useState<'all' | 'Senior 1' | 'Senior 2'>('all');
-  const [filterMatchType, setFilterMatchType] = useState<'all' | 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS'>('all');
 
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
@@ -109,9 +106,9 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       .filter(p => (p.performances || []).some(perf => perf.season === selectedSeason))
       .map(p => ({
         ...p,
-        seasonStats: getPlayerStatsForSeason(p, selectedSeason, allPlayers, filterMatchType),
+        seasonStats: getPlayerStatsForSeason(p, selectedSeason, allPlayers),
       }));
-  }, [players, selectedSeason, allPlayers, filterMatchType]);
+  }, [players, selectedSeason, allPlayers]);
 
   const filteredPlayersByTeam = playersWithSeasonStats.filter(player => {
     if (filterTeam === 'all') return true;
@@ -154,10 +151,10 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     let uniqueTeamTrainingsForSeason = 0;
 
     if (filterTeam === 'all') {
-      uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason, filterMatchType).length;
+      uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
       uniqueTeamTrainingsForSeason = getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
     } else {
-      uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', filterTeam, selectedSeason, filterMatchType).length;
+      uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', filterTeam, selectedSeason).length;
       uniqueTeamTrainingsForSeason = getTotalTeamEvents(allPlayers, 'training', filterTeam, selectedSeason).length;
     }
 
@@ -315,25 +312,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
             </select>
           </div>
 
-          <div>
-            <label htmlFor="match-type-filter-stats" className="sr-only">Type de Match</label>
-            <select
-              id="match-type-filter-stats"
-              value={filterMatchType}
-              onChange={(e) => setFilterMatchType(e.target.value as any)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            >
-              <option value="all">Tous les matchs</option>
-              <option value="D2">Championnat D2</option>
-              <option value="R2">Championnat R2</option>
-              <option value="CdF">Coupe de France</option>
-              <option value="CO">Coupe Occitannie</option>
-              <option value="CG">Coupe du Gers</option>
-              <option value="ChD">Challenge District</option>
-              <option value="CR">Coupe des Réserves</option>
-              <option value="CS">Coupe Savoldelli</option>
-            </select>
-          </div>
           
           </div>
         </div>
