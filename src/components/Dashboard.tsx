@@ -74,10 +74,16 @@ const getPlayerStatsForSeason = (
         stats.totalMatches++;
         stats.presentMatches++;
         stats.totalMinutes += p.minutesPlayed || 0;
+        // Safe and consistent calculation for goals
         if (p.scorers) {
-          stats.goals += p.scorers.filter(s => s.playerId === player.id).length;
+          stats.goals += (p.scorers || []).filter(s => s && s.playerId === player.id).length;
         }
-        stats.assists += p.assists || 0;
+
+        // Safe and consistent calculation for assists, using assisters for consistency
+        if (p.assisters) {
+            stats.assists += (p.assisters || []).filter(a => a && a.playerId === player.id).length;
+        }
+
         stats.yellowCards += p.yellowCards || 0;
         stats.redCards += p.redCards || 0;
         if (p.cleanSheet && player.position === "Gardien") {
