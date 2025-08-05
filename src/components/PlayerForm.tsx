@@ -85,16 +85,25 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
     onSave(playerData);
   };
 
-  const handleTeamChange = (team: Team, checked: boolean) => {
-    const currentTeams = formData.teams || [];
-    if (checked) {
-      setFormData({ ...formData, teams: [...currentTeams, team] });
+  const handleTeamChange = (team: string, checked: boolean) => {
+    let currentTeams = formData.teams || [];
+    if (team === 'Senior') {
+      if (checked) {
+        currentTeams.push('Senior 1', 'Senior 2');
+      } else {
+        currentTeams = currentTeams.filter(t => t !== 'Senior 1' && t !== 'Senior 2');
+      }
     } else {
-      setFormData({ ...formData, teams: currentTeams.filter(t => t !== team) });
+      if (checked) {
+        currentTeams.push(team as Team);
+      } else {
+        currentTeams = currentTeams.filter(t => t !== team);
+      }
     }
+    setFormData({ ...formData, teams: [...new Set(currentTeams)] });
   };
 
-  const teams: Team[] = ['Senior 1', 'Senior 2', 'U20', 'U19', 'U18', 'U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
+  const teams = ['Senior', 'U20', 'U19', 'U18', 'U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">
@@ -191,7 +200,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
                     <label key={team} className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={formData.teams?.includes(team) || false}
+                        checked={team === 'Senior' ? formData.teams?.includes('Senior 1') || formData.teams?.includes('Senior 2') : formData.teams?.includes(team as Team) || false}
                         onChange={(e) => handleTeamChange(team, e.target.checked)}
                         className="rounded border-gray-300 text-red-600 focus:ring-red-500"
                       />
