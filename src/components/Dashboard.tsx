@@ -132,12 +132,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
       doc.text(`Saison : ${selectedSeason}`, 14, 29);
 
       const tableColumn = ["Nom", "Prénom", "Validation Licence", "Paiement"];
-      const tableRows: (string|undefined)[][] = [];
+      const tableRows: string[][] = [];
 
       adminIssues.forEach(player => {
         const playerData = [
-          player.lastName,
-          player.firstName,
+          player.lastName || '',
+          player.firstName || '',
           player.licenseValid ? "Valide" : "Non valide",
           player.paymentValid ? "OK" : "En retard",
         ];
