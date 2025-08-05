@@ -197,7 +197,7 @@ export const exportPlayerCardToPDF = (player: Player, filename: string) => {
   doc.save(filename);
 };
 
-export const exportToPDF = (elementId: string, filename: string) => {
+export const exportToPDF = (elementId: string, filename: string, orientation: 'portrait' | 'landscape' = 'portrait') => {
   const element = document.getElementById(elementId);
 
   if (!element) {
@@ -219,7 +219,7 @@ export const exportToPDF = (elementId: string, filename: string) => {
     jsPDF: {
       unit: 'mm',
       format: 'a4',
-      orientation: 'portrait'
+      orientation: orientation
     }
   };
 
