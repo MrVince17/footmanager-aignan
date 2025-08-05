@@ -2,6 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+.pdf-export-font-small {
+  font-size: 9px !important;
+  line-height: 1.2 !important;
+}
+
+.pdf-export-font-small th,
+.pdf-export-font-small td {
+  padding: 2px 4px !important;
+}
+
+.pdf-export-font-small select, .pdf-export-font-small option {
+  color: black !important;
+  background-color: white !important;
+  border: 1px solid black !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  padding: 5px !important;
+}
+
+.pdf-export-font-small .lucide {
+  display: none !important;
+}
+
+.pdf-export-font-small > div {
+  margin-bottom: 1rem !important;
+}
+
+.pdf-export-font-small .p-3.rounded-full {
+  display: none !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

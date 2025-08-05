@@ -36,6 +36,9 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
 
   useEffect(() => {
     if (player) {
+      console.log('Player data received in form:', player);
+      console.log('dateOfBirth:', player.dateOfBirth);
+      console.log('licenseValidationDate:', player.licenseValidationDate);
       setFormData(player);
     }
   }, [player]);
@@ -43,8 +46,16 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Sanitize data for Firestore: convert undefined to null
+    const sanitizedData = { ...formData };
+    for (const key in sanitizedData) {
+      if (sanitizedData[key] === undefined) {
+        sanitizedData[key] = null;
+      }
+    }
+
     const playerData: Player = {
-      ...formData,
+      ...sanitizedData,
       id: player?.id || Date.now().toString(),
       firstName: formData.firstName || '',
       lastName: formData.lastName || '',
@@ -64,6 +75,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
       matchAttendanceRate: formData.matchAttendanceRate || 0,
       licenseValid: formData.licenseValid ?? true,
       paymentValid: formData.paymentValid ?? true,
+      licenseValidationDate: formData.licenseValidationDate || null, // Explicitly set to null if empty
       absences: formData.absences || [],
       injuries: formData.injuries || [],
       unavailabilities: formData.unavailabilities || [],
@@ -104,20 +116,31 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
               <span>Informations personnelles</span>
             </h3>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nom Prénom *
-              </label>
-              <input
-                type="text"
-                required
-                value={`${formData.lastName || ''} ${formData.firstName || ''}`}
-                onChange={(e) => {
-                  const [lastName, ...firstName] = e.target.value.split(' ');
-                  setFormData({ ...formData, lastName, firstName: firstName.join(' ') });
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Prénom *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.firstName || ''}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nom *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.lastName || ''}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

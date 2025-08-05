@@ -1,27 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Player } from '../types';
-import { storage } from '../utils/storage';
 import { getAvailableSeasons } from '../utils/seasonUtils';
+import { getTotalTeamEvents } from '../utils/playerUtils';
 import PresenceTable from './PresenceTable';
+import { Header } from './Header';
 
-export const PresencePage: React.FC = () => {
-  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
+interface PresencePageProps {
+  allPlayers: Player[];
+  onUpdatePlayerStorage: (type: string, refData: any, value?: any) => void;
+}
+
+export const PresencePage: React.FC<PresencePageProps> = ({ allPlayers, onUpdatePlayerStorage }) => {
   const [selectedSeason, setSelectedSeason] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'trainings' | 'matches'>('trainings');
 
-  useState(() => {
-    const players = storage.getPlayers();
-    setAllPlayers(players);
-    const seasons = getAvailableSeasons(players);
-    if (seasons.length > 0) {
+  useEffect(() => {
+    const seasons = getAvailableSeasons(allPlayers);
+    if (seasons.length > 0 && !seasons.includes(selectedSeason)) {
       setSelectedSeason(seasons[0]);
+    } else if (seasons.length === 0) {
+      setSelectedSeason('');
     }
-  });
+  }, [allPlayers, selectedSeason]);
 
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
   const trainings = useMemo(() => {
-    const allTrainings = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason);
+    const allTrainings = getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason);
 
     return allTrainings.map(training => {
       const presentPlayers = allPlayers.filter(player =>
@@ -35,17 +40,23 @@ export const PresencePage: React.FC = () => {
       const teams = new Set<string>();
       presentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
 
+      const sortedPresentPlayers = presentPlayers.sort((a, b) => {
+        const lastNameComparison = a.lastName.localeCompare(b.lastName);
+        if (lastNameComparison !== 0) return lastNameComparison;
+        return a.firstName.localeCompare(b.firstName);
+      });
+
       return {
         date: training.date,
         team: Array.from(teams).join(', ') || 'N/A',
-        presentCount: presentPlayers.length,
-        presentPlayers: presentPlayers.map(p => `${p.firstName} ${p.lastName}`),
+        presentCount: sortedPresentPlayers.length,
+        presentPlayers: sortedPresentPlayers.map(p => `${p.firstName} ${p.lastName}`),
       };
     });
   }, [allPlayers, selectedSeason]);
 
   const matches = useMemo(() => {
-    const allMatches = storage.getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason);
+    const allMatches = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason);
 
     return allMatches.map(match => {
       const presentPlayers = allPlayers.filter(player =>
@@ -61,22 +72,27 @@ export const PresencePage: React.FC = () => {
       const teams = new Set<string>();
       presentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
 
+      const sortedPresentPlayers = presentPlayers.sort((a, b) => {
+        const lastNameComparison = a.lastName.localeCompare(b.lastName);
+        if (lastNameComparison !== 0) return lastNameComparison;
+        return a.firstName.localeCompare(b.firstName);
+      });
+
       return {
         date: match.date,
         team: Array.from(teams).join(', ') || 'N/A',
-        presentCount: presentPlayers.length,
-        presentPlayers: presentPlayers.map(p => `${p.firstName} ${p.lastName}`),
+        presentCount: sortedPresentPlayers.length,
+        presentPlayers: sortedPresentPlayers.map(p => `${p.firstName} ${p.lastName}`),
       };
     });
   }, [allPlayers, selectedSeason]);
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white relative">
-        <h1 className="text-4xl font-bold mb-2">US AIGNAN</h1>
-        <h2 className="text-2xl font-semibold mb-2">Gestion des Présences</h2>
-        <p className="text-red-100">Suivez la présence de vos joueurs aux entraînements et aux matchs.</p>
-      </div>
+      <Header
+        title="Gestion des Présences"
+        subtitle="Suivez la présence de vos joueurs aux entraînements et aux matchs."
+      />
 
       <div className="bg-white rounded-xl shadow-md p-6">
         <div className="flex justify-between items-center">
@@ -119,6 +135,11 @@ export const PresencePage: React.FC = () => {
             type="training"
             allPlayers={allPlayers}
             selectedSeason={selectedSeason}
+            onDelete={(date) => {
+              if (window.confirm(`Êtes-vous sûr de vouloir supprimer l'entraînement du ${new Date(date).toLocaleDateString('fr-FR')}?`)) {
+                onUpdatePlayerStorage('trainingDelete', date);
+              }
+            }}
           />
         )}
         {activeTab === 'matches' && (

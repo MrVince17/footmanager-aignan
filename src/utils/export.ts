@@ -1,8 +1,8 @@
 import { Player } from '../types';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-import { getAge } from './playerUtils';
+import html2pdf from 'html2pdf.js';
+
+
 
 export const exportToExcel = (players: Player[], filename: string = 'export_joueurs_US_Aignan.xlsx') => {
   const headers = [
@@ -85,6 +85,30 @@ export const exportToExcel = (players: Player[], filename: string = 'export_joue
   XLSX.writeFile(workbook, filename);
 };
 
+export const exportStatsToExcel = (data: any[], filename: string) => {
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Statistiques');
+
+  // Style the header row
+  const headerRange = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
+  for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+    if (!worksheet[cellAddress]) continue;
+    worksheet[cellAddress].s = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "DC2626" } },
+      alignment: { horizontal: "center" }
+    };
+  }
+
+  // Auto-size columns
+  const colWidths = Object.keys(data[0]).map(key => ({ wch: Math.max(key.length, 20) }));
+  worksheet['!cols'] = colWidths;
+
+  XLSX.writeFile(workbook, filename);
+}
+
 export const exportPlayerStats = (player: Player) => {
   const data = {
     'Informations générales': {
@@ -159,41 +183,55 @@ export const exportPlayerStats = (player: Player) => {
   XLSX.writeFile(workbook, `stats_${player.firstName}_${player.lastName}_US_Aignan.xlsx`);
 };
 
-import 'jspdf-autotable';
+export const exportToPDF = (
+  elementId: string,
+  filename: string,
+  orientation: 'portrait' | 'landscape' = 'portrait',
+  exportOptions?: { margin?: number; tempClass?: string }
+) => {
+  const element = document.getElementById(elementId);
 
-export const exportToPDF = (player: Player, filename: string) => {
-  const doc = new jsPDF();
-  doc.text('Fiche Joueur - US Aignan', 20, 20);
-  doc.text(`Nom Prénom: ${player.firstName} ${player.lastName}`, 20, 30);
+  if (!element) {
+    console.error(`Error: Element with ID '${elementId}' not found.`);
+    return Promise.reject(`Element with ID '${elementId}' not found.`);
+  }
 
-  // Informations générales
-  (doc as any).autoTable({
-    startY: 40,
-    head: [['Informations générales', '']],
-    body: [
-      ['Âge', `${getAge(player.dateOfBirth)} ans`],
-      ['Position', player.position],
-      ['Équipe(s)', player.teams.join(', ')],
-      ['Licence', player.licenseNumber],
-    ],
-    styles: { fontSize: 10 },
-    columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 100 } },
-  });
+  if (exportOptions?.tempClass) {
+    element.classList.add(exportOptions.tempClass);
+  }
 
-  // Statut administratif
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
-  doc.text('Statut administratif', 20, finalY);
-  (doc as any).autoTable({
-    startY: finalY + 10,
-    head: [['Statut administratif', '']],
-    body: [
-      ['Licence', player.licenseValid ? 'Valide' : 'Non valide'],
-      ['Paiement', player.paymentValid ? 'À jour' : 'En retard'],
-      ['Date Validation Licence', player.licenseValidationDate ? new Date(player.licenseValidationDate).toLocaleDateString('fr-FR') : 'Non définie'],
-    ],
-    styles: { fontSize: 10 },
-    columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 100 } },
-  });
+  const options = {
+    margin: exportOptions?.margin ?? 10,
+    filename: filename,
+    image: {
+      type: 'jpeg',
+      quality: 0.98
+    },
+    html2canvas: {
+      scale: 2,
+      useCORS: true
+    },
+    jsPDF: {
+      unit: 'mm',
+      format: 'a4',
+      orientation: orientation
+    }
+  };
 
-  doc.save(filename);
+  return html2pdf()
+    .from(element)
+    .set(options)
+    .save()
+    .then(() => {
+      if (exportOptions?.tempClass) {
+        element.classList.remove(exportOptions.tempClass);
+      }
+    })
+    .catch(err => {
+      console.error("Error during PDF generation: ", err);
+      if (exportOptions?.tempClass) {
+        element.classList.remove(exportOptions.tempClass);
+      }
+      throw err;
+    });
 };

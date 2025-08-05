@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Player, Performance } from '../types';
+import { Player, Performance, Team } from '../types';
 import { Save, Calendar, Target, Users, AlertTriangle, Home, Bus } from 'lucide-react';
+import { Header } from './Header';
 
 interface PerformanceEntryProps {
   players: Player[];
@@ -71,6 +72,33 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const matchScorers: { playerId: string; minute: number }[] = [];
+    const matchAssisters: { playerId: string }[] = [];
+    const matchYellowCards: { playerId: string; minute: number }[] = [];
+    const matchRedCards: { playerId: string; minute: number }[] = [];
+
+    if (performanceData.type === 'match') {
+      selectedPlayers.forEach(playerId => {
+        const goals = performanceData.goals[playerId] || 0;
+        const assists = performanceData.assists[playerId] || 0;
+        const yellowCards = performanceData.yellowCards[playerId] || 0;
+        const redCards = performanceData.redCards[playerId] || 0;
+
+        for (let i = 0; i < goals; i++) {
+          matchScorers.push({ playerId: playerId, minute: 0 }); // Default minute 0
+        }
+        for (let i = 0; i < assists; i++) {
+          matchAssisters.push({ playerId: playerId });
+        }
+        for (let i = 0; i < yellowCards; i++) {
+          matchYellowCards.push({ playerId: playerId, minute: 0 }); // Default minute 0
+        }
+        for (let i = 0; i < redCards; i++) {
+          matchRedCards.push({ playerId: playerId, minute: 0 }); // Default minute 0
+        }
+      });
+    }
     
     selectedPlayers.forEach(playerId => {
       // Constructing without id, season, excused (handled by App.tsx and storage.ts)
@@ -78,23 +106,22 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
         date: performanceData.date,
         type: performanceData.type,
         present: performanceData.present[playerId] || false,
-        opponent: performanceData.type === 'match' ? performanceData.opponent : undefined,
-        scoreHome: performanceData.type === 'match' ? performanceData.scoreHome : undefined,
-        scoreAway: performanceData.type === 'match' ? performanceData.scoreAway : undefined,
-        location: performanceData.type === 'match' ? performanceData.location : undefined,
+        opponent: performanceData.type === 'match' ? performanceData.opponent : null,
+        scoreHome: performanceData.type === 'match' ? (performanceData.scoreHome ?? null) : null,
+        scoreAway: performanceData.type === 'match' ? (performanceData.scoreAway ?? null) : null,
+        location: performanceData.type === 'match' ? performanceData.location : null,
         minutesPlayed: performanceData.minutesPlayed[playerId] || 0,
         goals: performanceData.goals[playerId] || 0,
         assists: performanceData.assists[playerId] || 0,
         yellowCards: performanceData.yellowCards[playerId] || 0,
         redCards: performanceData.redCards[playerId] || 0,
         cleanSheet: performanceData.cleanSheets[playerId] || false,
-        // Initialize new detailed fields as empty or undefined for now
-        scorers: performanceData.type === 'match' ? [] : undefined,
-        assisters: performanceData.type === 'match' ? [] : undefined,
-        yellowCardsDetails: performanceData.type === 'match' ? [] : undefined,
-        redCardsDetails: performanceData.type === 'match' ? [] : undefined,
-        goalsConcededDetails: performanceData.type === 'match' ? [] : undefined,
-        matchType: performanceData.type === 'match' ? performanceData.matchType : undefined,
+        scorers: performanceData.type === 'match' ? matchScorers : null,
+        assisters: performanceData.type === 'match' ? matchAssisters : null,
+        yellowCardsDetails: performanceData.type === 'match' ? matchYellowCards : null,
+        redCardsDetails: performanceData.type === 'match' ? matchRedCards : null,
+        goalsConcededDetails: performanceData.type === 'match' ? [] : null,
+        matchType: performanceData.type === 'match' ? performanceData.matchType : null,
       };
       
       onSavePerformance(playerId, performanceDetails as any);
@@ -122,15 +149,33 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
     alert('Performances enregistrées avec succès !');
   };
 
-  const selectedPlayersList = players.filter(p => selectedPlayers.includes(p.id));
+  const filteredPlayersToDisplay = players
+    .filter(player => {
+      if (filterTeamPerformance === 'all') return true;
+      if (filterTeamPerformance === 'Senior') {
+        return player.teams.some(team => team.toLowerCase().includes('senior'));
+      }
+      if (filterTeamPerformance === 'Dirigeant/Dirigeante') {
+        return player.teams.some(team => team.toLowerCase().includes('dirigeant'));
+      }
+      return player.teams.includes(filterTeamPerformance as any);
+    })
+    .sort((a, b) => {
+      const lastNameComparison = a.lastName.localeCompare(b.lastName);
+      if (lastNameComparison !== 0) {
+        return lastNameComparison;
+      }
+      return a.firstName.localeCompare(b.firstName);
+    });
+
+  const selectedPlayersList = filteredPlayersToDisplay.filter(p => selectedPlayers.includes(p.id));
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">
-        <h1 className="text-4xl font-bold mb-2">US AIGNAN</h1>
-        <h2 className="text-2xl font-semibold mb-2">Saisie des Performances</h2>
-        <p className="text-red-100">Enregistrez les performances de vos joueurs</p>
-      </div>
+      <Header
+        title="Saisie des Performances"
+        subtitle="Enregistrez les performances de vos joueurs"
+      />
 
       <div className="bg-white rounded-xl shadow-md p-8">
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -312,32 +357,14 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
                 <option value="U20">U20</option>
                 <option value="U19">U19</option>
                 <option value="U18">U18</option>
-                <option value="U13-U17">U13-U17</option>
-                <option value="U6-U11">U6-U11</option>
+                <option value="U17">U17</option>
                 <option value="Arbitre">Arbitre</option>
-                <option value="dirigeant">Dirigeant</option>
+                <option value="Dirigeant/Dirigeante">Dirigeant/Dirigeante</option>
               </select>
               <button
                 type="button"
                 onClick={() => {
-                  const visiblePlayerIds = players
-                    .filter(p => {
-                      if (filterTeamPerformance === 'all') return true;
-                      if (filterTeamPerformance === 'Senior') {
-                        return p.teams.some(team => team.toLowerCase().includes('senior'));
-                      }
-                      if (filterTeamPerformance === 'U13-U17') {
-                        return p.teams.some(team => team.startsWith('U13') || team.startsWith('U14') || team.startsWith('U15') || team.startsWith('U16') || team.startsWith('U17'));
-                      }
-                      if (filterTeamPerformance === 'U6-U11') {
-                        return p.teams.some(team => team.startsWith('U6') || team.startsWith('U7') || team.startsWith('U8') || team.startsWith('U9') || team.startsWith('U10') || team.startsWith('U11'));
-                      }
-                      if (filterTeamPerformance === 'dirigeant') {
-                        return p.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant'].includes(team));
-                      }
-                      return p.teams.includes(filterTeamPerformance as any);
-                    })
-                    .map(p => p.id);
+                  const visiblePlayerIds = filteredPlayersToDisplay.map(p => p.id);
 
                   const currentlyVisibleAndSelected = selectedPlayers.filter(id => visiblePlayerIds.includes(id));
 
@@ -381,24 +408,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {players
-                .filter(player => {
-                  if (filterTeamPerformance === 'all') return true;
-                  if (filterTeamPerformance === 'Senior') {
-                    return player.teams.some(team => team.toLowerCase().includes('senior'));
-                  }
-                  if (filterTeamPerformance === 'U13-U17') {
-                    return player.teams.some(team => team.startsWith('U13') || team.startsWith('U14') || team.startsWith('U15') || team.startsWith('U16') || team.startsWith('U17'));
-                  }
-                   if (filterTeamPerformance === 'U6-U11') {
-                    return player.teams.some(team => team.startsWith('U6') || team.startsWith('U7') || team.startsWith('U8') || team.startsWith('U9') || team.startsWith('U10') || team.startsWith('U11'));
-                  }
-                  if (filterTeamPerformance === 'dirigeant') {
-                    return player.teams.some(team => ['Dirigeant', 'dirigeant', 'dirigéant', 'Dirigéant'].includes(team));
-                  }
-                  return player.teams.includes(filterTeamPerformance as any);
-                })
-                .map(player => (
+              {filteredPlayersToDisplay.map(player => (
                 <label key={player.id} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                   <input
                     type="checkbox"

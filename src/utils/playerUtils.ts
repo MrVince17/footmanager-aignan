@@ -39,3 +39,49 @@ export const getAge = (dateOfBirth: string) => {
   }
   return age;
 };
+
+// This function was originally in storage.ts and is pure data manipulation.
+// It's moved here to be a standalone utility function.
+export const getTotalTeamEvents = (
+  allPlayers: Player[],
+  type: 'training' | 'match',
+  teamName?: import('../types').Team,
+  season?: string, // Optional season filter
+  matchType?: string // Optional match type filter
+): { date: string, opponent?: string, season: string }[] => {
+  const uniqueEvents = new Map<string, { date: string, opponent?: string, season: string }>();
+
+  for (const player of allPlayers) {
+    if (teamName && !player.teams.includes(teamName)) {
+      continue;
+    }
+    if (Array.isArray(player.performances)) {
+      for (const perf of player.performances) {
+        if (
+          perf.type === type &&
+          (!season || perf.season === season) &&
+          (type !== 'match' || !matchType || matchType === 'all' || perf.matchType === matchType)
+        ) {
+          const key = type === 'match'
+            ? `${perf.season}-${perf.date}-${perf.opponent || 'unknown'}`
+            : `${perf.season}-${perf.date}`;
+          if (!uniqueEvents.has(key)) {
+            uniqueEvents.set(key, { date: perf.date, opponent: perf.opponent, season: perf.season });
+          }
+        }
+      }
+    }
+  }
+  return Array.from(uniqueEvents.values());
+};
+
+// Other utility functions that might have been in storage.ts can also be moved here.
+export const isDateInUnavailabilityPeriod = (player: Player, date: string): boolean => {
+    const checkDate = new Date(date);
+    if (!player.unavailabilities) return false;
+    return player.unavailabilities.some(unavailability => {
+      const startDate = new Date(unavailability.startDate);
+      const endDate = unavailability.endDate ? new Date(unavailability.endDate) : new Date();
+      return checkDate >= startDate && checkDate <= endDate;
+    });
+};

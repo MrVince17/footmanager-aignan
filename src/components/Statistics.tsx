@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { Player } from '../types';
 import { BarChart3, Download, Filter, Trophy, Target, Users, Activity } from 'lucide-react';
-import { exportToExcel, exportToPDF } from '../utils/export';
-import { storage } from '../utils/storage';
+import { exportStatsToExcel, exportToPDF } from '../utils/export';
+import { getTotalTeamEvents } from '../utils/playerUtils';
 import { getAvailableSeasons } from '../utils/seasonUtils';
+import { Header } from './Header';
 
 interface PlayerSeasonStats {
   totalMatches: number;
@@ -40,12 +41,10 @@ interface ExportPlayerData {
 const getPlayerStatsForSeason = (
   player: Player,
   season: string,
-  allPlayersForContext: Player[],
-  matchTypeFilter: string
+  allPlayersForContext: Player[]
 ): PlayerSeasonStats => {
   const seasonPerformances = (player.performances || []).filter(p =>
-    p.season === season &&
-    (matchTypeFilter === 'all' || p.matchType === matchTypeFilter)
+    p.season === season
   );
 
   let stats: Omit<PlayerSeasonStats, 'trainingAttendanceRateSeason' | 'matchAttendanceRateSeason'> = {
@@ -71,11 +70,11 @@ const getPlayerStatsForSeason = (
     }
   });
 
-  const allTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayersForContext, 'training', undefined, season).length;
+  const allTeamTrainingsForSeason = getTotalTeamEvents(allPlayersForContext, 'training', undefined, season).length;
   let allTeamMatchesForPlayerForSeason = 0;
   const uniqueMatchEventsForPlayerSeason = new Set<string>();
   player.teams.forEach(team => {
-    const teamMatchEvents = storage.getTotalTeamEvents(allPlayersForContext, 'match', team as any, season);
+    const teamMatchEvents = getTotalTeamEvents(allPlayersForContext, 'match', team, season);
     teamMatchEvents.forEach(event => uniqueMatchEventsForPlayerSeason.add(`${event.date}-${event.opponent || 'unknown'}`));
   });
   allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
@@ -99,8 +98,6 @@ interface StatisticsProps {
 
 export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason, onSeasonChange, allPlayers }) => {
   const [filterTeam, setFilterTeam] = useState<'all' | 'Senior 1' | 'Senior 2'>('all');
-  const [filterMatchType, setFilterMatchType] = useState<'all' | 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS'>('all');
-  const [sortBy, setSortBy] = useState<string>('goals');
 
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
@@ -109,27 +106,42 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       .filter(p => (p.performances || []).some(perf => perf.season === selectedSeason))
       .map(p => ({
         ...p,
-        seasonStats: getPlayerStatsForSeason(p, selectedSeason, allPlayers, filterMatchType),
+        seasonStats: getPlayerStatsForSeason(p, selectedSeason, allPlayers),
       }));
-  }, [players, selectedSeason, allPlayers, filterMatchType]);
+  }, [players, selectedSeason, allPlayers]);
 
-  const filteredPlayersByTeam = playersWithSeasonStats.filter(player =>
-    filterTeam === 'all' || player.teams.includes(filterTeam)
-  );
+  const filteredPlayersByTeam = playersWithSeasonStats.filter(player => {
+    if (filterTeam === 'all') return true;
+    if (filterTeam === 'Senior') {
+      return player.teams.some(team => team.toLowerCase().includes('senior'));
+    }
+    if (filterTeam === 'Dirigeant/Dirigeante') {
+      return player.teams.some(team => team.toLowerCase().includes('dirigeant'));
+    }
+    return player.teams.includes(filterTeam);
+  });
 
   const sortedPlayers = [...filteredPlayersByTeam].sort((a, b) => {
-    switch (sortBy) {
-      case 'goals': return b.seasonStats.goals - a.seasonStats.goals;
-      case 'assists': return b.seasonStats.assists - a.seasonStats.assists;
-      case 'matches': return b.seasonStats.totalMatches - a.seasonStats.totalMatches;
-      case 'trainings': return b.seasonStats.presentTrainings - a.seasonStats.presentTrainings;
-      case 'minutes': return b.seasonStats.totalMinutes - a.seasonStats.totalMinutes;
-      case 'matchAttendance': return b.seasonStats.matchAttendanceRateSeason - a.seasonStats.matchAttendanceRateSeason;
-      case 'trainingAttendance': return b.seasonStats.trainingAttendanceRateSeason - a.seasonStats.trainingAttendanceRateSeason;
-      case 'cards': return (b.seasonStats.yellowCards + b.seasonStats.redCards * 2) - (a.seasonStats.yellowCards + a.seasonStats.redCards * 2);
-      case 'cleanSheets': return b.seasonStats.cleanSheets - a.seasonStats.cleanSheets;
-      default: return 0;
-    }
+    const goalsDiff = b.seasonStats.goals - a.seasonStats.goals;
+    if (goalsDiff !== 0) return goalsDiff;
+
+    const assistsDiff = b.seasonStats.assists - a.seasonStats.assists;
+    if (assistsDiff !== 0) return assistsDiff;
+
+    const matchesDiff = b.seasonStats.totalMatches - a.seasonStats.totalMatches;
+    if (matchesDiff !== 0) return matchesDiff;
+
+    const trainingsDiff = b.seasonStats.presentTrainings - a.seasonStats.presentTrainings;
+    if (trainingsDiff !== 0) return trainingsDiff;
+
+    const lastNameA = a.lastName.trim();
+    const lastNameB = b.lastName.trim();
+    const lastNameDiff = lastNameA.localeCompare(lastNameB);
+    if (lastNameDiff !== 0) return lastNameDiff;
+
+    const firstNameA = a.firstName.trim();
+    const firstNameB = b.firstName.trim();
+    return firstNameA.localeCompare(firstNameB);
   });
 
   const teamStats = useMemo(() => {
@@ -143,11 +155,11 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     let uniqueTeamTrainingsForSeason = 0;
 
     if (filterTeam === 'all') {
-      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason, filterMatchType).length;
-      uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
+      uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
+      uniqueTeamTrainingsForSeason = getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
     } else {
-      uniqueTeamMatchesForSeason = storage.getTotalTeamEvents(allPlayers, 'match', filterTeam as any, selectedSeason, filterMatchType).length;
-      uniqueTeamTrainingsForSeason = storage.getTotalTeamEvents(allPlayers, 'training', filterTeam as any, selectedSeason).length;
+      uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', filterTeam, selectedSeason).length;
+      uniqueTeamTrainingsForSeason = getTotalTeamEvents(allPlayers, 'training', filterTeam, selectedSeason).length;
     }
 
     const totalMinutes = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.totalMinutes, 0);
@@ -203,6 +215,25 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
   }, [filteredPlayersByTeam]);
 
 
+  const prepareDataForExport = (playersToExport: typeof filteredPlayersByTeam): ExportPlayerData[] => {
+    return playersToExport.map(p => ({
+      'Nom': `${p.firstName} ${p.lastName}`,
+      'Numéro': p.licenseNumber,
+      'Position': p.position,
+      'Équipes': p.teams.join(', '),
+      'Matchs': p.seasonStats.totalMatches,
+      'Entraînements': p.seasonStats.presentTrainings,
+      'Minutes': p.seasonStats.totalMinutes,
+      'Buts': p.seasonStats.goals,
+      'Passes': p.seasonStats.assists,
+      'Cartons Jaunes': p.seasonStats.yellowCards,
+      'Cartons Rouges': p.seasonStats.redCards,
+      'Clean Sheets': p.position === 'Gardien' ? p.seasonStats.cleanSheets : '-',
+      'Assiduité Matchs (%)': p.seasonStats.matchAttendanceRateSeason.toFixed(1),
+      'Assiduité Entraînements (%)': p.seasonStats.trainingAttendanceRateSeason.toFixed(1),
+    }));
+  };
+
   const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode; color: string; subtitle?: string }> = 
     ({ title, value, icon, color, subtitle }) => (
       <div className="bg-white rounded-xl shadow-md p-6 border-l-4 hover:shadow-lg transition-shadow duration-300" style={{ borderLeftColor: color }}>
@@ -221,39 +252,41 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
 
   return (
     <div id="statistics-content" className="space-y-6">
-      <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">US AIGNAN</h1>
-            <h2 className="text-2xl font-semibold mb-2">Statistiques</h2>
-            <p className="text-red-100">Analysez les performances de votre équipe</p>
-          </div>
-          <div className="flex space-x-3">
-            <button
-              onClick={() => exportToPDF('statistics-content', 'statistiques_US_Aignan.pdf')}
-              className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors duration-200"
-            >
-              <Download size={20} />
-              <span>PDF</span>
-            </button>
-            <button
-              onClick={() => exportToExcel(filteredPlayersByTeam as any, 'statistiques_US_Aignan.xlsx')}
-              className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors duration-200"
-            >
-              <Download size={20} />
-              <span>Excel</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      <Header
+        title="Statistiques"
+        subtitle="Analysez les performances de votre équipe"
+      >
+        <button
+          onClick={() => exportToPDF(
+            'statistics-content',
+            'statistiques_US_Aignan.pdf',
+            'landscape',
+            { margin: 5, tempClass: 'pdf-export-font-small' }
+          )}
+          className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors text-white"
+          title="Exporter en PDF"
+        >
+          <Download size={20} />
+          <span>PDF</span>
+        </button>
+        <button
+          onClick={() => {
+            const dataToExport = prepareDataForExport(sortedPlayers);
+            exportStatsToExcel(dataToExport, 'statistiques_US_Aignan.xlsx');
+          }}
+          className="flex items-center space-x-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors text-white"
+          title="Exporter en Excel"
+        >
+          <Download size={20} />
+          <span>Excel</span>
+        </button>
+      </Header>
       <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center">
-          <div className="flex items-center space-x-2">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center justify-between">
+          <div className="flex items-center space-x-2 flex-wrap gap-4">
             <Filter size={20} className="text-gray-400" />
             <span className="text-sm font-medium text-gray-700">Filtres :</span>
-          </div>
-          
-          <div>
+            <div>
             <label htmlFor="season-select-stats" className="sr-only">Saison</label>
             <select
               id="season-select-stats"
@@ -274,53 +307,21 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
             <select
               id="team-filter-stats"
               value={filterTeam}
-              onChange={(e) => setFilterTeam(e.target.value as 'all' | 'Senior 1' | 'Senior 2')}
+              onChange={(e) => setFilterTeam(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
               <option value="all">Toutes les équipes</option>
-              <option value="Senior 1">Senior 1</option>
-              <option value="Senior 2">Senior 2</option>
+              <option value="Senior">Senior</option>
+              <option value="U20">U20</option>
+              <option value="U19">U19</option>
+              <option value="U18">U18</option>
+              <option value="U17">U17</option>
+              <option value="Arbitre">Arbitre</option>
+              <option value="Dirigeant/Dirigeante">Dirigeant/Dirigeante</option>
             </select>
           </div>
 
-          <div>
-            <label htmlFor="match-type-filter-stats" className="sr-only">Type de Match</label>
-            <select
-              id="match-type-filter-stats"
-              value={filterMatchType}
-              onChange={(e) => setFilterMatchType(e.target.value as any)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            >
-              <option value="all">Tous les matchs</option>
-              <option value="D2">Championnat D2</option>
-              <option value="R2">Championnat R2</option>
-              <option value="CdF">Coupe de France</option>
-              <option value="CO">Coupe Occitannie</option>
-              <option value="CG">Coupe du Gers</option>
-              <option value="ChD">Challenge District</option>
-              <option value="CR">Coupe des Réserves</option>
-              <option value="CS">Coupe Savoldelli</option>
-            </select>
-          </div>
           
-          <div>
-            <label htmlFor="sortby-stats" className="sr-only">Trier par</label>
-            <select
-              id="sortby-stats"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            >
-              <option value="goals">Trier par buts</option>
-              <option value="assists">Trier par passes</option>
-              <option value="matches">Trier par matchs</option>
-              <option value="trainings">Trier par entraînements</option>
-              <option value="minutes">Trier par minutes</option>
-              <option value="matchAttendance">Trier par assiduité matchs</option>
-              <option value="trainingAttendance">Trier par assiduité entraînements</option>
-              <option value="cards">Trier par cartons</option>
-              <option value="cleanSheets">Trier par clean sheets</option>
-            </select>
           </div>
         </div>
       </div>

@@ -1,10 +1,10 @@
 import React from "react";
-import { Download } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { Player } from "../types";
-import { storage } from "../utils/storage";
+import { getTotalTeamEvents } from '../utils/playerUtils';
 
 interface PresenceData {
   date: string;
@@ -18,6 +18,7 @@ interface PresenceTableProps {
   type: "training" | "match";
   allPlayers: Player[];
   selectedSeason: string;
+  onDelete?: (date: string) => void;
 }
 
 const PresenceTable: React.FC<PresenceTableProps> = ({
@@ -25,19 +26,27 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
   type,
   allPlayers,
   selectedSeason,
+  onDelete,
 }) => {
   const generatePresenceData = () => {
-    const events = storage
-      .getTotalTeamEvents(allPlayers, type, undefined, selectedSeason)
+    const events = getTotalTeamEvents(allPlayers, type, undefined, selectedSeason)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     const eventDates = events.map((e) => e.date);
 
-    const playersWithPresence = allPlayers.filter((p) =>
-      p.performances.some(
-        (perf) => perf.type === type && perf.season === selectedSeason
+    const playersWithPresence = allPlayers
+      .filter((p) =>
+        p.performances.some(
+          (perf) => perf.type === type && perf.season === selectedSeason
+        )
       )
-    );
+      .sort((a, b) => {
+        const lastNameDiff = a.lastName.localeCompare(b.lastName);
+        if (lastNameDiff !== 0) {
+          return lastNameDiff;
+        }
+        return a.firstName.localeCompare(b.firstName);
+      });
 
     const header = [
       "Nom Prénom",
@@ -243,6 +252,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
             <th scope="col" className="px-6 py-3">
               Joueurs présents
             </th>
+            {type === 'training' && <th scope="col" className="px-6 py-3">Action</th>}
           </tr>
         </thead>
         <tbody>
@@ -254,6 +264,13 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
               <td className="px-6 py-4">{item.team}</td>
               <td className="px-6 py-4">{item.presentCount}</td>
               <td className="px-6 py-4">{item.presentPlayers.join(", ")}</td>
+              {type === 'training' && (
+                <td className="px-6 py-4">
+                  <button onClick={() => onDelete && onDelete(item.date)} className="text-red-600 hover:text-red-800">
+                    <Trash2 size={18} />
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

@@ -9,8 +9,10 @@ import { PerformanceEntry } from './components/PerformanceEntry';
 import { Statistics } from './components/Statistics';
 import { MatchResultsPage } from './components/MatchResultsPage';
 import { PresencePage } from './components/PresencePage';
-import { Routes, Route, Link as RouterLink, Navigate, Outlet, useNavigate, useParams, useLocation } from 'react-router-dom';
-import { Unavailability, Performance } from './types';
+import { Routes, Route, Link as RouterLink, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
+import { Performance } from './types';
+import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { auth } from './firebase';
 
 import { 
   Home, 
@@ -21,9 +23,11 @@ import {
   ClipboardList,
   Menu, 
   X,
-  FileText
+  FileText,
+  LogOut
 } from 'lucide-react';
 import { getAvailableSeasons } from './utils/seasonUtils';
+import { User } from 'firebase/auth';
 
 interface MenuItem {
   id: string;
@@ -37,8 +41,17 @@ const AppLayout: React.FC<{
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   children: React.ReactNode;
-}> = ({ menuItems, sidebarOpen, setSidebarOpen, children }) => {
+  user: User;
+}> = ({ menuItems, sidebarOpen, setSidebarOpen, children, user }) => {
   const location = useLocation(); // Hook pour obtenir la localisation actuelle
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -90,15 +103,17 @@ const AppLayout: React.FC<{
             );
           })}
         </nav>
-        <div className="absolute bottom-6 left-6 right-6">
-          <RouterLink
-            to="/players/add"
-            onClick={() => setSidebarOpen(false)}
-            className="w-full flex items-center justify-center space-x-2 bg-primary text-white py-3 rounded-lg hover:bg-primary-hover transition-colors duration-200"
+        <div className="absolute bottom-6 left-6 right-6 space-y-2">
+           <div className="text-xs text-center text-gray-500 truncate px-2" title={user.email || 'Admin'}>
+            Connecté: {user.email || 'Admin'}
+          </div>
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center justify-center space-x-2 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 transition-colors duration-200"
           >
-            <Plus size={20} />
-            <span>Nouveau joueur</span>
-          </RouterLink>
+            <LogOut size={20} />
+            <span>Déconnexion</span>
+          </button>
         </div>
       </div>
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -129,117 +144,124 @@ const AppLayout: React.FC<{
   );
 };
 
+const SignInScreen: React.FC = () => {
+  const handleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Error signing in with Google: ", error);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="p-10 bg-white rounded-xl shadow-xl text-center">
+        <h1 className="text-2xl font-bold mb-2">Gestion US Aignan</h1>
+        <p className="text-gray-600 mb-6">Veuillez vous connecter pour continuer</p>
+        <button
+          onClick={handleSignIn}
+          className="w-full flex items-center justify-center space-x-2 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors duration-200"
+        >
+          <svg className="w-6 h-6" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></svg>
+          <span>Se connecter avec Google</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState<string>('');
   const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+  const [loadingAuth, setLoadingAuth] = useState(true);
 
+  // Effect for Firebase authentication state
   useEffect(() => {
-    storage.initializeSampleData();
-    const allPlayers = storage.getPlayers();
-    setPlayers(allPlayers);
-    const seasons = getAvailableSeasons(allPlayers);
-    if (seasons.length > 0) {
-      setSelectedSeason(seasons[0]);
-    }
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoadingAuth(false);
+    });
+    return () => unsubscribe();
   }, []);
 
-  const refreshPlayers = () => {
-    setPlayers(storage.getPlayers());
+  // Effect for loading player data, now dependent on user authentication
+  useEffect(() => {
+    if (user) { // Only run if user is authenticated
+      const fetchPlayers = async () => {
+        const allPlayers = await storage.getPlayers();
+        setPlayers(allPlayers);
+        const seasons = getAvailableSeasons(allPlayers);
+        if (seasons.length > 0) {
+          setSelectedSeason(seasons[0]);
+        }
+      };
+      fetchPlayers();
+    }
+  }, [user]); // Rerun when user state changes
+
+  const refreshPlayers = async () => {
+    setPlayers(await storage.getPlayers());
   };
 
-  const handleSavePlayer = (player: Player) => {
+  const handleSavePlayer = async (player: Player) => {
     const existingPlayer = players.find(p => p.id === player.id);
     if (existingPlayer) {
-      storage.updatePlayer(player);
+      await storage.updatePlayer(player);
     } else {
-      storage.addPlayer(player);
+      await storage.addPlayer(player);
     }
-    refreshPlayers();
+    await refreshPlayers();
     navigate('/players');
   };
 
-  const handleImportPlayers = (importedPlayers: Player[]) => {
-    // Basic validation and merging logic
+  const handleImportPlayers = async (importedPlayers: Player[]) => {
     const newPlayers = importedPlayers.map(p => ({
       ...p,
       id: p.id || `imported-${Date.now()}-${Math.random()}`,
-      // Add other default fields if necessary
     }));
-    storage.addMultiplePlayers(newPlayers);
-    refreshPlayers();
+    await storage.addMultiplePlayers(newPlayers);
+    await refreshPlayers();
   };
 
-  const handleDeletePlayer = (playerId: string) => {
+  const handleDeletePlayer = async (playerId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce joueur ?')) {
-      storage.deletePlayer(playerId);
-      refreshPlayers();
+      await storage.deletePlayer(playerId);
+      await refreshPlayers();
       if(window.location.pathname.includes(`/players/${playerId}`)) {
         navigate('/players');
       }
     }
   };
 
-  const handleDeleteMultiplePlayers = (playerIds: string[]) => {
-    storage.deleteMultiplePlayers(playerIds);
-    refreshPlayers();
+  const handleDeleteMultiplePlayers = async (playerIds: string[]) => {
+    await storage.deleteMultiplePlayers(playerIds);
+    await refreshPlayers();
   };
 
-  const handleSavePerformance = (playerId: string, performanceData: Omit<Performance, 'id' | 'season' | 'excused'>) => {
-    const performanceWithSeason: Omit<Performance, 'id' | 'excused'> = {
+  const handleSavePerformance = async (playerId: string, performanceData: Omit<Performance, 'id' | 'season' | 'excused'>) => {
+    const performance: Performance = {
       ...performanceData,
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       season: selectedSeason,
+      excused: false, // Or determine based on logic
     };
-    storage.addPerformance(playerId, performanceWithSeason);
-    refreshPlayers();
+    await storage.addPerformance(playerId, performance);
+    await refreshPlayers();
   };
 
-  const handleUpdatePlayerStorage = (
-    type: 'unavailabilityDelete' | 'unavailabilityAdd' | 'matchUpdate' | 'matchDelete',
-    refData: any,
-    value?: any
-  ) => {
-    const currentPlayers = storage.getPlayers();
-    let updatedPlayersArray = [...currentPlayers];
-
-    if (type === 'unavailabilityAdd') {
-        const { playerId, unavailability } = refData as { playerId: string, unavailability: Unavailability };
-        updatedPlayersArray = updatedPlayersArray.map(p =>
-            p.id === playerId ? { ...p, unavailabilities: [...p.unavailabilities, unavailability] } : p
-        );
-    } else if (type === 'unavailabilityDelete') {
-        const { playerId, unavailabilityId } = refData as { playerId: string, unavailabilityId: string };
-        updatedPlayersArray = updatedPlayersArray.map(p =>
-            p.id === playerId ? { ...p, unavailabilities: p.unavailabilities.filter(u => u.id !== unavailabilityId) } : p
-        );
-    } else if (type === 'matchUpdate') {
-        const originalPerfRef = refData as Performance;
-        const updatedPerfData = value as Partial<Performance>;
-        updatedPlayersArray = updatedPlayersArray.map(p => ({
-            ...p,
-            performances: p.performances.map(perf => {
-                const isSameMatch = perf.type === 'match' &&
-                    perf.date === originalPerfRef.date &&
-                    perf.opponent === originalPerfRef.opponent &&
-                    perf.location === originalPerfRef.location &&
-                    (perf.scoreHome === originalPerfRef.scoreHome || (Number.isNaN(perf.scoreHome) && Number.isNaN(originalPerfRef.scoreHome))) &&
-                    (perf.scoreAway === originalPerfRef.scoreAway || (Number.isNaN(perf.scoreAway) && Number.isNaN(originalPerfRef.scoreAway)));
-
-                if (isSameMatch) {
-                    return { ...perf, ...updatedPerfData };
-                }
-                return perf;
-            })
-        }));
+  const handleUpdatePlayerStorage = async (type: string, refData: any, value?: any) => {
+    if (type === 'matchUpdate') {
+      await storage.updateMatchDetails(refData, value);
     } else if (type === 'matchDelete') {
-        const originalPerfRef = refData as Performance;
-        storage.deleteMatch(originalPerfRef);
-        updatedPlayersArray = storage.getPlayers();
+      await storage.deleteMatch(refData);
+    } else if (type === 'trainingDelete') {
+      await storage.deleteTraining(refData);
     }
-
-    setPlayers(updatedPlayersArray);
-    storage.savePlayers(updatedPlayersArray);
+    await refreshPlayers();
   };
 
   const menuItems: MenuItem[] = [
@@ -251,25 +273,38 @@ function App() {
     { id: 'results', label: 'Résultats Saison', icon: ClipboardList, path: '/results' },
   ];
 
+  if (loadingAuth) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-red-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <SignInScreen />;
+  }
+
   return (
-      <AppLayout
-        menuItems={menuItems}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-      >
-        <Routes>
-          <Route path="/" element={<Dashboard players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
-          <Route path="/players" element={<PlayerList players={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} onDeleteMultiple={handleDeleteMultiplePlayers} />} />
-          <Route path="/players/add" element={<PlayerFormWrapper onSave={handleSavePlayer} players={players} />} />
-          <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
-          <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />
-          <Route path="/performance" element={<PerformanceEntry players={players} onSavePerformance={handleSavePerformance} />} />
-          <Route path="/presence" element={<PresencePage />} />
-          <Route path="/statistics" element={<Statistics players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
-          <Route path="/results" element={<MatchResultsPage allPlayers={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} onUpdatePlayerStorage={handleUpdatePlayerStorage} />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </AppLayout>
+    <AppLayout
+      user={user}
+      menuItems={menuItems}
+      sidebarOpen={sidebarOpen}
+      setSidebarOpen={setSidebarOpen}
+    >
+      <Routes>
+        <Route path="/" element={<Dashboard players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
+        <Route path="/players" element={<PlayerList players={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} onDeleteMultiple={handleDeleteMultiplePlayers} />} />
+        <Route path="/players/add" element={<PlayerFormWrapper onSave={handleSavePlayer} players={players} />} />
+        <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
+        <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />
+        <Route path="/performance" element={<PerformanceEntry players={players} onSavePerformance={handleSavePerformance} />} />
+        <Route path="/presence" element={<PresencePage allPlayers={players} onUpdatePlayerStorage={handleUpdatePlayerStorage} />} />
+        <Route path="/statistics" element={<Statistics players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
+        <Route path="/results" element={<MatchResultsPage allPlayers={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} onUpdatePlayerStorage={handleUpdatePlayerStorage} />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </AppLayout>
   );
 }
 
@@ -281,7 +316,7 @@ const PlayerFormWrapper: React.FC<{players?: Player[], onSave: (player: Player) 
   return <PlayerForm player={playerToEdit} onSave={onSave} onCancel={() => navigate('/players')} />;
 };
 
-const PlayerDetailWrapper: React.FC<{players: Player[], onPlayerUpdate: Function, onDeletePlayer: (id: string) => void, onEditPlayerRedirect: (id: string) => void}> = ({players, onPlayerUpdate, onDeletePlayer, onEditPlayerRedirect }) => {
+const PlayerDetailWrapper: React.FC<{players: Player[], onPlayerUpdate: () => Promise<void>, onDeletePlayer: (id: string) => Promise<void>, onEditPlayerRedirect: (id: string) => void}> = ({players, onPlayerUpdate, onDeletePlayer, onEditPlayerRedirect }) => {
   const { playerId } = useParams<{ playerId: string }>();
   const navigate = useNavigate();
   const player = players.find(p => p.id === playerId);
@@ -293,6 +328,7 @@ const PlayerDetailWrapper: React.FC<{players: Player[], onPlayerUpdate: Function
             onBack={() => navigate('/players')}
             onEdit={() => onEditPlayerRedirect(player.id)}
             onPlayerUpdate={onPlayerUpdate}
+            onDelete={() => onDeletePlayer(player.id)}
          />;
 };
 

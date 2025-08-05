@@ -22,6 +22,7 @@ import {
 import { exportPlayerStats, exportToPDF } from '../utils/export';
 import { storage } from '../utils/storage';
 import { getMatchStats, getAge } from '../utils/playerUtils';
+import { formatDateToDDMMYYYY } from '../utils/dateUtils';
 
 interface PlayerDetailProps {
   player: Player;
@@ -234,7 +235,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
               <span className="text-gray-700">Date Validation Licence</span>
               <div className="flex items-center space-x-2">
                 <span className="font-medium">
-                  {player.licenseValidationDate ? new Date(player.licenseValidationDate).toLocaleDateString('fr-FR') : 'Non définie'}
+                  {formatDateToDDMMYYYY(player.licenseValidationDate)}
                 </span>
               </div>
             </div>
@@ -439,8 +440,8 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
                     <span className="font-medium">{unavailability.reason}</span>
                   </div>
                   <p className="text-sm text-gray-600 mt-1">
-                    Du {new Date(unavailability.startDate).toLocaleDateString('fr-FR')}
-                    {unavailability.endDate && ` au ${new Date(unavailability.endDate).toLocaleDateString('fr-FR')}`}
+                    Du {formatDateToDDMMYYYY(unavailability.startDate)}
+                    {unavailability.endDate && ` au ${formatDateToDDMMYYYY(unavailability.endDate)}`}
                     {!unavailability.endDate && ' (en cours)'}
                   </p>
                   {unavailability.description && (
@@ -477,7 +478,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
                   }`}></div>
                   <div>
                     <p className="font-medium">{performance.type === 'match' ? 'Match' : 'Entraînement'}</p>
-                    <p className="text-sm text-gray-600">{new Date(performance.date).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-600">{formatDateToDDMMYYYY(performance.date)}</p>
                   </div>
                   {performance.excused && (
                     <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
