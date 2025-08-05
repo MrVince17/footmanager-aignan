@@ -198,6 +198,10 @@ export function PlayerList({
     return age;
   };
 
+  const noPlayerText = searchTerm || filterTeam !== 'all' || filterPosition !== 'all'
+    ? 'Essayez de modifier vos critères de recherche'
+    : 'Commencez par ajouter votre premier joueur';
+
   return (
     <div className="space-y-6">
       <Header
@@ -414,10 +418,7 @@ export function PlayerList({
           <Users size={48} className="mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun joueur trouvé</h3>
           <p className="text-gray-600 mb-4">
-            {searchTerm || filterTeam !== 'all' || filterPosition !== 'all' 
-              ? 'Essayez de modifier vos critères de recherche'
-              : 'Commencez par ajouter votre premier joueur'
-            }
+            {noPlayerText}
           </p>
           <Link
             to="/players/add"
