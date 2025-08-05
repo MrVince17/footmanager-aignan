@@ -285,15 +285,45 @@ export const Dashboard: React.FC<DashboardProps> = ({
   }, [playersWithSeasonStats, filterTeam]);
 
   const topScorers = [...playersWithSeasonStats]
-    .sort((a, b) => b.seasonStats.goals - a.seasonStats.goals)
+    .sort((a, b) => {
+      const goalsDiff = b.seasonStats.goals - a.seasonStats.goals;
+      if (goalsDiff !== 0) {
+        return goalsDiff;
+      }
+      const lastNameDiff = a.lastName.localeCompare(b.lastName);
+      if (lastNameDiff !== 0) {
+        return lastNameDiff;
+      }
+      return a.firstName.localeCompare(b.firstName);
+    })
     .slice(0, 3);
+
   const bestMatchAttendance = [...playersWithSeasonStats]
-    .sort((a, b) => b.matchAttendanceRateSeason - a.matchAttendanceRateSeason)
+    .sort((a, b) => {
+      const attendanceDiff = b.matchAttendanceRateSeason - a.matchAttendanceRateSeason;
+      if (attendanceDiff !== 0) {
+        return attendanceDiff;
+      }
+      const lastNameDiff = a.lastName.localeCompare(b.lastName);
+      if (lastNameDiff !== 0) {
+        return lastNameDiff;
+      }
+      return a.firstName.localeCompare(b.firstName);
+    })
     .slice(0, 3);
+
   const bestTrainingAttendance = [...playersWithSeasonStats]
-    .sort(
-      (a, b) => b.trainingAttendanceRateSeason - a.trainingAttendanceRateSeason
-    )
+    .sort((a, b) => {
+      const attendanceDiff = b.trainingAttendanceRateSeason - a.trainingAttendanceRateSeason;
+      if (attendanceDiff !== 0) {
+        return attendanceDiff;
+      }
+      const lastNameDiff = a.lastName.localeCompare(b.lastName);
+      if (lastNameDiff !== 0) {
+        return lastNameDiff;
+      }
+      return a.firstName.localeCompare(b.firstName);
+    })
     .slice(0, 3);
 
   const StatCard: React.FC<{
