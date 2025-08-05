@@ -101,7 +101,6 @@ interface StatisticsProps {
 export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason, onSeasonChange, allPlayers }) => {
   const [filterTeam, setFilterTeam] = useState<'all' | 'Senior 1' | 'Senior 2'>('all');
   const [filterMatchType, setFilterMatchType] = useState<'all' | 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS'>('all');
-  const [sortBy, setSortBy] = useState<string>('goals');
 
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
@@ -126,18 +125,22 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
   });
 
   const sortedPlayers = [...filteredPlayersByTeam].sort((a, b) => {
-    switch (sortBy) {
-      case 'goals': return b.seasonStats.goals - a.seasonStats.goals;
-      case 'assists': return b.seasonStats.assists - a.seasonStats.assists;
-      case 'matches': return b.seasonStats.totalMatches - a.seasonStats.totalMatches;
-      case 'trainings': return b.seasonStats.presentTrainings - a.seasonStats.presentTrainings;
-      case 'minutes': return b.seasonStats.totalMinutes - a.seasonStats.totalMinutes;
-      case 'matchAttendance': return b.seasonStats.matchAttendanceRateSeason - a.seasonStats.matchAttendanceRateSeason;
-      case 'trainingAttendance': return b.seasonStats.trainingAttendanceRateSeason - a.seasonStats.trainingAttendanceRateSeason;
-      case 'cards': return (b.seasonStats.yellowCards + b.seasonStats.redCards * 2) - (a.seasonStats.yellowCards + a.seasonStats.redCards * 2);
-      case 'cleanSheets': return b.seasonStats.cleanSheets - a.seasonStats.cleanSheets;
-      default: return 0;
-    }
+    const goalsDiff = b.seasonStats.goals - a.seasonStats.goals;
+    if (goalsDiff !== 0) return goalsDiff;
+
+    const assistsDiff = b.seasonStats.assists - a.seasonStats.assists;
+    if (assistsDiff !== 0) return assistsDiff;
+
+    const trainingsDiff = b.seasonStats.presentTrainings - a.seasonStats.presentTrainings;
+    if (trainingsDiff !== 0) return trainingsDiff;
+
+    const matchesDiff = b.seasonStats.totalMatches - a.seasonStats.totalMatches;
+    if (matchesDiff !== 0) return matchesDiff;
+
+    const lastNameDiff = a.lastName.localeCompare(b.lastName);
+    if (lastNameDiff !== 0) return lastNameDiff;
+
+    return a.firstName.localeCompare(b.firstName);
   });
 
   const teamStats = useMemo(() => {
@@ -332,25 +335,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
             </select>
           </div>
           
-          <div>
-            <label htmlFor="sortby-stats" className="sr-only">Trier par</label>
-            <select
-              id="sortby-stats"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            >
-              <option value="goals">Trier par buts</option>
-              <option value="assists">Trier par passes</option>
-              <option value="matches">Trier par matchs</option>
-              <option value="trainings">Trier par entraînements</option>
-              <option value="minutes">Trier par minutes</option>
-              <option value="matchAttendance">Trier par assiduité matchs</option>
-              <option value="trainingAttendance">Trier par assiduité entraînements</option>
-              <option value="cards">Trier par cartons</option>
-              <option value="cleanSheets">Trier par clean sheets</option>
-            </select>
-          </div>
           </div>
         </div>
       </div>
