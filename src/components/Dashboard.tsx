@@ -388,9 +388,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </button>
       </Header>
       <div id="dashboard-export-area">
+        {isPrinting && (
+          <Header
+            title="Tableau de Bord"
+            subtitle="Vue d'ensemble de votre équipe de football"
+          />
+        )}
         {/* Season and Team Filter */}
         {isPrinting ? (
-          <div className="mb-6 bg-white p-4 rounded-lg shadow flex items-center space-x-3">
+          <div className="my-6 bg-white p-4 rounded-lg shadow flex items-center space-x-3">
             <Filter size={20} className="text-gray-600" />
             <div>
               <span className="text-sm font-medium text-gray-700">Saison : </span>
