@@ -11,6 +11,7 @@ import {
   Download,
   Filter,
 } from "lucide-react";
+import jsPDF from 'jspdf';
 import { exportToPDF } from "../utils/export";
 import { getTotalTeamEvents } from "../utils/playerUtils";
 import { Header } from './Header';
