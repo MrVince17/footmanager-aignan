@@ -119,11 +119,11 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
       .map(([id, performances]) => {
         if (performances.length === 0) return null;
         const refPerf = performances[0];
-        const allScorers = performances.flatMap(p => p.scorers || []);
-        const allAssisters = performances.flatMap(p => p.assisters || []);
-        const allYellowCards = performances.flatMap(p => p.yellowCardsDetails || []);
-        const allRedCards = performances.flatMap(p => p.redCardsDetails || []);
-        const allGoalsConceded = performances.flatMap(p => p.goalsConcededDetails || []);
+        const allScorers = Array.from(new Set(performances.flatMap(p => p.scorers || []).map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
+        const allAssisters = Array.from(new Set(performances.flatMap(p => p.assisters || []).map(a => JSON.stringify(a)))).map(a => JSON.parse(a));
+        const allYellowCards = Array.from(new Set(performances.flatMap(p => p.yellowCardsDetails || []).map(yc => JSON.stringify(yc)))).map(yc => JSON.parse(yc));
+        const allRedCards = Array.from(new Set(performances.flatMap(p => p.redCardsDetails || []).map(rc => JSON.stringify(rc)))).map(rc => JSON.parse(rc));
+        const allGoalsConceded = Array.from(new Set(performances.flatMap(p => p.goalsConcededDetails || []).map(gc => JSON.stringify(gc)))).map(gc => JSON.parse(gc));
 
         return {
           id,
