@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 import { Header } from './Header';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatDateToYYYYMMDD } from '../utils/dateUtils';
+import { getPlayerStats } from '../utils/playerUtils';
 
 interface PlayerListProps {
   players: Player[];
@@ -317,7 +318,9 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
       {/* Players Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedAndFilteredPlayers.map((player) => (
+        {sortedAndFilteredPlayers.map((player) => {
+          const stats = getPlayerStats(player);
+          return (
           <div key={player.id} className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${selectedPlayers.includes(player.id) ? 'ring-2 ring-red-500' : ''}`}>
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
@@ -369,6 +372,20 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                   }</span>
                 </div>
 
+                <div className="grid grid-cols-3 gap-4 text-sm text-center pt-2">
+                  <div>
+                    <div className="font-semibold text-gray-900">{stats.totalMatches}</div>
+                    <div className="text-gray-600">Matchs</div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">{stats.goals}</div>
+                    <div className="text-gray-600">Buts</div>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">{stats.assists}</div>
+                    <div className="text-gray-600">Passes</div>
+                  </div>
+                </div>
 
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center space-x-1">
