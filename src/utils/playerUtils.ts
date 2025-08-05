@@ -19,9 +19,14 @@ export const getPlayerStats = (player: Player) => {
   };
 
   if (player.performances) {
+    const processedMatches = new Set<string>();
     player.performances.forEach(p => {
       if (p.type === 'match' && p.present) {
-        stats.totalMatches++;
+        const matchId = `${p.date}-${p.opponent}`;
+        if (!processedMatches.has(matchId)) {
+          stats.totalMatches++;
+          processedMatches.add(matchId);
+        }
         stats.totalMinutes += p.minutesPlayed || 0;
         stats.yellowCards += p.yellowCards || 0;
         stats.redCards += p.redCards || 0;
