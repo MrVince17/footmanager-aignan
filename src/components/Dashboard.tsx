@@ -12,6 +12,7 @@ import {
   Filter,
 } from "lucide-react";
 import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { exportToPDF } from "../utils/export";
 import { getTotalTeamEvents } from "../utils/playerUtils";
 import { Header } from './Header';
@@ -110,21 +111,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const handleExportAdminIssues = async () => {
-    if (adminIssues.length === 0) return;
+    if (adminIssues.length === 0) {
+      alert("Aucune donnée à exporter.");
+      return;
+    }
 
     try {
       const doc = new jsPDF();
+      const title = "Validation licence et paiement";
 
+      // Load custom font
       const fontUrl = "/fonts/DejaVuSans.ttf";
       const fontResponse = await fetch(fontUrl);
       const font = await fontResponse.arrayBuffer();
       const fontName = "DejaVuSans";
       doc.addFileToVFS(`${fontName}.ttf`, new Uint8Array(font).reduce((data, byte) => data + String.fromCharCode(byte), ''));
       doc.addFont(`${fontName}.ttf`, fontName, "normal");
-      doc.setFont(fontName);
 
-      doc.text("Validation licence et paiement", 14, 15);
-      doc.text(`Saison : ${selectedSeason}`, 14, 22);
+      doc.text(title, 14, 22);
+      doc.text(`Saison : ${selectedSeason}`, 14, 29);
 
       const tableColumn = ["Nom", "Prénom", "Validation Licence", "Paiement"];
       const tableRows: (string|undefined)[][] = [];
@@ -146,13 +151,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
         theme: "grid",
         headStyles: { fillColor: [220, 26, 38] },
         styles: {
-          font: fontName
-        }
+          fontSize: 8,
+          cellPadding: 1,
+          font: "DejaVuSans",
+        },
       });
-      doc.save("statut_administratif.pdf");
+
+      doc.save(`statut_administratif_${selectedSeason}.pdf`);
     } catch (error) {
       console.error("Erreur lors de la génération du PDF :", error);
-      alert("Une erreur est survenue lors de la génération du PDF.");
+      alert(
+        "Une erreur est survenue lors de la génération du PDF. Vérifiez la console pour plus de détails."
+      );
     }
   };
 
