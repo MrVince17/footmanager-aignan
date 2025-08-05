@@ -1,22 +1,8 @@
 import { Player } from '../types';
 import * as XLSX from 'xlsx';
 import html2pdf from 'html2pdf.js';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import { getAge } from './playerUtils';
 
-interface jsPDFWithAutoTable extends jsPDF {
-  autoTable: (options: {
-    startY?: number;
-    head?: string[][];
-    body?: (string | undefined)[][];
-    styles?: object;
-    columnStyles?: object;
-  }) => jsPDF;
-  lastAutoTable: {
-    finalY: number;
-  };
-}
+
 
 export const exportToExcel = (players: Player[], filename: string = 'export_joueurs_US_Aignan.xlsx') => {
   const headers = [
@@ -197,43 +183,6 @@ export const exportPlayerStats = (player: Player) => {
   XLSX.writeFile(workbook, `stats_${player.firstName}_${player.lastName}_US_Aignan.xlsx`);
 };
 
-export const exportPlayerCardToPDF = (player: Player, filename: string) => {
-  const doc = new jsPDF();
-  doc.text('Fiche Joueur - US Aignan', 20, 20);
-  doc.text(`Nom Prénom: ${player.firstName} ${player.lastName}`, 20, 30);
-
-  // Informations générales
-  (doc as jsPDFWithAutoTable).autoTable({
-    startY: 40,
-    head: [['Informations générales', '']],
-    body: [
-      ['Âge', `${getAge(player.dateOfBirth)} ans`],
-      ['Position', player.position],
-      ['Équipe(s)', player.teams.join(', ')],
-      ['Licence', player.licenseNumber],
-    ],
-    styles: { fontSize: 10 },
-    columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 100 } },
-  });
-
-  // Statut administratif
-  const finalY = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 10;
-  doc.text('Statut administratif', 20, finalY);
-  (doc as jsPDFWithAutoTable).autoTable({
-    startY: finalY + 10,
-    head: [['Statut administratif', '']],
-    body: [
-      ['Licence', player.licenseValid ? 'Valide' : 'Non valide'],
-      ['Paiement', player.paymentValid ? 'À jour' : 'En retard'],
-      ['Date Validation Licence', player.licenseValidationDate ? new Date(player.licenseValidationDate).toLocaleDateString('fr-FR') : 'Non définie'],
-    ],
-    styles: { fontSize: 10 },
-    columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 100 } },
-  });
-
-  doc.save(filename);
-};
-
 export const exportToPDF = (
   elementId: string,
   filename: string,
@@ -285,36 +234,4 @@ export const exportToPDF = (
       }
       throw err;
     });
-};
-
-export const exportAdminIssuesToPDF = (players: Player[], filename: string) => {
-  const doc = new jsPDF();
-  const tableColumn = ["Prénom", "Nom", "Problème"];
-  const tableRows: (string|undefined)[][] = [];
-
-  players.forEach(player => {
-    const issues = [];
-    if (!player.licenseValid) {
-      issues.push("Licence");
-    }
-    if (!player.paymentValid) {
-      issues.push("Paiement");
-    }
-    const issueText = issues.join(" et ");
-
-    const playerData = [
-      player.firstName,
-      player.lastName,
-      issueText,
-    ];
-    tableRows.push(playerData);
-  });
-
-  doc.text("Statut Administratif - Joueurs avec problèmes", 14, 15);
-  (doc as jsPDFWithAutoTable).autoTable({
-    head: [tableColumn],
-    body: tableRows,
-    startY: 20,
-  });
-  doc.save(filename);
 };

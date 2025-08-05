@@ -11,7 +11,7 @@ import {
   Download,
   Filter,
 } from "lucide-react";
-import { exportToPDF, exportAdminIssuesToPDF } from "../utils/export";
+import { exportToPDF } from "../utils/export";
 import { getTotalTeamEvents } from "../utils/playerUtils";
 import { Header } from './Header';
 
@@ -108,9 +108,50 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setIsPrinting(true);
   };
 
-  const handleExportAdminIssues = () => {
-    if (adminIssues.length > 0) {
-      exportAdminIssuesToPDF(adminIssues, "statut_administratif.pdf");
+  const handleExportAdminIssues = async () => {
+    if (adminIssues.length === 0) return;
+
+    try {
+      const doc = new jsPDF();
+
+      const fontUrl = "/fonts/DejaVuSans.ttf";
+      const fontResponse = await fetch(fontUrl);
+      const font = await fontResponse.arrayBuffer();
+      const fontName = "DejaVuSans";
+      doc.addFileToVFS(`${fontName}.ttf`, new Uint8Array(font).reduce((data, byte) => data + String.fromCharCode(byte), ''));
+      doc.addFont(`${fontName}.ttf`, fontName, "normal");
+      doc.setFont(fontName);
+
+      doc.text("Validation licence et paiement", 14, 15);
+      doc.text(`Saison : ${selectedSeason}`, 14, 22);
+
+      const tableColumn = ["Nom", "Prénom", "Validation Licence", "Paiement"];
+      const tableRows: (string|undefined)[][] = [];
+
+      adminIssues.forEach(player => {
+        const playerData = [
+          player.lastName,
+          player.firstName,
+          player.licenseValid ? "Valide" : "Non valide",
+          player.paymentValid ? "OK" : "En retard",
+        ];
+        tableRows.push(playerData);
+      });
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 35,
+        theme: "grid",
+        headStyles: { fillColor: [220, 26, 38] },
+        styles: {
+          font: fontName
+        }
+      });
+      doc.save("statut_administratif.pdf");
+    } catch (error) {
+      console.error("Erreur lors de la génération du PDF :", error);
+      alert("Une erreur est survenue lors de la génération du PDF.");
     }
   };
 
