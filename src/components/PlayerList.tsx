@@ -96,7 +96,7 @@ export function PlayerList({
           const firstName = row[1] || '';
           const dateOfBirth = formatDateToYYYYMMDD(row[2]);
           const licenseNumber = row[3];
-          let teams = (row[4] || '').split(',').map((t: string) => t.trim());
+          let teams: string[] = (row[4] || '').split(',').map(t => t.trim());
           if (teams.includes('Senior')) {
             teams = teams.filter(t => t !== 'Senior');
             teams.push('Senior 1', 'Senior 2');
