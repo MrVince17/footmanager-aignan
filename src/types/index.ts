@@ -80,7 +80,7 @@ export interface Performance {
   redCardsDetails?: CardDetail[];
   goalsConcededDetails?: GoalConcededDetail[];
   excused?: boolean;
-  matchType?: 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS';
+  matchType?: 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS' | 'Match Amical';
 }
 
 export interface Scorer {
@@ -126,7 +126,7 @@ export interface MatchDisplayData {
   redCardsDetails?: CardDetail[];
   goalsConcededDetails?: GoalConcededDetail[];
   originalPerformanceRef: Performance;
-  matchType?: 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS';
+  matchType?: 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS' | 'Match Amical';
 }
 
 export interface MatchDetails {

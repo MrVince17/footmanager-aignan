@@ -8,7 +8,7 @@ export const getPlayerById = (allPlayers: Player[], playerId: string): Player | 
 };
 
 export const getMatchStats = (performances: Performance[]): Record<string, number> => {
-  const matchTypes = ['D2', 'R2', 'CdF', 'CO', 'CR', 'ChD', 'CG', 'CS'];
+  const matchTypes = ['D2', 'R2', 'CdF', 'CO', 'CR', 'ChD', 'CG', 'CS', 'Match Amical'];
   const matchStats: Record<string, number> = {};
 
   matchTypes.forEach(type => {
