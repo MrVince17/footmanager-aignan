@@ -14,6 +14,8 @@ interface PlayerListProps {
   onDeleteMultiple: (playerIds: string[]) => void;
 }
 
+type TeamFilter = 'all' | 'Senior' | 'U20' | 'U19' | 'U18' | 'U17' | 'U6-U11' | 'Arbitre' | 'Dirigeant/Dirigeante';
+
 export function PlayerList({
   players,
   // onSelectPlayer, // Supprimé
@@ -23,7 +25,7 @@ export function PlayerList({
   onDeleteMultiple
 }: PlayerListProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterTeam, setFilterTeam] = useState<string>('all');
+  const [filterTeam, setFilterTeam] = useState<TeamFilter>('all');
   const [filterPosition, setFilterPosition] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
@@ -164,7 +166,7 @@ export function PlayerList({
       const matchesTeam = filterTeam === 'all' ||
         (filterTeam === 'Senior' && player.teams.some(team => team.toLowerCase().includes('senior'))) ||
         (filterTeam === 'Dirigeant/Dirigeante' && player.teams.some(team => team.toLowerCase().includes('dirigeant'))) ||
-        (filterTeam !== 'Senior' && filterTeam !== 'Dirigeant/Dirigeante' && player.teams.includes(filterTeam as any));
+        player.teams.includes(filterTeam);
       const matchesPosition = filterPosition === 'all' || player.position === filterPosition;
 
       return matchesSearch && matchesTeam && matchesPosition;
@@ -225,7 +227,7 @@ export function PlayerList({
           
           <select
             value={filterTeam}
-            onChange={(e) => setFilterTeam(e.target.value)}
+            onChange={(e) => setFilterTeam(e.target.value as TeamFilter)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           >
             <option value="all">Toutes les équipes</option>
@@ -404,7 +406,7 @@ export function PlayerList({
 
               <Link
                 to={`/players/${player.id}`}
-                className="w-full mt-4 bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 block text-center" // Ajout de block et text-center pour style de lien
+                className="w-full mt-4 bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 block text-center"
               >
                 Voir les détails
               </Link>
