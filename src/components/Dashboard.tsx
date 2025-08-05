@@ -334,7 +334,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const distribution: { [key: string]: number } = {};
     const filteredPlayers = playersWithSeasonStats.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam as Team));
     filteredPlayers.forEach(player => {
-      let mainTeam = player.teams[0] || 'Non assigné';
+      let mainTeam: string = player.teams[0] || 'Non assigné';
       if (player.teams.some(t => t.startsWith('Senior'))) {
         mainTeam = 'Senior';
       } else if (player.teams.includes('U17')) {
