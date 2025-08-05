@@ -57,8 +57,12 @@ const getPlayerStatsForSeason = (
         stats.totalMatches++;
         stats.presentMatches++;
         stats.totalMinutes += p.minutesPlayed || 0;
-        stats.goals += p.goals || 0;
-        stats.assists += p.assists || 0;
+        if (p.scorers) {
+          stats.goals += p.scorers.filter(s => s.playerId === player.id).length;
+        }
+        if (p.assisters) {
+          stats.assists += p.assisters.filter(a => a.playerId === player.id).length;
+        }
         stats.yellowCards += p.yellowCards || 0;
         stats.redCards += p.redCards || 0;
         if (p.cleanSheet && player.position === 'Gardien') {
