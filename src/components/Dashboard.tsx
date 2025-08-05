@@ -11,7 +11,7 @@ import {
   Download,
   Filter,
 } from "lucide-react";
-import { exportToPDF } from "../utils/export";
+import { exportToPDF, exportAdminIssuesToPDF } from "../utils/export";
 import { getTotalTeamEvents } from "../utils/playerUtils";
 import { Header } from './Header';
 
@@ -106,6 +106,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const handleExportClick = () => {
     setIsPrinting(true);
+  };
+
+  const handleExportAdminIssues = () => {
+    if (adminIssues.length > 0) {
+      exportAdminIssuesToPDF(adminIssues, "statut_administratif.pdf");
+    }
   };
 
   React.useEffect(() => {
@@ -553,9 +559,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
           {/* Administrative Status */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Statut Administratif
-            </h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Statut Administratif
+              </h3>
+              <button
+                onClick={handleExportAdminIssues}
+                className="flex items-center space-x-2 text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-lg transition-colors duration-200"
+              >
+                <Download size={16} />
+                <span>Export PDF</span>
+              </button>
+            </div>
             {adminIssues.length === 0 ? (
               <div className="flex items-center space-x-2 text-green-600">
                 <CheckCircle size={20} />

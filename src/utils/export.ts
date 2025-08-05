@@ -5,6 +5,19 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { getAge } from './playerUtils';
 
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: {
+    startY?: number;
+    head?: string[][];
+    body?: (string | undefined)[][];
+    styles?: object;
+    columnStyles?: object;
+  }) => jsPDF;
+  lastAutoTable: {
+    finalY: number;
+  };
+}
+
 export const exportToExcel = (players: Player[], filename: string = 'export_joueurs_US_Aignan.xlsx') => {
   const headers = [
     'Nom',
@@ -190,7 +203,7 @@ export const exportPlayerCardToPDF = (player: Player, filename: string) => {
   doc.text(`Nom Prénom: ${player.firstName} ${player.lastName}`, 20, 30);
 
   // Informations générales
-  (doc as any).autoTable({
+  (doc as jsPDFWithAutoTable).autoTable({
     startY: 40,
     head: [['Informations générales', '']],
     body: [
@@ -204,9 +217,9 @@ export const exportPlayerCardToPDF = (player: Player, filename: string) => {
   });
 
   // Statut administratif
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
+  const finalY = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 10;
   doc.text('Statut administratif', 20, finalY);
-  (doc as any).autoTable({
+  (doc as jsPDFWithAutoTable).autoTable({
     startY: finalY + 10,
     head: [['Statut administratif', '']],
     body: [
@@ -272,4 +285,36 @@ export const exportToPDF = (
       }
       throw err;
     });
+};
+
+export const exportAdminIssuesToPDF = (players: Player[], filename: string) => {
+  const doc = new jsPDF();
+  const tableColumn = ["Prénom", "Nom", "Problème"];
+  const tableRows: (string|undefined)[][] = [];
+
+  players.forEach(player => {
+    const issues = [];
+    if (!player.licenseValid) {
+      issues.push("Licence");
+    }
+    if (!player.paymentValid) {
+      issues.push("Paiement");
+    }
+    const issueText = issues.join(" et ");
+
+    const playerData = [
+      player.firstName,
+      player.lastName,
+      issueText,
+    ];
+    tableRows.push(playerData);
+  });
+
+  doc.text("Statut Administratif - Joueurs avec problèmes", 14, 15);
+  (doc as jsPDFWithAutoTable).autoTable({
+    head: [tableColumn],
+    body: tableRows,
+    startY: 20,
+  });
+  doc.save(filename);
 };
