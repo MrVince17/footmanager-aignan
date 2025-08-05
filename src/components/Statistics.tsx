@@ -128,11 +128,11 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     const assistsDiff = b.seasonStats.assists - a.seasonStats.assists;
     if (assistsDiff !== 0) return assistsDiff;
 
-    const trainingsDiff = b.seasonStats.presentTrainings - a.seasonStats.presentTrainings;
-    if (trainingsDiff !== 0) return trainingsDiff;
-
     const matchesDiff = b.seasonStats.totalMatches - a.seasonStats.totalMatches;
     if (matchesDiff !== 0) return matchesDiff;
+
+    const trainingsDiff = b.seasonStats.presentTrainings - a.seasonStats.presentTrainings;
+    if (trainingsDiff !== 0) return trainingsDiff;
 
     const lastNameDiff = a.lastName.localeCompare(b.lastName);
     if (lastNameDiff !== 0) return lastNameDiff;
