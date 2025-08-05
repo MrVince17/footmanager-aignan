@@ -293,7 +293,6 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             value={playerStats.totalMatches}
             icon={<Trophy size={24} />}
             color="#DC2626"
-            stats={getMatchStats(player.performances)}
           />
         </div>
         <div className="lg:col-span-2">
