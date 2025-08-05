@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Player } from '../types';
+import { Player, Team } from '../types';
 import { BarChart3, Download, Filter, Trophy, Target, Users, Activity } from 'lucide-react';
 import { exportStatsToExcel, exportToPDF } from '../utils/export';
 import { getTotalTeamEvents } from '../utils/playerUtils';
@@ -118,7 +118,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     if (filterTeam === 'Dirigeant/Dirigeante') {
       return player.teams.some(team => team.toLowerCase().includes('dirigeant'));
     }
-    return player.teams.includes(filterTeam);
+    return player.teams.includes(filterTeam as Team);
   });
 
   const sortedPlayers = [...filteredPlayersByTeam].sort((a, b) => {
@@ -158,8 +158,8 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
       uniqueTeamTrainingsForSeason = getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason).length;
     } else {
-      uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', filterTeam, selectedSeason).length;
-      uniqueTeamTrainingsForSeason = getTotalTeamEvents(allPlayers, 'training', filterTeam, selectedSeason).length;
+      uniqueTeamMatchesForSeason = getTotalTeamEvents(allPlayers, 'match', filterTeam as Team, selectedSeason).length;
+      uniqueTeamTrainingsForSeason = getTotalTeamEvents(allPlayers, 'training', filterTeam as Team, selectedSeason).length;
     }
 
     const totalMinutes = currentTeamPlayers.reduce((sum, p) => sum + p.seasonStats.totalMinutes, 0);

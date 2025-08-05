@@ -185,7 +185,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const playersWithSeasonStats = useMemo(() => {
     return players
-      .filter(p => filterTeam === 'all' || p.teams.includes(filterTeam))
+      .filter(p => filterTeam === 'all' || p.teams.includes(filterTeam as Team))
       .map((p) => {
         const seasonStats = getPlayerStatsForSeason(p, selectedSeason);
         // Calculate season-specific attendance rates
@@ -255,7 +255,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       0
     );
     // For totalMatches and totalTrainings, we should count unique team events for the season.
-    const teamToFilter = filterTeam === 'all' ? undefined : filterTeam;
+    const teamToFilter = filterTeam === 'all' ? undefined : filterTeam as Team;
     const uniqueTeamMatchesForSeason = getTotalTeamEvents(
       allPlayers,
       "match",
@@ -305,7 +305,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   // Admin issues are global, not season-specific
   const adminIssues = allPlayers
-    .filter((p) => (!p.licenseValid || !p.paymentValid) && (filterTeam === 'all' || p.teams.includes(filterTeam)))
+    .filter((p) => (!p.licenseValid || !p.paymentValid) && (filterTeam === 'all' || p.teams.includes(filterTeam as Team)))
     .sort((a, b) => {
       const lastNameComparison = a.lastName.localeCompare(b.lastName);
       if (lastNameComparison !== 0) {
@@ -326,7 +326,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const teamDistribution = useMemo(() => {
     const distribution: { [key: string]: number } = {};
-    const filteredPlayers = playersWithSeasonStats.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam));
+    const filteredPlayers = playersWithSeasonStats.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam as Team));
     filteredPlayers.forEach(player => {
       let mainTeam = player.teams[0] || 'Non assigné';
       if (player.teams.includes('Senior 1')) mainTeam = 'Senior 1';
