@@ -12,10 +12,14 @@
   padding: 2px 4px !important;
 }
 
-.pdf-export-font-small select {
-  color: #000 !important;
-  background-color: #fff !important;
-  border: 1px solid #ccc !important;
+.pdf-export-font-small select, .pdf-export-font-small option {
+  color: black !important;
+  background-color: white !important;
+  border: 1px solid black !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  padding: 5px !important;
 }
 
 /* Custom scrollbar */
