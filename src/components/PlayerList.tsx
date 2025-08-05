@@ -3,7 +3,7 @@ import { Player } from '../types';
 import { Search, Plus, Edit, Trash2, Users, Upload, Download, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Header } from './Header';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { formatDateToYYYYMMDD } from '../utils/dateUtils';
 import { getPlayerStats } from '../utils/playerUtils';
 
@@ -22,7 +22,6 @@ export const PlayerList: React.FC<PlayerListProps> = ({
   onImportPlayers,
   onDeleteMultiple
 }) => {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterPosition, setFilterPosition] = useState<string>('all');
