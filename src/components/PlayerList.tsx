@@ -400,7 +400,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
               <Link
                 to={`/players/${player.id}`}
-                className="w-full mt-4 bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 block text-center" // Ajout de block et text-center pour style de lien
+                className="w-full mt-4 bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 block text-center"
               >
                 Voir les détails
               </Link>
