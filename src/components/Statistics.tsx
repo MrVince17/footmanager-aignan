@@ -420,7 +420,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
                           style={{ width: `${player.seasonStats.matchAttendanceRateSeason}%` }}
                         ></div>
                       </div>
-                      <span className="text-sm font-medium">{player.seasonStats.matchAttendanceRateSeason.toFixed(0)}%</span>
+                      <span className="text-sm font-medium">{(player.seasonStats.matchAttendanceRateSeason || 0).toFixed(0)}%</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
@@ -431,7 +431,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
                           style={{ width: `${player.seasonStats.trainingAttendanceRateSeason}%` }}
                         ></div>
                       </div>
-                      <span className="text-sm font-medium">{player.seasonStats.trainingAttendanceRateSeason.toFixed(0)}%</span>
+                      <span className="text-sm font-medium">{(player.seasonStats.trainingAttendanceRateSeason || 0).toFixed(0)}%</span>
                     </div>
                   </td>
                 </tr>
