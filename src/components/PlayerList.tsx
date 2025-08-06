@@ -418,7 +418,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                 <div className="pt-2 border-t">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Présence matchs</span>
-                    <span className="font-medium">{player.matchAttendanceRate.toFixed(0)}%</span>
+                    <span className="font-medium">{(player.matchAttendanceRate || 0).toFixed(0)}%</span>
                   </div>
                 </div>
               </div>
