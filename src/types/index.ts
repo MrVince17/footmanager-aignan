@@ -1,4 +1,4 @@
-export type Team = 'Senior 1' | 'Senior 2' | 'U20' | 'U19' | 'U18' | 'U17' | 'U6-U11' | 'Arbitre' | 'Dirigeant/Dirigeante';
+export type Team = 'Senior' | 'U20' | 'U19' | 'U18' | 'U17' | 'U6-U11' | 'Arbitre' | 'Dirigeant/Dirigeante';
 
 export interface Player {
   id: string;
@@ -8,18 +8,6 @@ export interface Player {
   licenseNumber: string;
   teams: Team[];
   position: 'Gardien' | 'Défenseur' | 'Milieu' | 'Attaquant';
-  
-  // Statistics
-  totalMatches: number;
-  totalMinutes: number;
-  totalTrainings: number;
-  goals: number;
-  assists: number;
-  cleanSheets: number;
-  yellowCards: number;
-  redCards: number;
-  trainingAttendanceRate: number;
-  matchAttendanceRate: number;
   
   // Administrative
   licenseValid: boolean;
@@ -31,6 +19,9 @@ export interface Player {
   injuries: Injury[];
   unavailabilities: Unavailability[];
   performances: Performance[];
+
+  trainingAttendanceRate?: number;
+  matchAttendanceRate?: number;
 }
 
 export interface Absence {
@@ -103,8 +94,7 @@ export interface GoalConcededDetail {
 
 export interface TeamStats {
   totalPlayers: number;
-  seniors1Count: number;
-  seniors2Count: number;
+  seniorsCount: number;
   averageAge: number;
   totalGoals: number;
   totalMatches: number;

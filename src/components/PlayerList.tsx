@@ -1,13 +1,16 @@
-import React, { useState, useRef } from 'react';
-import { Player } from '../types';
+import React, { useState, useRef, useMemo } from 'react';
+import { Player, Team } from '../types';
 import { Search, Plus, Edit, Trash2, Users, Upload, Download, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Header } from './Header';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { formatDateToYYYYMMDD } from '../utils/dateUtils';
+import { getPlayerStatsForSeason } from '../utils/playerUtils';
+import { getAvailableSeasons } from '../utils/seasonUtils';
 
 interface PlayerListProps {
   players: Player[];
+  allPlayers: Player[];
   onDeletePlayer: (playerId: string) => void;
   onImportPlayers: (importedPlayers: Player[]) => void;
   onDeleteMultiple: (playerIds: string[]) => void;
@@ -15,13 +18,11 @@ interface PlayerListProps {
 
 export const PlayerList: React.FC<PlayerListProps> = ({
   players,
-  // onSelectPlayer, // Supprimé
-  // onEditPlayer, // Supprimé
+  allPlayers,
   onDeletePlayer,
   onImportPlayers,
   onDeleteMultiple
 }) => {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterPosition, setFilterPosition] = useState<string>('all');
@@ -96,7 +97,13 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           const firstName = row[1] || '';
           const dateOfBirth = formatDateToYYYYMMDD(row[2]);
           const licenseNumber = row[3];
-          const teams = (row[4] || '').split(',').map((t: string) => t.trim());
+          const rawTeams = (row[4] || '').split(',').map((t: string) => t.trim());
+          const teams: Team[] = [...new Set(rawTeams.map((team: string) => {
+            if (team === 'Senior 1' || team === 'Senior 2') {
+              return 'Senior';
+            }
+            return team as Team;
+          }))] as Team[];
           const position = row[5] || 'Non défini';
           const licenseValid = row[6] === 'Oui';
           const licenseValidationDate = formatDateToYYYYMMDD(row[7]);
@@ -113,17 +120,6 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             licenseValid: licenseValid,
             licenseValidationDate: licenseValidationDate,
             paymentValid: paymentValid,
-            // Default values for all other fields to ensure they are not undefined
-            totalMatches: 0,
-            totalMinutes: 0,
-            totalTrainings: 0,
-            goals: 0,
-            assists: 0,
-            cleanSheets: 0,
-            yellowCards: 0,
-            redCards: 0,
-            trainingAttendanceRate: 0,
-            matchAttendanceRate: 0,
             absences: [],
             injuries: [],
             unavailabilities: [],
@@ -157,7 +153,17 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     }
   };
 
-  const sortedAndFilteredPlayers = players
+  const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
+  const latestSeason = availableSeasons[0] || '';
+
+  const playersWithStats = useMemo(() => {
+    return players.map(player => {
+      const stats = getPlayerStatsForSeason(player, latestSeason, allPlayers);
+      return { ...player, ...stats };
+    });
+  }, [players, latestSeason, allPlayers]);
+
+  const sortedAndFilteredPlayers = playersWithStats
     .filter(player => {
       const matchesSearch =
         player.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -325,7 +331,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                     className="mt-1 h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
                   />
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    <h3 className="text-base font-semibold text-gray-900 mb-1">
                       {player.firstName} {player.lastName}
                     </h3>
                   <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
@@ -363,7 +369,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                   <span>{player.teams.join(', ')}</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-3 gap-4 text-sm">
                   <div className="text-center">
                     <div className="font-semibold text-gray-900">{player.goals}</div>
                     <div className="text-gray-600">Buts</div>
@@ -371,6 +377,29 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                   <div className="text-center">
                     <div className="font-semibold text-gray-900">{player.assists}</div>
                     <div className="text-gray-600">Passes</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-900">{player.totalMinutes}</div>
+                    <div className="text-gray-600">Minutes</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-2 text-sm pt-3 mt-3 border-t">
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-900">{player.totalMatches}</div>
+                    <div className="text-xs text-gray-600">Matchs</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-900">{player.presentTrainings}</div>
+                    <div className="text-xs text-gray-600">Entraîn.</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-yellow-500">{player.yellowCards}</div>
+                    <div className="text-xs text-gray-600">CJ</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-red-600">{player.redCards}</div>
+                    <div className="text-xs text-gray-600">CR</div>
                   </div>
                 </div>
 
@@ -388,7 +417,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                 <div className="pt-2 border-t">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Présence matchs</span>
-                    <span className="font-medium">{player.matchAttendanceRate.toFixed(0)}%</span>
+                    <span className="font-medium">{(player.matchAttendanceRateSeason || 0).toFixed(0)}%</span>
                   </div>
                 </div>
               </div>

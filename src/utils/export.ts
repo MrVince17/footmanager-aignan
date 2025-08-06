@@ -1,10 +1,15 @@
 import { Player } from '../types';
 import * as XLSX from 'xlsx';
+import { getPlayerStatsForSeason } from './playerUtils';
+import { getAvailableSeasons } from './seasonUtils';
 import html2pdf from 'html2pdf.js';
 
 
 
-export const exportToExcel = (players: Player[], filename: string = 'export_joueurs_US_Aignan.xlsx') => {
+export const exportToExcel = (players: Player[], allPlayers: Player[], filename: string = 'export_joueurs_US_Aignan.xlsx') => {
+  const availableSeasons = getAvailableSeasons(allPlayers);
+  const latestSeason = availableSeasons[0] || '';
+
   const headers = [
     'Nom',
     'Prénom',
@@ -26,26 +31,29 @@ export const exportToExcel = (players: Player[], filename: string = 'export_joue
     'Paiement OK'
   ];
 
-  const data = players.map(player => [
-    player.lastName,
-    player.firstName,
-    player.dateOfBirth,
-    player.licenseNumber,
-    player.teams.join(' + '),
-    player.position,
-    player.totalMatches,
-    player.totalMinutes,
-    player.totalTrainings,
-    player.goals,
-    player.assists,
-    player.cleanSheets,
-    player.yellowCards,
-    player.redCards,
-    `${player.trainingAttendanceRate.toFixed(1)}%`,
-    `${player.matchAttendanceRate.toFixed(1)}%`,
-    player.licenseValid ? 'Oui' : 'Non',
-    player.paymentValid ? 'Oui' : 'Non'
-  ]);
+  const data = players.map(player => {
+    const stats = getPlayerStatsForSeason(player, latestSeason, allPlayers);
+    return [
+      player.lastName,
+      player.firstName,
+      player.dateOfBirth,
+      player.licenseNumber,
+      player.teams.join(' + '),
+      player.position,
+      stats.totalMatches,
+      stats.totalMinutes,
+      stats.presentTrainings,
+      stats.goals,
+      stats.assists,
+      stats.cleanSheets,
+      stats.yellowCards,
+      stats.redCards,
+      `${(stats.trainingAttendanceRateSeason || 0).toFixed(1)}%`,
+      `${(stats.matchAttendanceRateSeason || 0).toFixed(1)}%`,
+      player.licenseValid ? 'Oui' : 'Non',
+      player.paymentValid ? 'Oui' : 'Non'
+    ];
+  });
 
   const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
   
@@ -109,7 +117,11 @@ export const exportStatsToExcel = (data: any[], filename: string) => {
   XLSX.writeFile(workbook, filename);
 }
 
-export const exportPlayerStats = (player: Player) => {
+export const exportPlayerStats = (player: Player, allPlayers: Player[]) => {
+  const availableSeasons = getAvailableSeasons(allPlayers);
+  const latestSeason = availableSeasons[0] || '';
+  const stats = getPlayerStatsForSeason(player, latestSeason, allPlayers);
+
   const data = {
     'Informations générales': {
       'Nom complet': `${player.firstName} ${player.lastName}`,
@@ -119,18 +131,18 @@ export const exportPlayerStats = (player: Player) => {
       'Position': player.position
     },
     'Statistiques': {
-      'Matchs joués': player.totalMatches,
-      'Minutes jouées': player.totalMinutes,
-      'Entraînements': player.totalTrainings,
-      'Buts marqués': player.goals,
-      'Passes décisives': player.assists,
-      'Clean sheets': player.cleanSheets,
-      'Cartons jaunes': player.yellowCards,
-      'Cartons rouges': player.redCards
+      'Matchs joués': stats.totalMatches,
+      'Minutes jouées': stats.totalMinutes,
+      'Entraînements': stats.presentTrainings,
+      'Buts marqués': stats.goals,
+      'Passes décisives': stats.assists,
+      'Clean sheets': stats.cleanSheets,
+      'Cartons jaunes': stats.yellowCards,
+      'Cartons rouges': stats.redCards
     },
     'Assiduité': {
-      'Présence entraînements': `${player.trainingAttendanceRate.toFixed(1)}%`,
-      'Présence matchs': `${player.matchAttendanceRate.toFixed(1)}%`
+      'Présence entraînements': `${(stats.trainingAttendanceRateSeason || 0).toFixed(1)}%`,
+      'Présence matchs': `${(stats.matchAttendanceRateSeason || 0).toFixed(1)}%`
     },
     'Administratif': {
       'Licence valide': player.licenseValid ? 'Oui' : 'Non',
@@ -227,7 +239,7 @@ export const exportToPDF = (
         element.classList.remove(exportOptions.tempClass);
       }
     })
-    .catch(err => {
+    .catch((err: any) => {
       console.error("Error during PDF generation: ", err);
       if (exportOptions?.tempClass) {
         element.classList.remove(exportOptions.tempClass);

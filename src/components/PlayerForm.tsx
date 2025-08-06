@@ -16,16 +16,6 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
     licenseNumber: '',
     teams: [],
     position: 'Défenseur',
-    totalMatches: 0,
-    totalMinutes: 0,
-    totalTrainings: 0,
-    goals: 0,
-    assists: 0,
-    cleanSheets: 0,
-    yellowCards: 0,
-    redCards: 0,
-    trainingAttendanceRate: 0,
-    matchAttendanceRate: 0,
     licenseValid: true,
     paymentValid: true,
     absences: [],
@@ -46,16 +36,8 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Sanitize data for Firestore: convert undefined to null
-    const sanitizedData = { ...formData };
-    for (const key in sanitizedData) {
-      if (sanitizedData[key] === undefined) {
-        sanitizedData[key] = null;
-      }
-    }
-
     const playerData: Player = {
-      ...sanitizedData,
+      ...formData,
       id: player?.id || Date.now().toString(),
       firstName: formData.firstName || '',
       lastName: formData.lastName || '',
@@ -63,19 +45,9 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
       licenseNumber: formData.licenseNumber || '',
       teams: formData.teams || [],
       position: formData.position || 'Défenseur',
-      totalMatches: formData.totalMatches || 0,
-      totalMinutes: formData.totalMinutes || 0,
-      totalTrainings: formData.totalTrainings || 0,
-      goals: formData.goals || 0,
-      assists: formData.assists || 0,
-      cleanSheets: formData.cleanSheets || 0,
-      yellowCards: formData.yellowCards || 0,
-      redCards: formData.redCards || 0,
-      trainingAttendanceRate: formData.trainingAttendanceRate || 0,
-      matchAttendanceRate: formData.matchAttendanceRate || 0,
       licenseValid: formData.licenseValid ?? true,
       paymentValid: formData.paymentValid ?? true,
-      licenseValidationDate: formData.licenseValidationDate || null, // Explicitly set to null if empty
+      licenseValidationDate: formData.licenseValidationDate || undefined,
       absences: formData.absences || [],
       injuries: formData.injuries || [],
       unavailabilities: formData.unavailabilities || [],
@@ -94,7 +66,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
     }
   };
 
-  const teams: Team[] = ['Senior', 'U20', 'U19', 'U18', 'U13-U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
+  const teams: Team[] = ['Senior', 'U20', 'U19', 'U18', 'U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">
@@ -221,122 +193,6 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
             </div>
           </div>
 
-          {/* Statistics (optional for existing players) */}
-          {player && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Statistiques</h3>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Matchs joués
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.totalMatches || 0}
-                    onChange={(e) => setFormData({ ...formData, totalMatches: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Entraînements
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.totalTrainings || 0}
-                    onChange={(e) => setFormData({ ...formData, totalTrainings: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Minutes jouées
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.totalMinutes || 0}
-                    onChange={(e) => setFormData({ ...formData, totalMinutes: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Buts
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.goals || 0}
-                    onChange={(e) => setFormData({ ...formData, goals: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Passes décisives
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.assists || 0}
-                    onChange={(e) => setFormData({ ...formData, assists: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-                
-                {formData.position === 'Gardien' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Clean sheets
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={formData.cleanSheets || 0}
-                      onChange={(e) => setFormData({ ...formData, cleanSheets: parseInt(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    />
-                  </div>
-                )}
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Cartons jaunes
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.yellowCards || 0}
-                    onChange={(e) => setFormData({ ...formData, yellowCards: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Cartons rouges
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.redCards || 0}
-                    onChange={(e) => setFormData({ ...formData, redCards: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Administrative Status */}
           <div className="space-y-4">

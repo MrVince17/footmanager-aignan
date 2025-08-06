@@ -1,7 +1,7 @@
 // src/utils/storage.ts
 import { collection, doc, getDocs, setDoc, deleteDoc, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '../firebase'; // Import the Firestore instance
-import { Player, Performance } from '../types';
+import { Player, Performance, Team, Unavailability } from '../types';
 
 const PLAYERS_COLLECTION = 'players';
 const playersCollectionRef = collection(db, PLAYERS_COLLECTION);
@@ -11,7 +11,20 @@ export const storage = {
   getPlayers: async (): Promise<Player[]> => {
     try {
       const querySnapshot = await getDocs(playersCollectionRef);
-      const players = querySnapshot.docs.map(doc => doc.data() as Player);
+      const players = querySnapshot.docs.map(doc => {
+        const player = doc.data() as Player;
+        // Map 'Senior 1' and 'Senior 2' to 'Senior' and remove duplicates
+        if (player.teams) {
+          const mappedTeams = player.teams.map(team => {
+            if (team === 'Senior 1' || team === 'Senior 2') {
+              return 'Senior';
+            }
+            return team;
+          });
+          player.teams = [...new Set(mappedTeams)] as Team[];
+        }
+        return player;
+      });
       return players;
     } catch (error) {
       console.error("Error fetching players: ", error);
@@ -182,6 +195,41 @@ export const storage = {
         console.log("Batch training delete successful!");
     } catch (error) {
         console.error("Error deleting training details in batch:", error);
+    }
+  },
+
+  addUnavailability: async (playerId: string, unavailability: Unavailability): Promise<void> => {
+    const playerDocRef = doc(db, PLAYERS_COLLECTION, playerId);
+    try {
+        const docSnap = await getDoc(playerDocRef);
+
+        if (docSnap.exists()) {
+            const player = docSnap.data() as Player;
+            const existingUnavailabilities = player.unavailabilities || [];
+            const updatedUnavailabilities = [...existingUnavailabilities, unavailability];
+            await setDoc(playerDocRef, { unavailabilities: updatedUnavailabilities }, { merge: true });
+        } else {
+            console.error(`Player with id ${playerId} not found!`);
+        }
+    } catch (error) {
+        console.error("Error adding unavailability:", error);
+    }
+  },
+
+  deleteUnavailability: async (playerId: string, unavailabilityId: string): Promise<void> => {
+    const playerDocRef = doc(db, PLAYERS_COLLECTION, playerId);
+    try {
+        const docSnap = await getDoc(playerDocRef);
+
+        if (docSnap.exists()) {
+            const player = docSnap.data() as Player;
+            const updatedUnavailabilities = (player.unavailabilities || []).filter(u => u.id !== unavailabilityId);
+            await setDoc(playerDocRef, { unavailabilities: updatedUnavailabilities }, { merge: true });
+        } else {
+            console.error(`Player with id ${playerId} not found!`);
+        }
+    } catch (error) {
+        console.error("Error deleting unavailability:", error);
     }
   },
 };

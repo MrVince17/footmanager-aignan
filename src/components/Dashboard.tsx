@@ -14,7 +14,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { exportToPDF } from "../utils/export";
-import { getTotalTeamEvents } from "../utils/playerUtils";
+import { getTotalTeamEvents, getAge } from "../utils/playerUtils";
 import { Header } from './Header';
 
 interface PlayerSeasonStats {
@@ -99,12 +99,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const [filterTeam, setFilterTeam] = React.useState<Team | 'all'>('all');
   const [isPrinting, setIsPrinting] = React.useState(false);
-  const validatePlayerData = (players: any[]) => {
-    return players.map(player => ({
-      ...player,
-      teams: player.teams && Array.isArray(player.teams) ? player.teams : []
-    }));
-  };
 
   const handleExportClick = () => {
     setIsPrinting(true);
@@ -192,6 +186,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const playersWithSeasonStats = useMemo(() => {
     return players
       .filter(p => filterTeam === 'all' || p.teams.includes(filterTeam))
+      .filter(p => (p.performances || []).some(perf => perf.season === selectedSeason))
       .map((p) => {
         const seasonStats = getPlayerStatsForSeason(p, selectedSeason);
         // Calculate season-specific attendance rates
@@ -224,12 +219,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
         const trainingAttendanceRate =
           allTeamTrainingsForSeason > 0
             ? (seasonStats.presentTrainings / allTeamTrainingsForSeason) * 100
-            : p.trainingAttendanceRate; // Fallback or 0
+            : 0; // Fallback to 0 if no trainings
         const matchAttendanceRate =
           allTeamMatchesForPlayerForSeason > 0
             ? (seasonStats.presentMatches / allTeamMatchesForPlayerForSeason) *
               100
-            : p.matchAttendanceRate; // Fallback or 0
+            : 0; // Fallback to 0 if no matches
 
         return {
           ...p,
@@ -242,11 +237,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const calculateTeamStats = (): TeamStats => {
     const totalPlayers = playersWithSeasonStats.length; // Should this be filtered by players active in the season?
-    const seniors1Count = playersWithSeasonStats.filter((p) =>
-      p.teams.includes("Senior 1")
-    ).length;
-    const seniors2Count = playersWithSeasonStats.filter((p) =>
-      p.teams.includes("Senior 2")
+    const seniorsCount = playersWithSeasonStats.filter((p) =>
+      p.teams.includes("Senior")
     ).length;
 
     const totalAge = playersWithSeasonStats.reduce((sum, player) => {
@@ -293,8 +285,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
     return {
       totalPlayers,
-      seniors1Count,
-      seniors2Count,
+      seniorsCount,
       averageAge,
       totalGoals,
       totalMatches: uniqueTeamMatchesForSeason,
@@ -332,19 +323,29 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const teamDistribution = useMemo(() => {
     const distribution: { [key: string]: number } = {};
-    const filteredPlayers = playersWithSeasonStats.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam));
+    const filteredPlayers = players.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam));
     filteredPlayers.forEach(player => {
       let mainTeam = player.teams[0] || 'Non assigné';
-      if (player.teams.includes('Senior 1')) mainTeam = 'Senior 1';
-      else if (player.teams.includes('Senior 2')) mainTeam = 'Senior 2';
+      if (player.teams.includes('Senior')) mainTeam = 'Senior';
       else if (player.teams.includes('U17')) mainTeam = 'U17';
-      else if (player.teams.includes('Dirigeant') || player.teams.includes('Dirigeante')) mainTeam = 'Dirigeant/Dirigeante';
+      else if (player.teams.includes('Dirigeant/Dirigeante')) mainTeam = 'Dirigeant/Dirigeante';
       else if (player.teams.includes('Arbitre')) mainTeam = 'Arbitre';
 
       distribution[mainTeam] = (distribution[mainTeam] || 0) + 1;
     });
     return distribution;
-  }, [playersWithSeasonStats, filterTeam]);
+  }, [players, filterTeam]);
+
+  const averageAge = useMemo(() => {
+    const playersForAge = players.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam));
+    if (playersForAge.length === 0) {
+      return 0;
+    }
+    const totalAge = playersForAge.reduce((sum, player) => {
+      return sum + getAge(player.dateOfBirth);
+    }, 0);
+    return totalAge / playersForAge.length;
+  }, [players, filterTeam]);
 
   const topScorers = [...playersWithSeasonStats]
     .sort((a, b) => {
@@ -499,7 +500,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <select
                   id="team-filter-dashboard"
                   value={filterTeam}
-                  onChange={(e) => setFilterTeam(e.target.value)}
+                  onChange={(e) => setFilterTeam(e.target.value as Team | 'all')}
                   className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
                 >
                   <option value="all">Toutes les équipes</option>
@@ -515,13 +516,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <StatCard
               title="Total Joueurs"
-              value={stats.totalPlayers}
+              value={Object.values(teamDistribution).reduce((a, b) => a + b, 0)}
               icon={<Users size={24} />}
               color="#DC2626"
             />
             <StatCard
               title="Âge Moyen"
-              value={`${stats.averageAge.toFixed(1)} ans`}
+              value={`${(averageAge || 0).toFixed(1)} ans`}
               icon={<Calendar size={24} />}
               color="#000000"
             />
@@ -533,13 +534,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
             />
             <StatCard
               title="Présence Matchs"
-              value={`${stats.averageMatchAttendance.toFixed(1)}%`}
+              value={`${(stats.averageMatchAttendance || 0).toFixed(1)}%`}
               icon={<Trophy size={24} />}
               color="#000000"
             />
             <StatCard
               title="Présence Entraînements"
-              value={`${stats.averageTrainingAttendance.toFixed(1)}%`}
+              value={`${(stats.averageTrainingAttendance || 0).toFixed(1)}%`}
               icon={<Activity size={24} />}
               color="#DC2626"
             />
@@ -565,21 +566,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     return indexA - indexB;
                   })
                   .map(([team, count]) => (
-                  <div key={team} className="flex items-center justify-between">
-                    <span className="text-gray-600">{team}</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-red-600 h-2 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${(count / stats.totalPlayers) * 100}%`,
-                          }}
-                        ></div>
+                    <div key={team} className="flex items-center justify-between">
+                      <span className="text-gray-600">{team}</span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-red-600 h-2 rounded-full transition-all duration-500"
+                            style={{
+                              width: `${(count / (Object.values(teamDistribution).reduce((a, b) => a + b, 0) || 1)) * 100}%`,
+                            }}
+                          ></div>
+                        </div>
+                        <span className="w-8 text-right font-semibold text-gray-900">{count}</span>
                       </div>
-                      <span className="font-semibold text-gray-900">{count}</span>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
             <div className="bg-white rounded-xl shadow-md p-6">
@@ -709,7 +710,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </span>
                     </div>
                     <span className="font-bold text-lg">
-                      {player.matchAttendanceRateSeason.toFixed(0)}%
+                      {(player.matchAttendanceRateSeason || 0).toFixed(0)}%
                     </span>
                   </div>
                 ))}
@@ -743,7 +744,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </span>
                     </div>
                     <span className="font-bold text-lg">
-                      {player.trainingAttendanceRateSeason.toFixed(0)}%
+                      {(player.trainingAttendanceRateSeason || 0).toFixed(0)}%
                     </span>
                   </div>
                 ))}

@@ -65,7 +65,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit,
     const home = scoreHome ?? '?';
     const away = scoreAway ?? '?';
     if (location === 'home') {
-      return <strong>{home} - {away}</strong>;
+      return `<strong>${home} - ${away}</strong>`;
     } else if (location === 'away') {
       return `${home} - <strong>${away}</strong>`;
     }

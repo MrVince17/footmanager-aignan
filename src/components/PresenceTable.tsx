@@ -143,7 +143,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
           ...header.reduce((acc, _, index) => {
             const maxWidth = Math.max(
               doc.getTextWidth(header[index]),
-              ...rows.map(row => doc.getTextWidth(row[index]?.toString() || ''))
+              ...rows.map(row => doc.getTextWidth((row[index] || '').toString()))
             );
             return { ...acc, [index]: { cellWidth: maxWidth + 10 } };
           }, {}),
@@ -182,8 +182,14 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
     const colWidths = cols.map(col => {
       const addresses = Object.keys(ws).filter(key => key.startsWith(col) && key !== `${col}1`);
       const maxWidth = Math.max(
-        ...addresses.map(addr => ws[addr].v?.toString().length || 0),
-        ws[`${col}1`].v?.toString().length || 0
+        ...addresses.map(addr => {
+            const cell = ws[addr];
+            if (cell && cell.v) {
+                return cell.v.toString().length;
+            }
+            return 0;
+        }),
+        (ws[`${col}1`] && ws[`${col}1`].v) ? ws[`${col}1`].v.toString().length : 0
       );
       return { wch: maxWidth + 2 };
     });

@@ -1,24 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Player } from '../types';
+import { Player, Team } from '../types';
 import { BarChart3, Download, Filter, Trophy, Target, Users, Activity } from 'lucide-react';
 import { exportStatsToExcel, exportToPDF } from '../utils/export';
-import { getTotalTeamEvents } from '../utils/playerUtils';
+import { getTotalTeamEvents, getPlayerStatsForSeason } from '../utils/playerUtils';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 import { Header } from './Header';
-
-interface PlayerSeasonStats {
-  totalMatches: number;
-  totalMinutes: number;
-  goals: number;
-  assists: number;
-  yellowCards: number;
-  redCards: number;
-  cleanSheets: number;
-  presentTrainings: number;
-  presentMatches: number;
-  trainingAttendanceRateSeason: number;
-  matchAttendanceRateSeason: number;
-}
 
 interface ExportPlayerData {
   Nom: string;
@@ -37,58 +23,6 @@ interface ExportPlayerData {
   'Assiduité Entraînements (%)': string;
 }
 
-
-const getPlayerStatsForSeason = (
-  player: Player,
-  season: string,
-  allPlayersForContext: Player[]
-): PlayerSeasonStats => {
-  const seasonPerformances = (player.performances || []).filter(p =>
-    p.season === season
-  );
-
-  let stats: Omit<PlayerSeasonStats, 'trainingAttendanceRateSeason' | 'matchAttendanceRateSeason'> = {
-    totalMatches: 0, totalMinutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, cleanSheets: 0, presentTrainings: 0, presentMatches: 0
-  };
-
-  seasonPerformances.forEach(p => {
-    if (p.present) {
-      if (p.type === 'match') {
-        stats.totalMatches++;
-        stats.presentMatches++;
-        stats.totalMinutes += p.minutesPlayed || 0;
-        stats.goals += p.goals || 0;
-        stats.assists += p.assists || 0;
-        stats.yellowCards += p.yellowCards || 0;
-        stats.redCards += p.redCards || 0;
-        if (p.cleanSheet && player.position === 'Gardien') {
-          stats.cleanSheets++;
-        }
-      } else if (p.type === 'training') {
-        stats.presentTrainings++;
-      }
-    }
-  });
-
-  const allTeamTrainingsForSeason = getTotalTeamEvents(allPlayersForContext, 'training', undefined, season).length;
-  let allTeamMatchesForPlayerForSeason = 0;
-  const uniqueMatchEventsForPlayerSeason = new Set<string>();
-  player.teams.forEach(team => {
-    const teamMatchEvents = getTotalTeamEvents(allPlayersForContext, 'match', team, season);
-    teamMatchEvents.forEach(event => uniqueMatchEventsForPlayerSeason.add(`${event.date}-${event.opponent || 'unknown'}`));
-  });
-  allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
-
-  const trainingAttendanceRateSeason = allTeamTrainingsForSeason > 0
-    ? (stats.presentTrainings / allTeamTrainingsForSeason) * 100
-    : player.trainingAttendanceRate;
-  const matchAttendanceRateSeason = allTeamMatchesForPlayerForSeason > 0
-    ? (stats.presentMatches / allTeamMatchesForPlayerForSeason) * 100
-    : player.matchAttendanceRate;
-
-  return { ...stats, trainingAttendanceRateSeason, matchAttendanceRateSeason };
-};
-
 interface StatisticsProps {
   players: Player[];
   allPlayers: Player[];
@@ -97,7 +31,7 @@ interface StatisticsProps {
 }
 
 export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason, onSeasonChange, allPlayers }) => {
-  const [filterTeam, setFilterTeam] = useState<'all' | 'Senior 1' | 'Senior 2'>('all');
+  const [filterTeam, setFilterTeam] = useState<Team | 'all'>('all');
 
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
@@ -113,10 +47,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
   const filteredPlayersByTeam = playersWithSeasonStats.filter(player => {
     if (filterTeam === 'all') return true;
     if (filterTeam === 'Senior') {
-      return player.teams.some(team => team.toLowerCase().includes('senior'));
-    }
-    if (filterTeam === 'Dirigeant/Dirigeante') {
-      return player.teams.some(team => team.toLowerCase().includes('dirigeant'));
+      return player.teams.some(team => team === 'Senior');
     }
     return player.teams.includes(filterTeam);
   });
@@ -194,24 +125,36 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     const currentTeamPlayers = filteredPlayersByTeam;
     const normalize = (str: string | undefined) => str ? str.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : '';
 
-    const gardiens = currentTeamPlayers.filter(p => normalize(p.position) === 'gardien').length;
-    const defenseurs = currentTeamPlayers.filter(p => normalize(p.position) === 'defenseur').length;
-    const milieux = currentTeamPlayers.filter(p => normalize(p.position) === 'milieu').length;
-    const attaquants = currentTeamPlayers.filter(p => normalize(p.position) === 'attaquant').length;
-
-    const nonJoueurs = currentTeamPlayers.filter(p =>
-      ['dirigeant', 'dirigeant / dirigeante', 'arbitre'].includes(normalize(p.position))
-    ).length;
-
-    const nonDefini = currentTeamPlayers.length - (gardiens + defenseurs + milieux + attaquants + nonJoueurs);
-
-    return {
-      'Gardien': gardiens,
-      'Défenseur': defenseurs,
-      'Milieu': milieux,
-      'Attaquant': attaquants,
-      'Non Défini': nonDefini,
+    const stats: { [key: string]: number } = {
+      'Gardien': 0,
+      'Défenseur': 0,
+      'Milieu': 0,
+      'Attaquant': 0,
+      'Non Joueur': 0,
+      'Coach': 0,
+      'Non Défini': 0,
     };
+
+    currentTeamPlayers.forEach(p => {
+      const normalizedPosition = normalize(p.position);
+      if (normalizedPosition.includes('gardien')) {
+        stats['Gardien']++;
+      } else if (normalizedPosition.includes('defenseur')) {
+        stats['Défenseur']++;
+      } else if (normalizedPosition.includes('milieu')) {
+        stats['Milieu']++;
+      } else if (normalizedPosition.includes('attaquant')) {
+        stats['Attaquant']++;
+      } else if (['dirigeant', 'dirigeant / dirigeante', 'arbitre'].includes(normalizedPosition)) {
+        stats['Non Joueur']++;
+      } else if (p.position && p.position.toUpperCase().includes('C')) {
+        stats['Coach']++;
+      } else {
+        stats['Non Défini']++;
+      }
+    });
+
+    return stats;
   }, [filteredPlayersByTeam]);
 
 
@@ -281,7 +224,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
           <span>Excel</span>
         </button>
       </Header>
-      <div className="bg-white rounded-xl shadow-md p-6">
+      <div className="bg-white rounded-xl shadow-md p-6 no-print" data-html2canvas-ignore>
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center justify-between">
           <div className="flex items-center space-x-2 flex-wrap gap-4">
             <Filter size={20} className="text-gray-400" />
@@ -307,7 +250,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
             <select
               id="team-filter-stats"
               value={filterTeam}
-              onChange={(e) => setFilterTeam(e.target.value)}
+              onChange={(e) => setFilterTeam(e.target.value as Team | 'all')}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
               <option value="all">Toutes les équipes</option>
@@ -325,7 +268,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pdf-grid-spacing">
         <StatCard
           title="Total Buts"
           value={teamStats.totalGoals}
@@ -351,7 +294,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
           color="#000000"
         />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pdf-grid-spacing">
         <StatCard
           title="Présence Matchs"
           value={`${teamStats.averageMatchAttendance.toFixed(1)}%`}
@@ -367,11 +310,11 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
           subtitle="Moyenne d'équipe"
         />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 pdf-grid-spacing">
         <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Répartition par Position</h3>
           <div className="space-y-4">
-            {Object.entries(positionStats).map(([position, count]) => (
+            {Object.entries(positionStats).filter(([, count]) => count > 0).map(([position, count]) => (
               <div key={position} className="flex items-center justify-between">
                 <span className="text-gray-600">{position}</span>
                 <div className="flex items-center space-x-2">
@@ -480,7 +423,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
                           style={{ width: `${player.seasonStats.matchAttendanceRateSeason}%` }}
                         ></div>
                       </div>
-                      <span className="text-sm font-medium">{player.seasonStats.matchAttendanceRateSeason.toFixed(0)}%</span>
+                      <span className="text-sm font-medium">{(player.seasonStats.matchAttendanceRateSeason || 0).toFixed(0)}%</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
@@ -491,7 +434,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
                           style={{ width: `${player.seasonStats.trainingAttendanceRateSeason}%` }}
                         ></div>
                       </div>
-                      <span className="text-sm font-medium">{player.seasonStats.trainingAttendanceRateSeason.toFixed(0)}%</span>
+                      <span className="text-sm font-medium">{(player.seasonStats.trainingAttendanceRateSeason || 0).toFixed(0)}%</span>
                     </div>
                   </td>
                 </tr>

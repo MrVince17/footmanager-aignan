@@ -1,5 +1,70 @@
 import { Player, Performance } from '../types';
 
+export interface PlayerSeasonStats {
+  totalMatches: number;
+  totalMinutes: number;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+  cleanSheets: number;
+  presentTrainings: number;
+  presentMatches: number;
+  trainingAttendanceRateSeason: number;
+  matchAttendanceRateSeason: number;
+}
+
+export const getPlayerStatsForSeason = (
+  player: Player,
+  season: string,
+  allPlayersForContext: Player[]
+): PlayerSeasonStats => {
+  const seasonPerformances = (player.performances || []).filter(p =>
+    p.season === season
+  );
+
+  let stats: Omit<PlayerSeasonStats, 'trainingAttendanceRateSeason' | 'matchAttendanceRateSeason'> = {
+    totalMatches: 0, totalMinutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, cleanSheets: 0, presentTrainings: 0, presentMatches: 0
+  };
+
+  seasonPerformances.forEach(p => {
+    if (p.present) {
+      if (p.type === 'match') {
+        stats.totalMatches++;
+        stats.presentMatches++;
+        stats.totalMinutes += p.minutesPlayed || 0;
+        stats.goals += p.goals || 0;
+        stats.assists += p.assists || 0;
+        stats.yellowCards += p.yellowCards || 0;
+        stats.redCards += p.redCards || 0;
+        if (p.cleanSheet && player.position === 'Gardien') {
+          stats.cleanSheets++;
+        }
+      } else if (p.type === 'training') {
+        stats.presentTrainings++;
+      }
+    }
+  });
+
+  const allTeamTrainingsForSeason = getTotalTeamEvents(allPlayersForContext, 'training', undefined, season).length;
+  let allTeamMatchesForPlayerForSeason = 0;
+  const uniqueMatchEventsForPlayerSeason = new Set<string>();
+  player.teams.forEach(team => {
+    const teamMatchEvents = getTotalTeamEvents(allPlayersForContext, 'match', team, season);
+    teamMatchEvents.forEach(event => uniqueMatchEventsForPlayerSeason.add(`${event.date}-${event.opponent || 'unknown'}`));
+  });
+  allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
+
+  const trainingAttendanceRateSeason = allTeamTrainingsForSeason > 0
+    ? (stats.presentTrainings / allTeamTrainingsForSeason) * 100
+    : 0;
+  const matchAttendanceRateSeason = allTeamMatchesForPlayerForSeason > 0
+    ? (stats.presentMatches / allTeamMatchesForPlayerForSeason) * 100
+    : 0;
+
+  return { ...stats, trainingAttendanceRateSeason, matchAttendanceRateSeason };
+};
+
 export const getPlayerById = (allPlayers: Player[], playerId: string): Player | undefined => {
   if (!allPlayers || !playerId) {
     return undefined;
@@ -8,7 +73,7 @@ export const getPlayerById = (allPlayers: Player[], playerId: string): Player | 
 };
 
 export const getMatchStats = (performances: Performance[]): Record<string, number> => {
-  const matchTypes = ['D2', 'R2', 'CdF', 'CO', 'CR', 'ChD', 'CG', 'CS'];
+  const matchTypes = ['D2', 'R2', 'CdF', 'CO', 'CR', 'ChD', 'CG', 'CS', 'Match Amical'];
   const matchStats: Record<string, number> = {};
 
   matchTypes.forEach(type => {
