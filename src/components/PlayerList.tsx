@@ -369,7 +369,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                   <span>{player.teams.join(', ')}</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-3 gap-4 text-sm">
                   <div className="text-center">
                     <div className="font-semibold text-gray-900">{player.goals}</div>
                     <div className="text-gray-600">Buts</div>
@@ -377,6 +377,10 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                   <div className="text-center">
                     <div className="font-semibold text-gray-900">{player.assists}</div>
                     <div className="text-gray-600">Passes</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-900">{player.totalMinutes}</div>
+                    <div className="text-gray-600">Minutes</div>
                   </div>
                 </div>
 
