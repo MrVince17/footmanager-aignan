@@ -2,7 +2,7 @@ import { Player } from '../types';
 import * as XLSX from 'xlsx';
 import { getPlayerStatsForSeason } from './playerUtils';
 import { getAvailableSeasons } from './seasonUtils';
-const html2pdf = require('html2pdf.js');
+import html2pdf from 'html2pdf.js';
 
 
 
