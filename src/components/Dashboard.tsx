@@ -186,6 +186,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const playersWithSeasonStats = useMemo(() => {
     return players
       .filter(p => filterTeam === 'all' || p.teams.includes(filterTeam))
+      .filter(p => (p.performances || []).some(perf => perf.season === selectedSeason))
       .map((p) => {
         const seasonStats = getPlayerStatsForSeason(p, selectedSeason);
         // Calculate season-specific attendance rates
