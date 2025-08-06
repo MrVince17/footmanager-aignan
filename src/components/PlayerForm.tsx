@@ -80,7 +80,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
     }
   };
 
-  const teams: Team[] = ['Senior', 'U20', 'U19', 'U18', 'U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
+  const teams: Team[] = ['Senior', 'U20', 'U19', 'U18', 'U13-U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-red-600 to-black rounded-xl p-8 text-white">

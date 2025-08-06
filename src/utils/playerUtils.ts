@@ -1,4 +1,4 @@
-import { Player, Performance } from '../types';
+import { Player, Performance, PlayerSeasonStats } from '../types';
 
 export const getPlayerById = (allPlayers: Player[], playerId: string): Player | undefined => {
   if (!allPlayers || !playerId) {
@@ -8,7 +8,7 @@ export const getPlayerById = (allPlayers: Player[], playerId: string): Player | 
 };
 
 export const getMatchStats = (performances: Performance[]): Record<string, number> => {
-  const matchTypes = ['D2', 'R2', 'CdF', 'CO', 'CR', 'ChD', 'CG', 'CS', 'Match Amical'];
+  const matchTypes = ['D2', 'R2', 'CdF', 'CO', 'CR', 'ChD', 'CG', 'CS'];
   const matchStats: Record<string, number> = {};
 
   matchTypes.forEach(type => {
@@ -86,38 +86,53 @@ export const isDateInUnavailabilityPeriod = (player: Player, date: string): bool
     });
 };
 
-export const calculatePlayerStats = (performances: Performance[]) => {
-  let totalMatches = 0;
-  let totalMinutes = 0;
-  let goals = 0;
-  let assists = 0;
-  let yellowCards = 0;
-  let redCards = 0;
-  let cleanSheets = 0;
+export const getPlayerStatsForSeason = (
+  player: Player,
+  season: string,
+  allPlayersForContext: Player[]
+): PlayerSeasonStats => {
+  const seasonPerformances = (player.performances || []).filter(p =>
+    p.season === season
+  );
 
-  if (Array.isArray(performances)) {
-    performances.forEach(perf => {
-      if (perf.type === 'match' && perf.present) {
-        totalMatches++;
-        totalMinutes += perf.minutesPlayed || 0;
-        goals += perf.goals || 0;
-        assists += perf.assists || 0;
-        yellowCards += perf.yellowCards || 0;
-        redCards += perf.redCards || 0;
-        if (perf.cleanSheet) {
-          cleanSheets++;
-        }
-      }
-    });
-  }
-
-  return {
-    totalMatches,
-    totalMinutes,
-    goals,
-    assists,
-    yellowCards,
-    redCards,
-    cleanSheets
+  let stats: Omit<PlayerSeasonStats, 'trainingAttendanceRateSeason' | 'matchAttendanceRateSeason'> = {
+    totalMatches: 0, totalMinutes: 0, goals: 0, assists: 0, yellowCards: 0, redCards: 0, cleanSheets: 0, presentTrainings: 0, presentMatches: 0
   };
+
+  seasonPerformances.forEach(p => {
+    if (p.present) {
+      if (p.type === 'match') {
+        stats.totalMatches++;
+        stats.presentMatches++;
+        stats.totalMinutes += p.minutesPlayed || 0;
+        stats.goals += p.goals || 0;
+        stats.assists += p.assists || 0;
+        stats.yellowCards += p.yellowCards || 0;
+        stats.redCards += p.redCards || 0;
+        if (p.cleanSheet && player.position === 'Gardien') {
+          stats.cleanSheets++;
+        }
+      } else if (p.type === 'training') {
+        stats.presentTrainings++;
+      }
+    }
+  });
+
+  const allTeamTrainingsForSeason = getTotalTeamEvents(allPlayersForContext, 'training', undefined, season).length;
+  let allTeamMatchesForPlayerForSeason = 0;
+  const uniqueMatchEventsForPlayerSeason = new Set<string>();
+  player.teams.forEach(team => {
+    const teamMatchEvents = getTotalTeamEvents(allPlayersForContext, 'match', team, season);
+    teamMatchEvents.forEach(event => uniqueMatchEventsForPlayerSeason.add(`${event.date}-${event.opponent || 'unknown'}`));
+  });
+  allTeamMatchesForPlayerForSeason = uniqueMatchEventsForPlayerSeason.size;
+
+  const trainingAttendanceRateSeason = allTeamTrainingsForSeason > 0
+    ? (stats.presentTrainings / allTeamTrainingsForSeason) * 100
+    : player.trainingAttendanceRate;
+  const matchAttendanceRateSeason = allTeamMatchesForPlayerForSeason > 0
+    ? (stats.presentMatches / allTeamMatchesForPlayerForSeason) * 100
+    : player.matchAttendanceRate;
+
+  return { ...stats, trainingAttendanceRateSeason, matchAttendanceRateSeason };
 };

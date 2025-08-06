@@ -5,7 +5,8 @@ import * as XLSX from 'xlsx';
 import { Header } from './Header';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatDateToYYYYMMDD } from '../utils/dateUtils';
-import { calculatePlayerStats } from '../utils/playerUtils';
+import { getPlayerStatsForSeason } from '../utils/playerUtils';
+import { getAvailableSeasons } from '../utils/seasonUtils';
 
 interface PlayerListProps {
   players: Player[];
@@ -97,13 +98,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           const firstName = row[1] || '';
           const dateOfBirth = formatDateToYYYYMMDD(row[2]);
           const licenseNumber = row[3];
-          const rawTeams = (row[4] || '').split(',').map((t: string) => t.trim());
-          const teams = [...new Set(rawTeams.map(team => {
-            if (team === 'Senior 1' || team === 'Senior 2') {
-              return 'Senior';
-            }
-            return team;
-          }))];
+          const teams = (row[4] || '').split(',').map((t: string) => t.trim());
           const position = row[5] || 'Non défini';
           const licenseValid = row[6] === 'Oui';
           const licenseValidationDate = formatDateToYYYYMMDD(row[7]);
@@ -200,6 +195,9 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     }
     return age;
   };
+
+  const availableSeasons = getAvailableSeasons(players);
+  const latestSeason = availableSeasons.length > 0 ? availableSeasons[0] : '';
 
   return (
     <div className="space-y-6">
@@ -314,7 +312,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
       {/* Players Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sortedAndFilteredPlayers.map((player) => {
-          const stats = calculatePlayerStats(player.performances);
+          const stats = getPlayerStatsForSeason(player, latestSeason, players);
           return (
             <div key={player.id} className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden ${selectedPlayers.includes(player.id) ? 'ring-2 ring-red-500' : ''}`}>
               <div className="p-6">
@@ -390,7 +388,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                   <div className="pt-2 border-t">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Présence matchs</span>
-                      <span className="font-medium">{player.matchAttendanceRate.toFixed(0)}%</span>
+                      <span className="font-medium">{stats.matchAttendanceRateSeason.toFixed(0)}%</span>
                     </div>
                   </div>
                 </div>

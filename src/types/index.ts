@@ -1,4 +1,4 @@
-export type Team = 'Senior' | 'U20' | 'U19' | 'U18' | 'U17' | 'U6-U11' | 'Arbitre' | 'Dirigeant/Dirigeante';
+export type Team = 'Senior 1' | 'Senior 2' | 'U20' | 'U19' | 'U18' | 'U17' | 'U6-U11' | 'Arbitre' | 'Dirigeant/Dirigeante';
 
 export interface Player {
   id: string;
@@ -73,7 +73,7 @@ export interface Performance {
   redCardsDetails?: CardDetail[];
   goalsConcededDetails?: GoalConcededDetail[];
   excused?: boolean;
-  matchType?: 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS' | 'Match Amical';
+  matchType?: 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS';
 }
 
 export interface Scorer {
@@ -96,7 +96,8 @@ export interface GoalConcededDetail {
 
 export interface TeamStats {
   totalPlayers: number;
-  seniorsCount: number;
+  seniors1Count: number;
+  seniors2Count: number;
   averageAge: number;
   totalGoals: number;
   totalMatches: number;
@@ -118,7 +119,7 @@ export interface MatchDisplayData {
   redCardsDetails?: CardDetail[];
   goalsConcededDetails?: GoalConcededDetail[];
   originalPerformanceRef: Performance;
-  matchType?: 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS' | 'Match Amical';
+  matchType?: 'D2' | 'R2' | 'CdF' | 'CO' | 'CG' | 'ChD' | 'CR' | 'CS';
 }
 
 export interface MatchDetails {
@@ -136,4 +137,18 @@ export interface MatchDetails {
   cartonsJaunes: { nom: string; minute: number }[];
   cartonsRouges: { nom: string; minute: number }[];
   prochainMatch?: string;
+}
+
+export interface PlayerSeasonStats {
+  totalMatches: number;
+  totalMinutes: number;
+  goals: number;
+  assists: number;
+  yellowCards: number;
+  redCards: number;
+  cleanSheets: number;
+  presentTrainings: number;
+  presentMatches: number;
+  trainingAttendanceRateSeason: number;
+  matchAttendanceRateSeason: number;
 }

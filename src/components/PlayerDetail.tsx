@@ -21,17 +21,19 @@ import {
 } from 'lucide-react';
 import { exportPlayerStats, exportToPDF } from '../utils/export';
 import { storage } from '../utils/storage';
-import { getMatchStats, getAge, calculatePlayerStats } from '../utils/playerUtils';
+import { getMatchStats, getAge, getPlayerStatsForSeason } from '../utils/playerUtils';
 import { formatDateToDDMMYYYY } from '../utils/dateUtils';
+import { getAvailableSeasons } from '../utils/seasonUtils';
 
 interface PlayerDetailProps {
   player: Player;
   onBack: () => void;
   onEdit: (player: Player) => void;
   onPlayerUpdate: () => void;
+  allPlayers: Player[];
 }
 
-export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEdit, onPlayerUpdate }) => {
+export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEdit, onPlayerUpdate, allPlayers }) => {
   const [showUnavailabilityForm, setShowUnavailabilityForm] = useState(false);
   const [unavailabilityForm, setUnavailabilityForm] = useState({
     startDate: '',
@@ -108,7 +110,9 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
       </div>
     );
 
-  const stats = calculatePlayerStats(player.performances);
+  const availableSeasons = getAvailableSeasons(allPlayers);
+  const latestSeason = availableSeasons.length > 0 ? availableSeasons[0] : '';
+  const stats = getPlayerStatsForSeason(player, latestSeason, allPlayers);
 
   return (
     <div id="player-detail-content" className="space-y-6">
@@ -245,12 +249,12 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">Présence matchs</span>
-                <span className="font-medium">{player.matchAttendanceRate.toFixed(1)}%</span>
+                <span className="font-medium">{stats.matchAttendanceRateSeason.toFixed(1)}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-red-600 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${player.matchAttendanceRate}%` }}
+                  style={{ width: `${stats.matchAttendanceRateSeason}%` }}
                 ></div>
               </div>
             </div>
@@ -258,12 +262,12 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">Présence entraînements</span>
-                <span className="font-medium">{player.trainingAttendanceRate.toFixed(1)}%</span>
+                <span className="font-medium">{stats.trainingAttendanceRateSeason.toFixed(1)}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-black h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${player.trainingAttendanceRate}%` }}
+                  style={{ width: `${stats.trainingAttendanceRateSeason}%` }}
                 ></div>
               </div>
             </div>
@@ -286,7 +290,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <StatCard
               title="Entraînements"
-              value={player.totalTrainings}
+              value={stats.presentTrainings}
               icon={<Activity size={24} />}
               color="#000000"
             />

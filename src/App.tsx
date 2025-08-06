@@ -297,7 +297,7 @@ function App() {
         <Route path="/players" element={<PlayerList players={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} onDeleteMultiple={handleDeleteMultiplePlayers} />} />
         <Route path="/players/add" element={<PlayerFormWrapper onSave={handleSavePlayer} players={players} />} />
         <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
-        <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />
+        <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} allPlayers={players} />} />
         <Route path="/performance" element={<PerformanceEntry players={players} onSavePerformance={handleSavePerformance} />} />
         <Route path="/presence" element={<PresencePage allPlayers={players} onUpdatePlayerStorage={handleUpdatePlayerStorage} />} />
         <Route path="/statistics" element={<Statistics players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
@@ -316,7 +316,7 @@ const PlayerFormWrapper: React.FC<{players?: Player[], onSave: (player: Player) 
   return <PlayerForm player={playerToEdit} onSave={onSave} onCancel={() => navigate('/players')} />;
 };
 
-const PlayerDetailWrapper: React.FC<{players: Player[], onPlayerUpdate: () => Promise<void>, onDeletePlayer: (id: string) => Promise<void>, onEditPlayerRedirect: (id: string) => void}> = ({players, onPlayerUpdate, onDeletePlayer, onEditPlayerRedirect }) => {
+const PlayerDetailWrapper: React.FC<{players: Player[], onPlayerUpdate: () => Promise<void>, onDeletePlayer: (id: string) => Promise<void>, onEditPlayerRedirect: (id: string) => void, allPlayers: Player[]}> = ({players, onPlayerUpdate, onDeletePlayer, onEditPlayerRedirect, allPlayers }) => {
   const { playerId } = useParams<{ playerId: string }>();
   const navigate = useNavigate();
   const player = players.find(p => p.id === playerId);
@@ -329,6 +329,7 @@ const PlayerDetailWrapper: React.FC<{players: Player[], onPlayerUpdate: () => Pr
             onEdit={() => onEditPlayerRedirect(player.id)}
             onPlayerUpdate={onPlayerUpdate}
             onDelete={() => onDeletePlayer(player.id)}
+            allPlayers={allPlayers}
          />;
 };
 
