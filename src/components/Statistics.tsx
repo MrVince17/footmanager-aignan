@@ -367,7 +367,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
           subtitle="Moyenne d'équipe"
         />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pdf-grid-spacing">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 pdf-grid-spacing">
         <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Répartition par Position</h3>
           <div className="space-y-4">
