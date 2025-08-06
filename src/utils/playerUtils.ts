@@ -57,10 +57,10 @@ export const getPlayerStatsForSeason = (
 
   const trainingAttendanceRateSeason = allTeamTrainingsForSeason > 0
     ? (stats.presentTrainings / allTeamTrainingsForSeason) * 100
-    : player.trainingAttendanceRate;
+    : 0;
   const matchAttendanceRateSeason = allTeamMatchesForPlayerForSeason > 0
     ? (stats.presentMatches / allTeamMatchesForPlayerForSeason) * 100
-    : player.matchAttendanceRate;
+    : 0;
 
   return { ...stats, trainingAttendanceRateSeason, matchAttendanceRateSeason };
 };
