@@ -125,33 +125,36 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     const currentTeamPlayers = filteredPlayersByTeam;
     const normalize = (str: string | undefined) => str ? str.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : '';
 
-    const gardiens = currentTeamPlayers.filter(p => normalize(p.position) === 'gardien').length;
-    const defenseurs = currentTeamPlayers.filter(p => normalize(p.position) === 'defenseur').length;
-    const milieux = currentTeamPlayers.filter(p => normalize(p.position) === 'milieu').length;
-    const attaquants = currentTeamPlayers.filter(p => normalize(p.position) === 'attaquant').length;
+    const stats: { [key: string]: number } = {
+      'Gardien': 0,
+      'Défenseur': 0,
+      'Milieu': 0,
+      'Attaquant': 0,
+      'Non Joueur': 0,
+      'Coach': 0,
+      'Non Défini': 0,
+    };
 
-    const nonJoueurs = currentTeamPlayers.filter(p =>
-      ['dirigeant', 'dirigeant / dirigeante', 'arbitre'].includes(normalize(p.position))
-    ).length;
-
-    const categorizedPlayerIds = new Set<string>();
     currentTeamPlayers.forEach(p => {
-        const normalizedPosition = normalize(p.position);
-        if (['gardien', 'defenseur', 'milieu', 'attaquant', 'dirigeant', 'dirigeant / dirigeante', 'arbitre'].includes(normalizedPosition)) {
-            categorizedPlayerIds.add(p.id);
-        }
+      const normalizedPosition = normalize(p.position);
+      if (normalizedPosition.includes('gardien')) {
+        stats['Gardien']++;
+      } else if (normalizedPosition.includes('defenseur')) {
+        stats['Défenseur']++;
+      } else if (normalizedPosition.includes('milieu')) {
+        stats['Milieu']++;
+      } else if (normalizedPosition.includes('attaquant')) {
+        stats['Attaquant']++;
+      } else if (['dirigeant', 'dirigeant / dirigeante', 'arbitre'].includes(normalizedPosition)) {
+        stats['Non Joueur']++;
+      } else if (p.position && p.position.toUpperCase().includes('C')) {
+        stats['Coach']++;
+      } else {
+        stats['Non Défini']++;
+      }
     });
 
-    const nonDefini = currentTeamPlayers.length - categorizedPlayerIds.size;
-
-    return {
-      'Gardien': gardiens,
-      'Défenseur': defenseurs,
-      'Milieu': milieux,
-      'Attaquant': attaquants,
-      'Non Joueur': nonJoueurs,
-      'Non Défini': nonDefini,
-    };
+    return stats;
   }, [filteredPlayersByTeam]);
 
 
