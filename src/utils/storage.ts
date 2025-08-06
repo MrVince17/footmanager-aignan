@@ -1,7 +1,7 @@
 // src/utils/storage.ts
 import { collection, doc, getDocs, setDoc, deleteDoc, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '../firebase'; // Import the Firestore instance
-import { Player, Performance } from '../types';
+import { Player, Performance, Team } from '../types';
 
 const PLAYERS_COLLECTION = 'players';
 const playersCollectionRef = collection(db, PLAYERS_COLLECTION);
@@ -11,7 +11,20 @@ export const storage = {
   getPlayers: async (): Promise<Player[]> => {
     try {
       const querySnapshot = await getDocs(playersCollectionRef);
-      const players = querySnapshot.docs.map(doc => doc.data() as Player);
+      const players = querySnapshot.docs.map(doc => {
+        const player = doc.data() as Player;
+        // Map 'Senior 1' and 'Senior 2' to 'Senior' and remove duplicates
+        if (player.teams) {
+          const mappedTeams = player.teams.map(team => {
+            if (team === 'Senior 1' || team === 'Senior 2') {
+              return 'Senior';
+            }
+            return team;
+          });
+          player.teams = [...new Set(mappedTeams)] as Team[];
+        }
+        return player;
+      });
       return players;
     } catch (error) {
       console.error("Error fetching players: ", error);

@@ -96,7 +96,13 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           const firstName = row[1] || '';
           const dateOfBirth = formatDateToYYYYMMDD(row[2]);
           const licenseNumber = row[3];
-          const teams = (row[4] || '').split(',').map((t: string) => t.trim());
+          const rawTeams = (row[4] || '').split(',').map((t: string) => t.trim());
+          const teams = [...new Set(rawTeams.map(team => {
+            if (team === 'Senior 1' || team === 'Senior 2') {
+              return 'Senior';
+            }
+            return team;
+          }))];
           const position = row[5] || 'Non défini';
           const licenseValid = row[6] === 'Oui';
           const licenseValidationDate = formatDateToYYYYMMDD(row[7]);

@@ -1,4 +1,4 @@
-export type Team = 'Senior 1' | 'Senior 2' | 'U20' | 'U19' | 'U18' | 'U17' | 'U6-U11' | 'Arbitre' | 'Dirigeant/Dirigeante';
+export type Team = 'Senior' | 'U20' | 'U19' | 'U18' | 'U17' | 'U6-U11' | 'Arbitre' | 'Dirigeant/Dirigeante';
 
 export interface Player {
   id: string;
@@ -103,8 +103,7 @@ export interface GoalConcededDetail {
 
 export interface TeamStats {
   totalPlayers: number;
-  seniors1Count: number;
-  seniors2Count: number;
+  seniorsCount: number;
   averageAge: number;
   totalGoals: number;
   totalMatches: number;
