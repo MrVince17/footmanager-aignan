@@ -116,6 +116,6 @@
   }
 
   .pdf-grid-spacing {
-    gap: 0.5rem !important;
+    gap: 12px !important;
   }
 }
