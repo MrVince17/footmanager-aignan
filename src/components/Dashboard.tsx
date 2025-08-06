@@ -336,6 +336,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return distribution;
   }, [players, filterTeam]);
 
+  const averageAge = useMemo(() => {
+    const playersForAge = players.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam));
+    if (playersForAge.length === 0) {
+      return 0;
+    }
+    const totalAge = playersForAge.reduce((sum, player) => {
+      const age =
+        new Date().getFullYear() - new Date(player.dateOfBirth).getFullYear();
+      return sum + age;
+    }, 0);
+    return totalAge / playersForAge.length;
+  }, [players, filterTeam]);
+
   const topScorers = [...playersWithSeasonStats]
     .sort((a, b) => {
       const goalsDiff = b.seasonStats.goals - a.seasonStats.goals;
@@ -511,7 +524,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             />
             <StatCard
               title="Âge Moyen"
-              value={`${(stats.averageAge || 0).toFixed(1)} ans`}
+              value={`${(averageAge || 0).toFixed(1)} ans`}
               icon={<Calendar size={24} />}
               color="#000000"
             />
