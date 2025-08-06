@@ -85,3 +85,39 @@ export const isDateInUnavailabilityPeriod = (player: Player, date: string): bool
       return checkDate >= startDate && checkDate <= endDate;
     });
 };
+
+export const calculatePlayerStats = (performances: Performance[]) => {
+  let totalMatches = 0;
+  let totalMinutes = 0;
+  let goals = 0;
+  let assists = 0;
+  let yellowCards = 0;
+  let redCards = 0;
+  let cleanSheets = 0;
+
+  if (Array.isArray(performances)) {
+    performances.forEach(perf => {
+      if (perf.type === 'match' && perf.present) {
+        totalMatches++;
+        totalMinutes += perf.minutesPlayed || 0;
+        goals += perf.goals || 0;
+        assists += perf.assists || 0;
+        yellowCards += perf.yellowCards || 0;
+        redCards += perf.redCards || 0;
+        if (perf.cleanSheet) {
+          cleanSheets++;
+        }
+      }
+    });
+  }
+
+  return {
+    totalMatches,
+    totalMinutes,
+    goals,
+    assists,
+    yellowCards,
+    redCards,
+    cleanSheets
+  };
+};
