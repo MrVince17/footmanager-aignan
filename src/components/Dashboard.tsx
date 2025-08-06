@@ -242,11 +242,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const calculateTeamStats = (): TeamStats => {
     const totalPlayers = playersWithSeasonStats.length; // Should this be filtered by players active in the season?
-    const seniors1Count = playersWithSeasonStats.filter((p) =>
-      p.teams.includes("Senior 1")
-    ).length;
-    const seniors2Count = playersWithSeasonStats.filter((p) =>
-      p.teams.includes("Senior 2")
+    const seniorsCount = playersWithSeasonStats.filter((p) =>
+      p.teams.includes("Senior")
     ).length;
 
     const totalAge = playersWithSeasonStats.reduce((sum, player) => {
@@ -293,8 +290,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
     return {
       totalPlayers,
-      seniors1Count,
-      seniors2Count,
+      seniorsCount,
       averageAge,
       totalGoals,
       totalMatches: uniqueTeamMatchesForSeason,
@@ -335,8 +331,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const filteredPlayers = playersWithSeasonStats.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam));
     filteredPlayers.forEach(player => {
       let mainTeam = player.teams[0] || 'Non assigné';
-      if (player.teams.includes('Senior 1')) mainTeam = 'Senior 1';
-      else if (player.teams.includes('Senior 2')) mainTeam = 'Senior 2';
+      if (player.teams.includes('Senior')) mainTeam = 'Senior';
       else if (player.teams.includes('U17')) mainTeam = 'U17';
       else if (player.teams.includes('Dirigeant') || player.teams.includes('Dirigeante')) mainTeam = 'Dirigeant/Dirigeante';
       else if (player.teams.includes('Arbitre')) mainTeam = 'Arbitre';

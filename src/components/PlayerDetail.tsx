@@ -21,19 +21,17 @@ import {
 } from 'lucide-react';
 import { exportPlayerStats, exportToPDF } from '../utils/export';
 import { storage } from '../utils/storage';
-import { getMatchStats, getAge, getPlayerStatsForSeason } from '../utils/playerUtils';
+import { getMatchStats, getAge } from '../utils/playerUtils';
 import { formatDateToDDMMYYYY } from '../utils/dateUtils';
-import { getAvailableSeasons } from '../utils/seasonUtils';
 
 interface PlayerDetailProps {
   player: Player;
   onBack: () => void;
   onEdit: (player: Player) => void;
   onPlayerUpdate: () => void;
-  allPlayers: Player[];
 }
 
-export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEdit, onPlayerUpdate, allPlayers }) => {
+export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEdit, onPlayerUpdate }) => {
   const [showUnavailabilityForm, setShowUnavailabilityForm] = useState(false);
   const [unavailabilityForm, setUnavailabilityForm] = useState({
     startDate: '',
@@ -110,9 +108,9 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
       </div>
     );
 
-  const availableSeasons = getAvailableSeasons(allPlayers);
-  const latestSeason = availableSeasons.length > 0 ? availableSeasons[0] : '';
-  const stats = getPlayerStatsForSeason(player, latestSeason, allPlayers);
+  console.log('player.performances', player.performances);
+  console.log('getMatchStats(player.performances)', getMatchStats(player.performances));
+  console.log('player.trainingAttendanceRate', player.trainingAttendanceRate);
 
   return (
     <div id="player-detail-content" className="space-y-6">
@@ -249,12 +247,12 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">Présence matchs</span>
-                <span className="font-medium">{stats.matchAttendanceRateSeason.toFixed(1)}%</span>
+                <span className="font-medium">{player.matchAttendanceRate.toFixed(1)}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-red-600 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${stats.matchAttendanceRateSeason}%` }}
+                  style={{ width: `${player.matchAttendanceRate}%` }}
                 ></div>
               </div>
             </div>
@@ -262,12 +260,12 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">Présence entraînements</span>
-                <span className="font-medium">{stats.trainingAttendanceRateSeason.toFixed(1)}%</span>
+                <span className="font-medium">{player.trainingAttendanceRate.toFixed(1)}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-black h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${stats.trainingAttendanceRateSeason}%` }}
+                  style={{ width: `${player.trainingAttendanceRate}%` }}
                 ></div>
               </div>
             </div>
@@ -280,7 +278,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
         <div className="lg:col-span-1">
           <StatCard
             title="Matchs joués"
-            value={stats.totalMatches}
+            value={player.totalMatches}
             icon={<Trophy size={24} />}
             color="#DC2626"
             stats={getMatchStats(player.performances)}
@@ -290,45 +288,45 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, onBack, onEd
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <StatCard
               title="Entraînements"
-              value={stats.presentTrainings}
+              value={player.totalTrainings}
               icon={<Activity size={24} />}
               color="#000000"
             />
             <StatCard
               title="Minutes jouées"
-              value={stats.totalMinutes}
+              value={player.totalMinutes}
               icon={<Clock size={24} />}
               color="#DC2626"
             />
             <StatCard
               title="Buts marqués"
-              value={stats.goals}
+              value={player.goals}
               icon={<Target size={24} />}
               color="#000000"
             />
             <StatCard
               title="Passes décisives"
-              value={stats.assists}
+              value={player.assists}
               icon={<Users size={24} />}
               color="#DC2626"
             />
             {player.position === 'Gardien' && (
               <StatCard
                 title="Clean Sheets"
-                value={stats.cleanSheets}
+                value={player.cleanSheets}
                 icon={<CheckCircle size={24} />}
                 color="#000000"
               />
             )}
             <StatCard
               title="Cartons jaunes"
-              value={stats.yellowCards}
+              value={player.yellowCards}
               icon={<AlertCircle size={24} />}
               color="#F59E0B"
             />
             <StatCard
               title="Cartons rouges"
-              value={stats.redCards}
+              value={player.redCards}
               icon={<AlertCircle size={24} />}
               color="#EF4444"
             />

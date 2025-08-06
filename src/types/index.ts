@@ -1,4 +1,4 @@
-export type Team = 'Senior 1' | 'Senior 2' | 'U20' | 'U19' | 'U18' | 'U17' | 'U6-U11' | 'Arbitre' | 'Dirigeant/Dirigeante';
+export type Team = 'Senior' | 'U20' | 'U19' | 'U18' | 'U17' | 'U6-U11' | 'Arbitre' | 'Dirigeant/Dirigeante';
 
 export interface Player {
   id: string;
@@ -10,7 +10,14 @@ export interface Player {
   position: 'Gardien' | 'Défenseur' | 'Milieu' | 'Attaquant';
   
   // Statistics
+  totalMatches: number;
+  totalMinutes: number;
   totalTrainings: number;
+  goals: number;
+  assists: number;
+  cleanSheets: number;
+  yellowCards: number;
+  redCards: number;
   trainingAttendanceRate: number;
   matchAttendanceRate: number;
   
@@ -96,8 +103,7 @@ export interface GoalConcededDetail {
 
 export interface TeamStats {
   totalPlayers: number;
-  seniors1Count: number;
-  seniors2Count: number;
+  seniorsCount: number;
   averageAge: number;
   totalGoals: number;
   totalMatches: number;
@@ -137,18 +143,4 @@ export interface MatchDetails {
   cartonsJaunes: { nom: string; minute: number }[];
   cartonsRouges: { nom: string; minute: number }[];
   prochainMatch?: string;
-}
-
-export interface PlayerSeasonStats {
-  totalMatches: number;
-  totalMinutes: number;
-  goals: number;
-  assists: number;
-  yellowCards: number;
-  redCards: number;
-  cleanSheets: number;
-  presentTrainings: number;
-  presentMatches: number;
-  trainingAttendanceRateSeason: number;
-  matchAttendanceRateSeason: number;
 }
