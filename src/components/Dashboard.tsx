@@ -554,21 +554,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     return indexA - indexB;
                   })
                   .map(([team, count]) => (
-                  <div key={team} className="flex items-center justify-between">
-                    <span className="text-gray-600">{team}</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-red-600 h-2 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${(count / stats.totalPlayers) * 100}%`,
-                          }}
-                        ></div>
+                    <div key={team} className="flex items-center">
+                      <span className="w-32 shrink-0 text-gray-600">{team}</span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-red-600 h-2 rounded-full transition-all duration-500"
+                            style={{
+                              width: `${(count / stats.totalPlayers) * 100}%`,
+                            }}
+                          ></div>
+                        </div>
+                        <span className="font-semibold text-gray-900">{count}</span>
                       </div>
-                      <span className="font-semibold text-gray-900">{count}</span>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
             <div className="bg-white rounded-xl shadow-md p-6">
