@@ -281,7 +281,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
           <span>Excel</span>
         </button>
       </Header>
-      <div className="bg-white rounded-xl shadow-md p-6 no-print">
+      <div className="bg-white rounded-xl shadow-md p-6 no-print" data-html2canvas-ignore>
         <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center justify-between">
           <div className="flex items-center space-x-2 flex-wrap gap-4">
             <Filter size={20} className="text-gray-400" />
