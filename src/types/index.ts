@@ -19,6 +19,9 @@ export interface Player {
   injuries: Injury[];
   unavailabilities: Unavailability[];
   performances: Performance[];
+
+  trainingAttendanceRate?: number;
+  matchAttendanceRate?: number;
 }
 
 export interface Absence {
