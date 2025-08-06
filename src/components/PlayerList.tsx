@@ -385,6 +385,25 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                   </div>
                 </div>
 
+                <div className="grid grid-cols-4 gap-2 text-sm pt-3 mt-3 border-t">
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-900">{player.totalMatches}</div>
+                    <div className="text-xs text-gray-600">Matchs</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-900">{player.presentTrainings}</div>
+                    <div className="text-xs text-gray-600">Entraîn.</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-yellow-500">{player.yellowCards}</div>
+                    <div className="text-xs text-gray-600">CJ</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-red-600">{player.redCards}</div>
+                    <div className="text-xs text-gray-600">CR</div>
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center space-x-1">
                     <div className={`w-2 h-2 rounded-full ${player.licenseValid ? 'bg-green-500' : 'bg-red-500'}`}></div>
