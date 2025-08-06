@@ -92,32 +92,37 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, allPlayers, 
     }
   };
 
-  const StatCard: React.FC<{ title: string; value?: string | number; color: string; stats?: Record<string, number> }> =
-    ({ title, value, color, stats }) => (
-      <div className="bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow duration-300 h-full" style={{ borderLeftColor: color }}>
-        <div className="flex justify-between">
-          <div>
-            <p className="text-xs font-medium text-gray-600">{title}</p>
-            <p className="text-xl font-bold text-gray-900 mt-1">{value}</p>
-          </div>
-          <div className="flex flex-col items-center">
-            {stats && (
-              <div className="mt-1 space-y-0.5">
-                {Object.entries(stats).map(([matchType, count]) => (
-                  <div key={matchType} className="text-2xs text-gray-600">
-                    <span className="font-semibold">{matchType}:</span> {count}
-                  </div>
-                ))}
-              </div>
+  const StatCard: React.FC<{ title: string; value?: string | number; color: string; icon: React.ReactNode; stats?: Record<string, number> }> =
+    ({ title, value, color, icon, stats }) => (
+        <div className="bg-white rounded-lg shadow-md p-4 border-l-4 hover:shadow-lg transition-shadow duration-300 h-full" style={{ borderLeftColor: color }}>
+            <div className="flex justify-between items-center">
+                <div>
+                    <p className="text-xs font-medium text-gray-600">{title}</p>
+                    <p className="text-xl font-bold text-gray-900 mt-1">{value}</p>
+                </div>
+                <div className="p-3 rounded-full" style={{ backgroundColor: `${color}20` }}>
+                    <div style={{ color }}>{icon}</div>
+                </div>
+            </div>
+            {stats && Object.values(stats).some(v => v > 0) && (
+                <div className="mt-2 pt-2 border-t border-gray-100">
+                    <div className="grid grid-cols-3 gap-1 text-center">
+                        {Object.entries(stats).map(([matchType, count]) => (
+                            count > 0 && (
+                                <div key={matchType} className="text-2xs text-gray-600">
+                                    <span className="font-semibold">{matchType}</span>
+                                    <p className="text-xs font-bold">{count}</p>
+                                </div>
+                            )
+                        ))}
+                    </div>
+                </div>
             )}
-          </div>
         </div>
-      </div>
     );
 
   console.log('player.performances', player.performances);
   console.log('getMatchStats(player.performances)', getMatchStats(player.performances));
-  console.log('player.trainingAttendanceRate', player.trainingAttendanceRate);
 
   return (
     <div id="player-detail-content" className="space-y-6">
