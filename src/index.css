@@ -114,4 +114,10 @@
   .no-print {
     display: none !important;
   }
+
+  .pdf-spacing {
+    --tw-space-y-reverse: 0 !important;
+    margin-top: -1rem !important;
+    margin-bottom: -1rem !important;
+  }
 }

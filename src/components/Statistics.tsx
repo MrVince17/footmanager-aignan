@@ -251,7 +251,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     );
 
   return (
-    <div id="statistics-content" className="space-y-6">
+    <div id="statistics-content" className="space-y-6 pdf-spacing">
       <Header
         title="Statistiques"
         subtitle="Analysez les performances de votre équipe"
