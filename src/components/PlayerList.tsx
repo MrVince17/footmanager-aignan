@@ -1,9 +1,9 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { Player } from '../types';
+import { Player, Team } from '../types';
 import { Search, Plus, Edit, Trash2, Users, Upload, Download, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Header } from './Header';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { formatDateToYYYYMMDD } from '../utils/dateUtils';
 import { getPlayerStatsForSeason } from '../utils/playerUtils';
 import { getAvailableSeasons } from '../utils/seasonUtils';
@@ -23,7 +23,6 @@ export const PlayerList: React.FC<PlayerListProps> = ({
   onImportPlayers,
   onDeleteMultiple
 }) => {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterPosition, setFilterPosition] = useState<string>('all');
@@ -99,12 +98,12 @@ export const PlayerList: React.FC<PlayerListProps> = ({
           const dateOfBirth = formatDateToYYYYMMDD(row[2]);
           const licenseNumber = row[3];
           const rawTeams = (row[4] || '').split(',').map((t: string) => t.trim());
-          const teams = [...new Set(rawTeams.map(team => {
+          const teams: Team[] = [...new Set(rawTeams.map((team: string) => {
             if (team === 'Senior 1' || team === 'Senior 2') {
               return 'Senior';
             }
-            return team;
-          }))];
+            return team as Team;
+          }))] as Team[];
           const position = row[5] || 'Non défini';
           const licenseValid = row[6] === 'Oui';
           const licenseValidationDate = formatDateToYYYYMMDD(row[7]);
@@ -418,7 +417,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                 <div className="pt-2 border-t">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Présence matchs</span>
-                    <span className="font-medium">{(player.matchAttendanceRate || 0).toFixed(0)}%</span>
+                    <span className="font-medium">{(player.matchAttendanceRateSeason || 0).toFixed(0)}%</span>
                   </div>
                 </div>
               </div>
