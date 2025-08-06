@@ -323,7 +323,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   const teamDistribution = useMemo(() => {
     const distribution: { [key: string]: number } = {};
-    const filteredPlayers = playersWithSeasonStats.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam));
+    const filteredPlayers = players.filter(p => filterTeam === 'all' || p.teams.includes(filterTeam));
     filteredPlayers.forEach(player => {
       let mainTeam = player.teams[0] || 'Non assigné';
       if (player.teams.includes('Senior')) mainTeam = 'Senior';
@@ -334,7 +334,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       distribution[mainTeam] = (distribution[mainTeam] || 0) + 1;
     });
     return distribution;
-  }, [playersWithSeasonStats, filterTeam]);
+  }, [players, filterTeam]);
 
   const topScorers = [...playersWithSeasonStats]
     .sort((a, b) => {
@@ -562,7 +562,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           <div
                             className="bg-red-600 h-2 rounded-full transition-all duration-500"
                             style={{
-                              width: `${(count / stats.totalPlayers) * 100}%`,
+                              width: `${(count / (Object.values(teamDistribution).reduce((a, b) => a + b, 0) || 1)) * 100}%`,
                             }}
                           ></div>
                         </div>
