@@ -505,7 +505,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <StatCard
               title="Total Joueurs"
-              value={stats.totalPlayers}
+              value={Object.values(teamDistribution).reduce((a, b) => a + b, 0)}
               icon={<Users size={24} />}
               color="#DC2626"
             />
