@@ -516,7 +516,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             />
             <StatCard
               title="Âge Moyen"
-              value={`${stats.averageAge.toFixed(1)} ans`}
+              value={`${(stats.averageAge || 0).toFixed(1)} ans`}
               icon={<Calendar size={24} />}
               color="#000000"
             />
@@ -528,13 +528,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
             />
             <StatCard
               title="Présence Matchs"
-              value={`${stats.averageMatchAttendance.toFixed(1)}%`}
+              value={`${(stats.averageMatchAttendance || 0).toFixed(1)}%`}
               icon={<Trophy size={24} />}
               color="#000000"
             />
             <StatCard
               title="Présence Entraînements"
-              value={`${stats.averageTrainingAttendance.toFixed(1)}%`}
+              value={`${(stats.averageTrainingAttendance || 0).toFixed(1)}%`}
               icon={<Activity size={24} />}
               color="#DC2626"
             />
@@ -704,7 +704,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </span>
                     </div>
                     <span className="font-bold text-lg">
-                      {player.matchAttendanceRateSeason.toFixed(0)}%
+                      {(player.matchAttendanceRateSeason || 0).toFixed(0)}%
                     </span>
                   </div>
                 ))}
@@ -738,7 +738,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </span>
                     </div>
                     <span className="font-bold text-lg">
-                      {player.trainingAttendanceRateSeason.toFixed(0)}%
+                      {(player.trainingAttendanceRateSeason || 0).toFixed(0)}%
                     </span>
                   </div>
                 ))}
