@@ -14,7 +14,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { exportToPDF } from "../utils/export";
-import { getTotalTeamEvents } from "../utils/playerUtils";
+import { getTotalTeamEvents, getAge } from "../utils/playerUtils";
 import { Header } from './Header';
 
 interface PlayerSeasonStats {
@@ -342,9 +342,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       return 0;
     }
     const totalAge = playersForAge.reduce((sum, player) => {
-      const age =
-        new Date().getFullYear() - new Date(player.dateOfBirth).getFullYear();
-      return sum + age;
+      return sum + getAge(player.dateOfBirth);
     }, 0);
     return totalAge / playersForAge.length;
   }, [players, filterTeam]);
