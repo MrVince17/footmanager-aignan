@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Player } from '../types';
+import { Player, Team } from '../types';
 import { BarChart3, Download, Filter, Trophy, Target, Users, Activity } from 'lucide-react';
 import { exportStatsToExcel, exportToPDF } from '../utils/export';
-import { getTotalTeamEvents, getPlayerStatsForSeason, PlayerSeasonStats } from '../utils/playerUtils';
+import { getTotalTeamEvents, getPlayerStatsForSeason } from '../utils/playerUtils';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 import { Header } from './Header';
 
@@ -31,7 +31,7 @@ interface StatisticsProps {
 }
 
 export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason, onSeasonChange, allPlayers }) => {
-  const [filterTeam, setFilterTeam] = useState<'all' | 'Senior 1' | 'Senior 2'>('all');
+  const [filterTeam, setFilterTeam] = useState<Team | 'all'>('all');
 
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
@@ -47,10 +47,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
   const filteredPlayersByTeam = playersWithSeasonStats.filter(player => {
     if (filterTeam === 'all') return true;
     if (filterTeam === 'Senior') {
-      return player.teams.some(team => team.toLowerCase().includes('senior'));
-    }
-    if (filterTeam === 'Dirigeant/Dirigeante') {
-      return player.teams.some(team => team.toLowerCase().includes('dirigeant'));
+      return player.teams.some(team => team === 'Senior');
     }
     return player.teams.includes(filterTeam);
   });
@@ -250,7 +247,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
             <select
               id="team-filter-stats"
               value={filterTeam}
-              onChange={(e) => setFilterTeam(e.target.value)}
+              onChange={(e) => setFilterTeam(e.target.value as Team | 'all')}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
             >
               <option value="all">Toutes les équipes</option>
