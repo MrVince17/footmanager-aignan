@@ -380,7 +380,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
         <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Répartition par Position</h3>
           <div className="space-y-4">
-            {Object.entries(positionStats).map(([position, count]) => (
+            {Object.entries(positionStats).filter(([, count]) => count > 0).map(([position, count]) => (
               <div key={position} className="flex items-center justify-between">
                 <span className="text-gray-600">{position}</span>
                 <div className="flex items-center space-x-2">
