@@ -99,12 +99,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const [filterTeam, setFilterTeam] = React.useState<Team | 'all'>('all');
   const [isPrinting, setIsPrinting] = React.useState(false);
-  const validatePlayerData = (players: any[]) => {
-    return players.map(player => ({
-      ...player,
-      teams: player.teams && Array.isArray(player.teams) ? player.teams : []
-    }));
-  };
 
   const handleExportClick = () => {
     setIsPrinting(true);
@@ -224,12 +218,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
         const trainingAttendanceRate =
           allTeamTrainingsForSeason > 0
             ? (seasonStats.presentTrainings / allTeamTrainingsForSeason) * 100
-            : p.trainingAttendanceRate; // Fallback or 0
+            : 0; // Fallback to 0 if no trainings
         const matchAttendanceRate =
           allTeamMatchesForPlayerForSeason > 0
             ? (seasonStats.presentMatches / allTeamMatchesForPlayerForSeason) *
               100
-            : p.matchAttendanceRate; // Fallback or 0
+            : 0; // Fallback to 0 if no matches
 
         return {
           ...p,
@@ -333,7 +327,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       let mainTeam = player.teams[0] || 'Non assigné';
       if (player.teams.includes('Senior')) mainTeam = 'Senior';
       else if (player.teams.includes('U17')) mainTeam = 'U17';
-      else if (player.teams.includes('Dirigeant') || player.teams.includes('Dirigeante')) mainTeam = 'Dirigeant/Dirigeante';
+      else if (player.teams.includes('Dirigeant/Dirigeante')) mainTeam = 'Dirigeant/Dirigeante';
       else if (player.teams.includes('Arbitre')) mainTeam = 'Arbitre';
 
       distribution[mainTeam] = (distribution[mainTeam] || 0) + 1;
@@ -494,7 +488,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <select
                   id="team-filter-dashboard"
                   value={filterTeam}
-                  onChange={(e) => setFilterTeam(e.target.value)}
+                  onChange={(e) => setFilterTeam(e.target.value as Team | 'all')}
                   className="block w-full max-w-xs pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md shadow-sm"
                 >
                   <option value="all">Toutes les équipes</option>
