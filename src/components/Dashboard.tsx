@@ -554,8 +554,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     return indexA - indexB;
                   })
                   .map(([team, count]) => (
-                    <div key={team} className="flex items-center">
-                      <span className="w-32 shrink-0 text-gray-600">{team}</span>
+                    <div key={team} className="flex items-center justify-between">
+                      <span className="text-gray-600">{team}</span>
                       <div className="flex items-center space-x-2">
                         <div className="w-32 bg-gray-200 rounded-full h-2">
                           <div
@@ -565,7 +565,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             }}
                           ></div>
                         </div>
-                        <span className="font-semibold text-gray-900">{count}</span>
+                        <span className="w-8 text-right font-semibold text-gray-900">{count}</span>
                       </div>
                     </div>
                   ))}
