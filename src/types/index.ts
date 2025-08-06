@@ -9,18 +9,6 @@ export interface Player {
   teams: Team[];
   position: 'Gardien' | 'Défenseur' | 'Milieu' | 'Attaquant';
   
-  // Statistics
-  totalMatches: number;
-  totalMinutes: number;
-  totalTrainings: number;
-  goals: number;
-  assists: number;
-  cleanSheets: number;
-  yellowCards: number;
-  redCards: number;
-  trainingAttendanceRate: number;
-  matchAttendanceRate: number;
-  
   // Administrative
   licenseValid: boolean;
   licenseValidationDate?: string;

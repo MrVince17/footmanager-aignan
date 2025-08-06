@@ -1,13 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Player } from '../types';
 import { Search, Plus, Edit, Trash2, Users, Upload, Download, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Header } from './Header';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatDateToYYYYMMDD } from '../utils/dateUtils';
+import { getPlayerStatsForSeason } from '../utils/playerUtils';
+import { getAvailableSeasons } from '../utils/seasonUtils';
 
 interface PlayerListProps {
   players: Player[];
+  allPlayers: Player[];
   onDeletePlayer: (playerId: string) => void;
   onImportPlayers: (importedPlayers: Player[]) => void;
   onDeleteMultiple: (playerIds: string[]) => void;
@@ -15,8 +18,7 @@ interface PlayerListProps {
 
 export const PlayerList: React.FC<PlayerListProps> = ({
   players,
-  // onSelectPlayer, // Supprimé
-  // onEditPlayer, // Supprimé
+  allPlayers,
   onDeletePlayer,
   onImportPlayers,
   onDeleteMultiple
@@ -119,17 +121,6 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             licenseValid: licenseValid,
             licenseValidationDate: licenseValidationDate,
             paymentValid: paymentValid,
-            // Default values for all other fields to ensure they are not undefined
-            totalMatches: 0,
-            totalMinutes: 0,
-            totalTrainings: 0,
-            goals: 0,
-            assists: 0,
-            cleanSheets: 0,
-            yellowCards: 0,
-            redCards: 0,
-            trainingAttendanceRate: 0,
-            matchAttendanceRate: 0,
             absences: [],
             injuries: [],
             unavailabilities: [],
@@ -163,7 +154,17 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     }
   };
 
-  const sortedAndFilteredPlayers = players
+  const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
+  const latestSeason = availableSeasons[0] || '';
+
+  const playersWithStats = useMemo(() => {
+    return players.map(player => {
+      const stats = getPlayerStatsForSeason(player, latestSeason, allPlayers);
+      return { ...player, ...stats };
+    });
+  }, [players, latestSeason, allPlayers]);
+
+  const sortedAndFilteredPlayers = playersWithStats
     .filter(player => {
       const matchesSearch =
         player.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
