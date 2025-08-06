@@ -203,13 +203,22 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       ['dirigeant', 'dirigeant / dirigeante', 'arbitre'].includes(normalize(p.position))
     ).length;
 
-    const nonDefini = currentTeamPlayers.length - (gardiens + defenseurs + milieux + attaquants + nonJoueurs);
+    const categorizedPlayerIds = new Set<string>();
+    currentTeamPlayers.forEach(p => {
+        const normalizedPosition = normalize(p.position);
+        if (['gardien', 'defenseur', 'milieu', 'attaquant', 'dirigeant', 'dirigeant / dirigeante', 'arbitre'].includes(normalizedPosition)) {
+            categorizedPlayerIds.add(p.id);
+        }
+    });
+
+    const nonDefini = currentTeamPlayers.length - categorizedPlayerIds.size;
 
     return {
       'Gardien': gardiens,
       'Défenseur': defenseurs,
       'Milieu': milieux,
       'Attaquant': attaquants,
+      'Non Joueur': nonJoueurs,
       'Non Défini': nonDefini,
     };
   }, [filteredPlayersByTeam]);
