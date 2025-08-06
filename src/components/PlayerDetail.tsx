@@ -259,7 +259,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, allPlayers, 
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">Présence matchs</span>
-                <span className="font-medium">{playerStats.matchAttendanceRateSeason.toFixed(1)}%</span>
+                <span className="font-medium">{(playerStats.matchAttendanceRateSeason || 0).toFixed(1)}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
@@ -272,7 +272,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, allPlayers, 
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">Présence entraînements</span>
-                <span className="font-medium">{playerStats.trainingAttendanceRateSeason.toFixed(1)}%</span>
+                <span className="font-medium">{(playerStats.trainingAttendanceRateSeason || 0).toFixed(1)}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
