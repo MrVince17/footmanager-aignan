@@ -332,7 +332,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                     className="mt-1 h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
                   />
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    <h3 className="text-base font-semibold text-gray-900 mb-1">
                       {player.firstName} {player.lastName}
                     </h3>
                   <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
