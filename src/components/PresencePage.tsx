@@ -26,7 +26,8 @@ export const PresencePage: React.FC<PresencePageProps> = ({ allPlayers, onUpdate
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
   const trainings = useMemo(() => {
-    const allTrainings = getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason);
+    const allTrainings = getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return allTrainings.map(training => {
       const presentPlayers = allPlayers.filter(player =>
