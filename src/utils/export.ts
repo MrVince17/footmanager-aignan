@@ -1,6 +1,7 @@
 import { Player } from '../types';
 import * as XLSX from 'xlsx';
-import { getPlayerStatsForSeason, getAvailableSeasons } from './playerUtils';
+import { getPlayerStatsForSeason } from './playerUtils';
+import { getAvailableSeasons } from './seasonUtils';
 const html2pdf = require('html2pdf.js');
 
 
