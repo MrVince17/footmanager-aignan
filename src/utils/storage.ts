@@ -3,6 +3,32 @@ import { collection, doc, getDocs, setDoc, deleteDoc, writeBatch, getDoc } from 
 import { db } from '../firebase'; // Import the Firestore instance
 import { Player, Performance, Team, Unavailability } from '../types';
 
+// Helper to remove undefined values recursively from objects/arrays before Firestore writes
+function sanitizeObject<T>(obj: T): T {
+  if (Array.isArray(obj)) {
+    return (obj
+      .map((item) => (item && typeof item === 'object' ? sanitizeObject(item as any) : item))
+      .filter((item) => item !== undefined)) as unknown as T;
+  }
+  if (obj && typeof obj === 'object') {
+    const clean: Record<string, any> = {};
+    Object.entries(obj as Record<string, any>).forEach(([key, value]) => {
+      if (value === undefined) {
+        return;
+      }
+      if (Array.isArray(value)) {
+        clean[key] = sanitizeObject(value);
+      } else if (value && typeof value === 'object') {
+        clean[key] = sanitizeObject(value);
+      } else {
+        clean[key] = value;
+      }
+    });
+    return clean as T;
+  }
+  return obj;
+}
+
 const PLAYERS_COLLECTION = 'players';
 const playersCollectionRef = collection(db, PLAYERS_COLLECTION);
 
@@ -180,7 +206,8 @@ export const storage = {
 
       if (performanceUpdated) {
         const playerDocRef = doc(db, PLAYERS_COLLECTION, player.id);
-        batch.update(playerDocRef, { performances: updatedPerformances });
+        const sanitizedPerformances = sanitizeObject(updatedPerformances);
+        batch.update(playerDocRef, { performances: sanitizedPerformances });
       }
     });
 
@@ -205,10 +232,10 @@ export const storage = {
           const performances = player.performances || [];
 
           let found = false;
-          const updatedPerformances: Performance[] = performances.map(p => {
+          let updatedPerformances: Performance[] = performances.map(p => {
             if (p.type === 'match' && p.date === originalPerf.date && (p.opponent || '') === (originalPerf.opponent || '')) {
               found = true;
-              return {
+              const merged: Performance = {
                 ...p,
                 present: perfUpdate.present,
                 minutesPlayed: perfUpdate.present ? perfUpdate.minutesPlayed : 0,
@@ -217,12 +244,13 @@ export const storage = {
                 yellowCards: perfUpdate.present ? perfUpdate.yellowCards : 0,
                 redCards: perfUpdate.present ? perfUpdate.redCards : 0,
               } as Performance;
+              return merged;
             }
             return p;
           });
 
           if (!found) {
-            const newPerf: Performance = {
+            const newPerf: Performance = sanitizeObject({
               id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
               type: 'match',
               date: originalPerf.date,
@@ -236,11 +264,13 @@ export const storage = {
               assists: perfUpdate.present ? perfUpdate.assists : 0,
               yellowCards: perfUpdate.present ? perfUpdate.yellowCards : 0,
               redCards: perfUpdate.present ? perfUpdate.redCards : 0,
-            };
+            } as Performance);
             updatedPerformances.push(newPerf);
           }
 
-          batch.update(playerDocRef, { performances: updatedPerformances });
+          // Sanitize all performances to strip undefined before writing
+          const sanitizedPerformances = sanitizeObject(updatedPerformances);
+          batch.update(playerDocRef, { performances: sanitizedPerformances });
         }
       } catch (error) {
         console.error('Error updating match performances for player', perfUpdate.playerId, error);
