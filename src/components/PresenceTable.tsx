@@ -195,15 +195,12 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
             p.type === 'match' && p.season === selectedSeason && p.date === event.date && (p.opponent || '') === (event.opponent || '')
           );
           const minutes = perf?.minutesPlayed || 0;
-          const present = !!perf?.present && minutes > 0;
+          const present = !!perf?.present;
           if (present) {
-            // Compute player's match attendance percentage for the season
-            // Avoid circular import by local calc if needed, but we rely on stats util elsewhere
-            // We recompute total team matches for player's teams and presence across season
             const totalTeamEvents = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
             let playerPresentMatches = 0;
             (player.performances || []).forEach(p => {
-              if (p.type === 'match' && p.season === selectedSeason && p.present && (p.minutesPlayed || 0) > 0) {
+              if (p.type === 'match' && p.season === selectedSeason && p.present) {
                 playerPresentMatches++;
               }
             });
