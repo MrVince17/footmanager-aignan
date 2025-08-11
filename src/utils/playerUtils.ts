@@ -111,10 +111,10 @@ export const getTotalTeamEvents = (
   allPlayers: Player[],
   type: 'training' | 'match',
   teamName?: import('../types').Team,
-  season?: string, // Optional season filter
-  matchType?: string // Optional match type filter
-): { date: string, opponent?: string, season: string }[] => {
-  const uniqueEvents = new Map<string, { date: string, opponent?: string, season: string }>();
+  season?: string,
+  matchType?: string
+): { id?: string, date: string, opponent?: string, season: string }[] => {
+  const uniqueEvents = new Map<string, { id?: string, date: string, opponent?: string, season: string }>();
 
   for (const player of allPlayers) {
     if (teamName && !player.teams.includes(teamName)) {

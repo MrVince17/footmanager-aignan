@@ -258,7 +258,11 @@ function App() {
     } else if (type === 'matchDelete') {
       await storage.deleteMatch(refData);
     } else if (type === 'trainingDelete') {
-      await storage.deleteTraining(refData);
+      await storage.deleteTraining(refData.date);
+    } else if (type === 'matchPerformancesUpdate') {
+      await storage.updateMatchPerformances(refData.match.originalPerformanceRef, refData.performances);
+    } else if (type === 'trainingPresenceUpdate') {
+      await storage.updateTrainingPresence(refData.training, refData.presences);
     }
     await refreshPlayers();
   };

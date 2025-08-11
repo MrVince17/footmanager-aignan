@@ -36,42 +36,49 @@ export const PresencePage: React.FC<PresencePageProps> = ({ allPlayers, onUpdate
   const trainings = useMemo(() => {
     return getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .map(training => {
+      .map(event => {
         const presentPlayers = allPlayers.filter(player =>
-          player.performances?.some(p => p.type === 'training' && p.date === training.date && p.present)
+          player.performances?.some(p => p.type === 'training' && p.date === event.date && p.present)
         );
+        const sortedPresentPlayers = [...presentPlayers].sort((a, b) => {
+          const ln = a.lastName.localeCompare(b.lastName);
+          return ln !== 0 ? ln : a.firstName.localeCompare(b.firstName);
+        });
         const teams = new Set<string>();
-        presentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
+        sortedPresentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
         return {
-          date: training.date,
+          date: event.date,
           team: Array.from(teams).join(', ') || 'N/A',
-          presentCount: presentPlayers.length,
-          presentPlayers: presentPlayers.map(p => `${p.firstName} ${p.lastName}`),
-          originalPerformanceRef: training,
+          presentCount: sortedPresentPlayers.length,
+          presentPlayers: sortedPresentPlayers.map(p => `${p.firstName} ${p.lastName}`),
+          originalPerformanceRef: { ...event, type: 'training' as const },
         };
       });
   }, [allPlayers, selectedSeason]);
 
   const matches = useMemo(() => {
-    return getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).map(match => {
+    return getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).map(event => {
       const presentPlayers = allPlayers.filter(player =>
         player.performances?.some(p =>
           p.type === 'match' &&
-          p.date === match.date &&
-          p.opponent === match.opponent &&
-          p.present &&
-          (p.minutesPlayed ?? 0) > 0
+          p.date === event.date &&
+          p.opponent === event.opponent &&
+          p.present
         )
       );
+      const sortedPresentPlayers = [...presentPlayers].sort((a, b) => {
+        const ln = a.lastName.localeCompare(b.lastName);
+        return ln !== 0 ? ln : a.firstName.localeCompare(b.firstName);
+      });
       const teams = new Set<string>();
-      presentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
+      sortedPresentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
       return {
-        date: match.date,
-        opponent: match.opponent,
+        date: event.date,
+        opponent: event.opponent,
         team: Array.from(teams).join(', ') || 'N/A',
-        presentCount: presentPlayers.length,
-        presentPlayers: presentPlayers.map(p => `${p.firstName} ${p.lastName}`),
-        originalPerformanceRef: match,
+        presentCount: sortedPresentPlayers.length,
+        presentPlayers: sortedPresentPlayers.map(p => `${p.firstName} ${p.lastName}`),
+        originalPerformanceRef: { ...event, type: 'match' as const },
       };
     });
   }, [allPlayers, selectedSeason]);

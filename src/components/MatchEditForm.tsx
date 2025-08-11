@@ -100,17 +100,19 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex justify-center items-center">
-      <div className="relative p-8 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-        <h3 className="text-2xl font-semibold mb-6 text-center text-gray-700">Modifier le Match</h3>
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-          aria-label="Fermer"
-        >
-          &times;
-        </button>
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 h-full w-full z-50 flex justify-center items-center">
+      <div className="relative border w-full max-w-2xl shadow-lg rounded-md bg-white max-h-[90vh] flex flex-col">
+        <div className="p-6 border-b sticky top-0 bg-white z-10">
+          <h3 className="text-2xl font-semibold text-center text-gray-700">Modifier le Match</h3>
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+            aria-label="Fermer"
+          >
+            &times;
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
           <div>
             <label htmlFor="match-date" className="block text-sm font-medium text-gray-700 mb-1">Date</label>
             <input
@@ -383,7 +385,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
             </button>
           </div>
 
-          <div className="pt-6 flex justify-end space-x-3">
+          <div className="pt-6 flex justify-end space-x-3 border-t sticky bottom-0 bg-white">
             <button
               type="button"
               onClick={onClose}

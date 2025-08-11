@@ -103,10 +103,8 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
     const groupedByMatch: Record<string, Performance[]> = {};
     seasonPerformances.forEach((p) => {
       const opponent = p.opponent || 'UnknownOpponent';
-      const location = p.location || 'unknownLocation';
-      const scoreHome = p.scoreHome !== undefined ? String(p.scoreHome) : 'N/A';
-      const scoreAway = p.scoreAway !== undefined ? String(p.scoreAway) : 'N/A';
-      const matchId = `${p.date}-${opponent}-${location}-${scoreHome}-${scoreAway}`;
+      // Group by date + opponent to avoid duplicates when some entries miss score/location
+      const matchId = `${p.season}-${p.date}-${opponent}`;
 
       if (!groupedByMatch[matchId]) {
         groupedByMatch[matchId] = [];
@@ -118,7 +116,12 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
     const matches: MatchDisplayData[] = Object.entries(groupedByMatch)
       .map(([id, performances]) => {
         if (performances.length === 0) return null;
-        const refPerf = performances[0];
+        // Choose ref performance that has the most info (score/location)
+        const refPerf = [...performances].sort((a, b) => {
+          const scoreA = (a.scoreHome !== undefined ? 1 : 0) + (a.scoreAway !== undefined ? 1 : 0) + (a.location ? 1 : 0);
+          const scoreB = (b.scoreHome !== undefined ? 1 : 0) + (b.scoreAway !== undefined ? 1 : 0) + (b.location ? 1 : 0);
+          return scoreB - scoreA;
+        })[0];
         return {
           id,
           date: refPerf.date,

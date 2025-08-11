@@ -361,6 +361,48 @@ export const Dashboard: React.FC<DashboardProps> = ({
     })
     .slice(0, 3);
 
+  const topAssisters = [...playersWithSeasonStats]
+    .sort((a, b) => {
+      const assistsDiff = b.seasonStats.assists - a.seasonStats.assists;
+      if (assistsDiff !== 0) {
+        return assistsDiff;
+      }
+      const lastNameDiff = a.lastName.localeCompare(b.lastName);
+      if (lastNameDiff !== 0) {
+        return lastNameDiff;
+      }
+      return a.firstName.localeCompare(b.firstName);
+    })
+    .slice(0, 3);
+
+  const topYellowCards = [...playersWithSeasonStats]
+    .sort((a, b) => {
+      const ycDiff = b.seasonStats.yellowCards - a.seasonStats.yellowCards;
+      if (ycDiff !== 0) {
+        return ycDiff;
+      }
+      const lastNameDiff = a.lastName.localeCompare(b.lastName);
+      if (lastNameDiff !== 0) {
+        return lastNameDiff;
+      }
+      return a.firstName.localeCompare(b.firstName);
+    })
+    .slice(0, 3);
+
+  const topRedCards = [...playersWithSeasonStats]
+    .sort((a, b) => {
+      const rcDiff = b.seasonStats.redCards - a.seasonStats.redCards;
+      if (rcDiff !== 0) {
+        return rcDiff;
+      }
+      const lastNameDiff = a.lastName.localeCompare(b.lastName);
+      if (lastNameDiff !== 0) {
+        return lastNameDiff;
+      }
+      return a.firstName.localeCompare(b.firstName);
+    })
+    .slice(0, 3);
+
   const bestMatchAttendance = [...playersWithSeasonStats]
     .sort((a, b) => {
       const attendanceDiff = b.matchAttendanceRateSeason - a.matchAttendanceRateSeason;
@@ -678,6 +720,102 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </span>
                     </div>
                     <span className="font-bold text-lg">{player.seasonStats.goals}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Meilleurs Passeurs
+              </h3>
+              <div className="space-y-3">
+                {topAssisters.map((player, index) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                          index === 0
+                            ? "bg-blue-600"
+                            : index === 1
+                            ? "bg-black"
+                            : "bg-gray-500"
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                      <span className="font-medium">
+                        {player.firstName} {player.lastName}
+                      </span>
+                    </div>
+                    <span className="font-bold text-lg">{player.seasonStats.assists}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Plus de Cartons Jaunes
+              </h3>
+              <div className="space-y-3">
+                {topYellowCards.map((player, index) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                          index === 0
+                            ? "bg-yellow-500"
+                            : index === 1
+                            ? "bg-black"
+                            : "bg-gray-500"
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                      <span className="font-medium">
+                        {player.firstName} {player.lastName}
+                      </span>
+                    </div>
+                    <span className="font-bold text-lg">{player.seasonStats.yellowCards}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Plus de Cartons Rouges
+              </h3>
+              <div className="space-y-3">
+                {topRedCards.map((player, index) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                          index === 0
+                            ? "bg-red-600"
+                            : index === 1
+                            ? "bg-black"
+                            : "bg-gray-500"
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                      <span className="font-medium">
+                        {player.firstName} {player.lastName}
+                      </span>
+                    </div>
+                    <span className="font-bold text-lg">{player.seasonStats.redCards}</span>
                   </div>
                 ))}
               </div>
