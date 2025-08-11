@@ -173,12 +173,86 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
       return;
     }
 
+    // For matches, export rows: Nom, Prénom, Date du match, Minutes jouées, % Présence (saison)
+    if (type === 'match') {
+      const events = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      const header = [
+        'Nom',
+        'Prénom',
+        'Date du match',
+        'Minutes jouées',
+        '% Présence (saison)'
+      ];
+
+      const rows: (string | number)[][] = [];
+
+      // Build per player per match rows, only for players who have minutes > 0
+      for (const event of events) {
+        for (const player of allPlayers) {
+          const perf = (player.performances || []).find(p =>
+            p.type === 'match' && p.season === selectedSeason && p.date === event.date && (p.opponent || '') === (event.opponent || '')
+          );
+          const minutes = perf?.minutesPlayed || 0;
+          const present = !!perf?.present && minutes > 0;
+          if (present) {
+            // Compute player's match attendance percentage for the season
+            // Avoid circular import by local calc if needed, but we rely on stats util elsewhere
+            // We recompute total team matches for player's teams and presence across season
+            const totalTeamEvents = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
+            let playerPresentMatches = 0;
+            (player.performances || []).forEach(p => {
+              if (p.type === 'match' && p.season === selectedSeason && p.present && (p.minutesPlayed || 0) > 0) {
+                playerPresentMatches++;
+              }
+            });
+            const presencePct = totalTeamEvents > 0 ? ((playerPresentMatches / totalTeamEvents) * 100) : 0;
+
+            rows.push([
+              player.lastName,
+              player.firstName,
+              new Date(event.date).toLocaleDateString('fr-FR'),
+              minutes,
+              `${presencePct.toFixed(1)} %`
+            ]);
+          }
+        }
+      }
+
+      const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+      const wb = XLSX.utils.book_new();
+      const sheetName = 'Présences Matchs - Détails';
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+      // Auto-fit columns
+      const cols = Object.keys(ws).filter(key => key.endsWith('1')).map(key => key.replace('1', ''));
+      const colWidths = cols.map(col => {
+        const addresses = Object.keys(ws).filter(key => key.startsWith(col) && key !== `${col}1`);
+        const maxWidth = Math.max(
+          ...addresses.map(addr => {
+              const cell = ws[addr];
+              if (cell && cell.v) {
+                  return cell.v.toString().length;
+              }
+              return 0;
+          }),
+          (ws[`${col}1`] && ws[`${col}1`].v) ? ws[`${col}1`].v.toString().length : 0
+        );
+        return { wch: Math.min(maxWidth + 2, 40) };
+      });
+      (ws as any)['!cols'] = colWidths;
+
+      XLSX.writeFile(wb, `presences_match_Saison_${selectedSeason}.xlsx`);
+      return;
+    }
+
+    // Default (trainings): keep matrix export
     const { header, rows, totalRow } = generatePresenceData();
     const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totalRow]);
 
     const wb = XLSX.utils.book_new();
-    const sheetName =
-      type === "training" ? "Présences Entraînements" : "Présences Matchs";
+    const sheetName = 'Présences Entraînements';
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
     // Auto-fit columns
@@ -216,7 +290,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
       }
     }
 
-    XLSX.writeFile(wb, `presences_${type}_Saison_${selectedSeason}.xlsx`);
+    XLSX.writeFile(wb, `presences_training_Saison_${selectedSeason}.xlsx`);
   };
 
   return (
