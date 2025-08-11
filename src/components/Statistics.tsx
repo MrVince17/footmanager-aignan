@@ -130,16 +130,22 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       'Défenseur': 0,
       'Milieu': 0,
       'Attaquant': 0,
-      'Non Joueur': 0,
       'Coach': 0,
+      'Dirigeant': 0,
       'Non Défini': 0,
     };
 
     currentTeamPlayers.forEach(p => {
-      // Non joueur if assigned to Dirigeant/Dirigeante or Arbitre team
-      const isNonPlayer = (p.teams || []).some(t => t === 'Dirigeant/Dirigeante' || t === 'Arbitre');
-      if (isNonPlayer) {
-        stats['Non Joueur']++;
+      // Separate non-players by role
+      const isDirigeant = (p.teams || []).some(t => t === 'Dirigeant/Dirigeante');
+      const isArbitre = (p.teams || []).some(t => t === 'Arbitre');
+      if (isDirigeant) {
+        stats['Dirigeant']++;
+        return;
+      }
+      if (isArbitre) {
+        // Count arbitres under 'Non Défini' or create a separate category if needed
+        stats['Non Défini']++;
         return;
       }
 
