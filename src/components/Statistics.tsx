@@ -132,6 +132,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       'Attaquant': 0,
       'Coach': 0,
       'Dirigeant': 0,
+      'Arbitre': 0,
       'Non Défini': 0,
     };
 
@@ -144,8 +145,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
         return;
       }
       if (isArbitre) {
-        // Count arbitres under 'Non Défini' or create a separate category if needed
-        stats['Non Défini']++;
+        stats['Arbitre']++;
         return;
       }
 
