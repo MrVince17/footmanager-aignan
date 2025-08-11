@@ -59,8 +59,7 @@ export const PresencePage: React.FC<PresencePageProps> = ({ allPlayers, onUpdate
           p.type === 'match' &&
           p.date === event.date &&
           p.opponent === event.opponent &&
-          p.present &&
-          (p.minutesPlayed ?? 0) > 0
+          p.present
         )
       );
       const teams = new Set<string>();
