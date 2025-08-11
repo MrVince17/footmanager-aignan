@@ -115,28 +115,80 @@ export const storage = {
     const allPlayers = await storage.getPlayers();
     const batch = writeBatch(db);
 
-    allPlayers.forEach(player => {
-        const performances = player.performances || [];
-        let performanceUpdated = false;
-        const updatedPerformances = performances.map(p => {
-            if (p.date === originalPerf.date && p.opponent === originalPerf.opponent && p.type === 'match') {
-                performanceUpdated = true;
-                return { ...p, ...updatedData };
-            }
-            return p;
-        });
+    // Pre-compute per-player counts from updated arrays if provided
+    const goalsCountByPlayer: Record<string, number> = {};
+    const assistsCountByPlayer: Record<string, number> = {};
+    const yellowCountByPlayer: Record<string, number> = {};
+    const redCountByPlayer: Record<string, number> = {};
 
-        if (performanceUpdated) {
-            const playerDocRef = doc(db, PLAYERS_COLLECTION, player.id);
-            batch.update(playerDocRef, { performances: updatedPerformances });
+    if (updatedData.scorers) {
+      updatedData.scorers.forEach(s => {
+        if (s.playerId) goalsCountByPlayer[s.playerId] = (goalsCountByPlayer[s.playerId] || 0) + 1;
+      });
+    }
+    if (updatedData.assisters) {
+      updatedData.assisters.forEach(a => {
+        if (a.playerId) assistsCountByPlayer[a.playerId] = (assistsCountByPlayer[a.playerId] || 0) + 1;
+      });
+    }
+    if (updatedData.yellowCardsDetails) {
+      updatedData.yellowCardsDetails.forEach(yc => {
+        if (yc.playerId) yellowCountByPlayer[yc.playerId] = (yellowCountByPlayer[yc.playerId] || 0) + 1;
+      });
+    }
+    if (updatedData.redCardsDetails) {
+      updatedData.redCardsDetails.forEach(rc => {
+        if (rc.playerId) redCountByPlayer[rc.playerId] = (redCountByPlayer[rc.playerId] || 0) + 1;
+      });
+    }
+
+    allPlayers.forEach(player => {
+      const performances = player.performances || [];
+      let performanceUpdated = false;
+      const updatedPerformances = performances.map(p => {
+        if (p.date === originalPerf.date && p.opponent === originalPerf.opponent && p.type === 'match') {
+          performanceUpdated = true;
+          const merged = { ...p, ...updatedData } as Performance;
+
+          // If arrays are provided, sync numeric per-player stats accordingly
+          // Only set for the involved player; others get 0 by default if arrays exist
+          if (updatedData.scorers || updatedData.assisters || updatedData.yellowCardsDetails || updatedData.redCardsDetails) {
+            const playerId = player.id;
+            if (updatedData.scorers) {
+              merged.goals = goalsCountByPlayer[playerId] || 0;
+            }
+            if (updatedData.assisters) {
+              merged.assists = assistsCountByPlayer[playerId] || 0;
+            }
+            if (updatedData.yellowCardsDetails) {
+              merged.yellowCards = yellowCountByPlayer[playerId] || 0;
+            }
+            if (updatedData.redCardsDetails) {
+              merged.redCards = redCountByPlayer[playerId] || 0;
+            }
+            // If player appears in any list (goal/assist/card), mark present true
+            const appearsInAny = !!(goalsCountByPlayer[playerId] || assistsCountByPlayer[playerId] || yellowCountByPlayer[playerId] || redCountByPlayer[playerId]);
+            if (appearsInAny) {
+              merged.present = true;
+            }
+          }
+
+          return merged;
         }
+        return p;
+      });
+
+      if (performanceUpdated) {
+        const playerDocRef = doc(db, PLAYERS_COLLECTION, player.id);
+        batch.update(playerDocRef, { performances: updatedPerformances });
+      }
     });
 
     try {
-        await batch.commit();
-        console.log("Batch match update successful!");
+      await batch.commit();
+      console.log("Batch match update successful!");
     } catch (error) {
-        console.error("Error updating match details in batch:", error);
+      console.error("Error updating match details in batch:", error);
     }
   },
 
