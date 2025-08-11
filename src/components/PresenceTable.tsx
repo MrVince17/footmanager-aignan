@@ -132,31 +132,84 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
 
       doc.text(title, 14, 22);
 
-      autoTable(doc, {
-        head: [header],
-        body: [...rows, totalRow],
-        startY: 30,
-        theme: "grid",
-        headStyles: { fillColor: [220, 26, 38], fontStyle: "bold" },
-        styles: {
-          fontSize: 8,
-          cellPadding: 1,
-          font: "DejaVuSans",
-        },
-        columnStyles: {
-          ...header.reduce((acc, _, index) => {
-            const maxWidth = Math.max(
-              doc.getTextWidth(header[index]),
-              ...rows.map(row => doc.getTextWidth((row[index] || '').toString()))
+      if (type === 'match') {
+        // Build per-player per-match table similar to Excel
+        const events = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason)
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        const headerMatch = ['Nom', 'Prénom', 'Date du match', 'Minutes jouées', '% Présence (saison)'];
+        const bodyMatch: (string | number)[][] = [];
+
+        // Sort players alphabetically
+        const sortedPlayers = [...allPlayers].sort((a, b) => {
+          const ln = a.lastName.localeCompare(b.lastName);
+          return ln !== 0 ? ln : a.firstName.localeCompare(b.firstName);
+        });
+
+        const totalTeamEvents = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
+
+        for (const event of events) {
+          for (const player of sortedPlayers) {
+            const perf = (player.performances || []).find(p =>
+              p.type === 'match' && p.season === selectedSeason && p.date === event.date && (p.opponent || '') === (event.opponent || '')
             );
-            return { ...acc, [index]: { cellWidth: maxWidth + 10 } };
-          }, {}),
-          // Center align for date columns
-          ...Array.from({ length: header.length - 4 }, (_, i) => i + 2).reduce((acc, i) => ({ ...acc, [i]: { halign: 'center' } }), {}),
-          [header.length - 2]: { halign: 'center' }, // Center align Total Présences column
-          [header.length - 1]: { halign: 'center' },
-        },
-      });
+            const present = !!perf?.present;
+            if (present) {
+              const minutes = perf?.minutesPlayed || 0;
+              let playerPresentMatches = 0;
+              (player.performances || []).forEach(p => {
+                if (p.type === 'match' && p.season === selectedSeason && p.present) {
+                  playerPresentMatches++;
+                }
+              });
+              const presencePct = totalTeamEvents > 0 ? ((playerPresentMatches / totalTeamEvents) * 100) : 0;
+
+              bodyMatch.push([
+                player.lastName,
+                player.firstName,
+                new Date(event.date).toLocaleDateString('fr-FR'),
+                minutes,
+                `${presencePct.toFixed(1)} %`,
+              ]);
+            }
+          }
+        }
+
+        autoTable(doc, {
+          head: [headerMatch],
+          body: bodyMatch,
+          startY: 30,
+          theme: 'grid',
+          headStyles: { fillColor: [220, 26, 38], fontStyle: 'bold' },
+          styles: { fontSize: 8, cellPadding: 1, font: 'DejaVuSans' },
+        });
+      } else {
+        autoTable(doc, {
+          head: [header],
+          body: [...rows, totalRow],
+          startY: 30,
+          theme: "grid",
+          headStyles: { fillColor: [220, 26, 38], fontStyle: "bold" },
+          styles: {
+            fontSize: 8,
+            cellPadding: 1,
+            font: "DejaVuSans",
+          },
+          columnStyles: {
+            ...header.reduce((acc, _, index) => {
+              const maxWidth = Math.max(
+                doc.getTextWidth(header[index]),
+                ...rows.map(row => doc.getTextWidth((row[index] || '').toString()))
+              );
+              return { ...acc, [index]: { cellWidth: maxWidth + 10 } };
+            }, {}),
+            // Center align for date columns
+            ...Array.from({ length: header.length - 4 }, (_, i) => i + 2).reduce((acc, i) => ({ ...acc, [i]: { halign: 'center' } }), {}),
+            [header.length - 2]: { halign: 'center' }, // Center align Total Présences column
+            [header.length - 1]: { halign: 'center' },
+          },
+        });
+      }
 
       doc.save(`presence_${type}_${selectedSeason}.pdf`);
     } catch (error) {
