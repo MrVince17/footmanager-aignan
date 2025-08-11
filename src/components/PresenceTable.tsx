@@ -189,8 +189,14 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
       const rows: (string | number)[][] = [];
 
       // Build per player per match rows, only for players who have minutes > 0
+      // Sort players alphabetically by last name, then first name
+      const sortedPlayers = [...allPlayers].sort((a, b) => {
+        const ln = a.lastName.localeCompare(b.lastName);
+        return ln !== 0 ? ln : a.firstName.localeCompare(b.firstName);
+      });
+
       for (const event of events) {
-        for (const player of allPlayers) {
+        for (const player of sortedPlayers) {
           const perf = (player.performances || []).find(p =>
             p.type === 'match' && p.season === selectedSeason && p.date === event.date && (p.opponent || '') === (event.opponent || '')
           );
