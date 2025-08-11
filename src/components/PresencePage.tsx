@@ -36,29 +36,29 @@ export const PresencePage: React.FC<PresencePageProps> = ({ allPlayers, onUpdate
   const trainings = useMemo(() => {
     return getTotalTeamEvents(allPlayers, 'training', undefined, selectedSeason)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .map(training => {
+      .map(event => {
         const presentPlayers = allPlayers.filter(player =>
-          player.performances?.some(p => p.type === 'training' && p.date === training.date && p.present)
+          player.performances?.some(p => p.type === 'training' && p.date === event.date && p.present)
         );
         const teams = new Set<string>();
         presentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
         return {
-          date: training.date,
+          date: event.date,
           team: Array.from(teams).join(', ') || 'N/A',
           presentCount: presentPlayers.length,
           presentPlayers: presentPlayers.map(p => `${p.firstName} ${p.lastName}`),
-          originalPerformanceRef: training,
+          originalPerformanceRef: { ...event, type: 'training' as const },
         };
       });
   }, [allPlayers, selectedSeason]);
 
   const matches = useMemo(() => {
-    return getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).map(match => {
+    return getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).map(event => {
       const presentPlayers = allPlayers.filter(player =>
         player.performances?.some(p =>
           p.type === 'match' &&
-          p.date === match.date &&
-          p.opponent === match.opponent &&
+          p.date === event.date &&
+          p.opponent === event.opponent &&
           p.present &&
           (p.minutesPlayed ?? 0) > 0
         )
@@ -66,12 +66,12 @@ export const PresencePage: React.FC<PresencePageProps> = ({ allPlayers, onUpdate
       const teams = new Set<string>();
       presentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
       return {
-        date: match.date,
-        opponent: match.opponent,
+        date: event.date,
+        opponent: event.opponent,
         team: Array.from(teams).join(', ') || 'N/A',
         presentCount: presentPlayers.length,
         presentPlayers: presentPlayers.map(p => `${p.firstName} ${p.lastName}`),
-        originalPerformanceRef: match,
+        originalPerformanceRef: { ...event, type: 'match' as const },
       };
     });
   }, [allPlayers, selectedSeason]);

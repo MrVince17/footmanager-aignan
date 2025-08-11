@@ -140,6 +140,119 @@ export const storage = {
     }
   },
 
+  // New: update per-player match performances (present, minutes, goals, etc.)
+  updateMatchPerformances: async (originalPerf: Performance, performancesUpdate: Array<{ playerId: string; present: boolean; minutesPlayed: number; goals: number; assists: number; yellowCards: number; redCards: number; }>): Promise<void> => {
+    const batch = writeBatch(db);
+
+    for (const perfUpdate of performancesUpdate) {
+      const playerDocRef = doc(db, PLAYERS_COLLECTION, perfUpdate.playerId);
+      try {
+        const docSnap = await getDoc(playerDocRef);
+        if (docSnap.exists()) {
+          const player = docSnap.data() as Player;
+          const performances = player.performances || [];
+
+          let found = false;
+          const updatedPerformances: Performance[] = performances.map(p => {
+            if (p.type === 'match' && p.date === originalPerf.date && (p.opponent || '') === (originalPerf.opponent || '')) {
+              found = true;
+              return {
+                ...p,
+                present: perfUpdate.present,
+                minutesPlayed: perfUpdate.present ? perfUpdate.minutesPlayed : 0,
+                goals: perfUpdate.present ? perfUpdate.goals : 0,
+                assists: perfUpdate.present ? perfUpdate.assists : 0,
+                yellowCards: perfUpdate.present ? perfUpdate.yellowCards : 0,
+                redCards: perfUpdate.present ? perfUpdate.redCards : 0,
+              } as Performance;
+            }
+            return p;
+          });
+
+          if (!found) {
+            const newPerf: Performance = {
+              id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+              type: 'match',
+              date: originalPerf.date,
+              opponent: originalPerf.opponent,
+              season: originalPerf.season,
+              matchType: originalPerf.matchType,
+              location: originalPerf.location,
+              present: perfUpdate.present,
+              minutesPlayed: perfUpdate.present ? perfUpdate.minutesPlayed : 0,
+              goals: perfUpdate.present ? perfUpdate.goals : 0,
+              assists: perfUpdate.present ? perfUpdate.assists : 0,
+              yellowCards: perfUpdate.present ? perfUpdate.yellowCards : 0,
+              redCards: perfUpdate.present ? perfUpdate.redCards : 0,
+            };
+            updatedPerformances.push(newPerf);
+          }
+
+          batch.update(playerDocRef, { performances: updatedPerformances });
+        }
+      } catch (error) {
+        console.error('Error updating match performances for player', perfUpdate.playerId, error);
+      }
+    }
+
+    try {
+      await batch.commit();
+      console.log('Batch match performances update successful');
+    } catch (error) {
+      console.error('Error committing match performances batch', error);
+    }
+  },
+
+  // New: update per-player training presences
+  updateTrainingPresence: async (trainingRef: Performance, presences: Array<{ playerId: string; present: boolean }>): Promise<void> => {
+    const batch = writeBatch(db);
+
+    for (const presence of presences) {
+      const playerDocRef = doc(db, PLAYERS_COLLECTION, presence.playerId);
+      try {
+        const docSnap = await getDoc(playerDocRef);
+        if (docSnap.exists()) {
+          const player = docSnap.data() as Player;
+          const performances = player.performances || [];
+
+          let found = false;
+          const updatedPerformances: Performance[] = performances.map(p => {
+            if (p.type === 'training' && (p.id === trainingRef.id || p.date === trainingRef.date)) {
+              found = true;
+              return {
+                ...p,
+                present: presence.present,
+              } as Performance;
+            }
+            return p;
+          });
+
+          if (!found) {
+            const newPerf: Performance = {
+              id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+              type: 'training',
+              date: trainingRef.date,
+              season: trainingRef.season,
+              present: presence.present,
+            } as Performance;
+            updatedPerformances.push(newPerf);
+          }
+
+          batch.update(playerDocRef, { performances: updatedPerformances });
+        }
+      } catch (error) {
+        console.error('Error updating training presence for player', presence.playerId, error);
+      }
+    }
+
+    try {
+      await batch.commit();
+      console.log('Batch training presence update successful');
+    } catch (error) {
+      console.error('Error committing training presence batch', error);
+    }
+  },
+
   deleteMatch: async (originalPerf: Performance): Promise<void> => {
     const allPlayers = await storage.getPlayers();
     const batch = writeBatch(db);
