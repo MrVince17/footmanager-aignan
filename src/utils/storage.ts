@@ -16,7 +16,7 @@ export const storage = {
         // Map 'Senior 1' and 'Senior 2' to 'Senior' and remove duplicates
         if (player.teams) {
           const mappedTeams = player.teams.map(team => {
-            if (team === 'Senior 1' || team === 'Senior 2') {
+            if ((team as string) === 'Senior 1' || (team as string) === 'Senior 2') {
               return 'Senior';
             }
             return team;

@@ -1,5 +1,5 @@
 import React from "react";
-import { Download, Trash2 } from "lucide-react";
+import { Download, Trash2, Pencil } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -11,6 +11,8 @@ interface PresenceData {
   team: string;
   presentCount: number;
   presentPlayers: string[];
+  opponent?: string;
+  originalPerformanceRef?: any;
 }
 
 interface PresenceTableProps {
@@ -18,7 +20,8 @@ interface PresenceTableProps {
   type: "training" | "match";
   allPlayers: Player[];
   selectedSeason: string;
-  onDelete?: (date: string) => void;
+  onDelete?: (date: string, opponent?: string) => void;
+  onEdit?: (item: PresenceData) => void;
 }
 
 const PresenceTable: React.FC<PresenceTableProps> = ({
@@ -27,6 +30,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
   allPlayers,
   selectedSeason,
   onDelete,
+  onEdit,
 }) => {
   const generatePresenceData = () => {
     const events = getTotalTeamEvents(allPlayers, type, undefined, selectedSeason)
@@ -133,7 +137,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
         body: [...rows, totalRow],
         startY: 30,
         theme: "grid",
-        headStyles: { fillColor: [220, 26, 38] },
+        headStyles: { fillColor: [220, 26, 38], fontStyle: "bold" },
         styles: {
           fontSize: 8,
           cellPadding: 1,
@@ -149,6 +153,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
           }, {}),
           // Center align for date columns
           ...Array.from({ length: header.length - 4 }, (_, i) => i + 2).reduce((acc, i) => ({ ...acc, [i]: { halign: 'center' } }), {}),
+          [header.length - 2]: { halign: 'center' }, // Center align Total Présences column
           [header.length - 1]: { halign: 'center' },
         },
       });
@@ -246,37 +251,39 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
       <table className="w-full text-sm text-left text-gray-500">
         <thead className="text-xs text-gray-700 uppercase bg-gray-50">
           <tr>
-            <th scope="col" className="px-6 py-3">
-              Date
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Équipe
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Nombre de présents
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Joueurs présents
-            </th>
-            {type === 'training' && <th scope="col" className="px-6 py-3">Action</th>}
+            <th scope="col" className="px-6 py-3">Date</th>
+            <th scope="col" className="px-6 py-3">{type === 'training' ? 'Équipe' : 'Adversaire'}</th>
+            <th scope="col" className="px-6 py-3">Présents</th>
+            <th scope="col" className="px-6 py-3">Joueurs présents</th>
+            <th scope="col" className="px-6 py-3">Actions</th>
           </tr>
         </thead>
         <tbody>
           {data.map((item, index) => (
             <tr key={index} className="bg-white border-b hover:bg-gray-50">
-              <td className="px-6 py-4">
-                {new Date(item.date).toLocaleDateString("fr-FR")}
-              </td>
-              <td className="px-6 py-4">{item.team}</td>
+              <td className="px-6 py-4">{new Date(item.date).toLocaleDateString("fr-FR")}</td>
+              <td className="px-6 py-4">{type === 'training' ? item.team : item.opponent}</td>
               <td className="px-6 py-4">{item.presentCount}</td>
               <td className="px-6 py-4">{item.presentPlayers.join(", ")}</td>
-              {type === 'training' && (
-                <td className="px-6 py-4">
-                  <button onClick={() => onDelete && onDelete(item.date)} className="text-red-600 hover:text-red-800">
-                    <Trash2 size={18} />
-                  </button>
-                </td>
-              )}
+              <td className="px-6 py-4">
+                <div className="flex items-center space-x-4">
+                  {type === 'match' && onEdit && (
+                    <button onClick={() => onEdit(item)} className="text-blue-600 hover:text-blue-800">
+                      <Pencil size={18} />
+                    </button>
+                  )}
+                  {type === 'training' && onEdit && (
+                    <button onClick={() => onEdit(item)} className="text-blue-600 hover:text-blue-800">
+                      <Pencil size={18} />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button onClick={() => onDelete(item.date, item.opponent || '')} className="text-red-600 hover:text-red-800">
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>

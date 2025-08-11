@@ -131,7 +131,7 @@ export const getTotalTeamEvents = (
             ? `${perf.season}-${perf.date}-${perf.opponent || 'unknown'}`
             : `${perf.season}-${perf.date}`;
           if (!uniqueEvents.has(key)) {
-            uniqueEvents.set(key, { date: perf.date, opponent: perf.opponent, season: perf.season });
+            uniqueEvents.set(key, { id: perf.id, date: perf.date, opponent: perf.opponent, season: perf.season });
           }
         }
       }

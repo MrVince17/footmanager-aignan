@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { MatchDisplayData, Player, Performance } from '../types'; // Assuming these types are defined
+import { MatchDisplayData, Player, Performance } from '../types';
 
 interface MatchEditFormProps {
   matchToEdit: MatchDisplayData;
-  allPlayers: Player[]; // Though not used in this simplified version, good to have for future extension
+  allPlayers: Player[];
   onSave: (updatedMatchData: Partial<Performance>, originalPerformanceRef: Performance) => void;
   onClose: () => void;
   isVisible: boolean;
@@ -16,24 +16,22 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
   onClose,
   isVisible,
 }) => {
-  // Initialize form state from matchToEdit.originalPerformanceRef
-  // as onSave expects Partial<Performance>
-  const [date, setDate] = useState(matchToEdit.originalPerformanceRef.date || '');
-  const [opponent, setOpponent] = useState(matchToEdit.originalPerformanceRef.opponent || '');
-  const [scoreHome, setScoreHome] = useState<string | number>(matchToEdit.originalPerformanceRef.scoreHome ?? '');
-  const [scoreAway, setScoreAway] = useState<string | number>(matchToEdit.originalPerformanceRef.scoreAway ?? '');
-  const [location, setLocation] = useState<'home' | 'away' | undefined>(matchToEdit.originalPerformanceRef.location);
+  const [date, setDate] = useState(matchToEdit.date || '');
+  const [opponent, setOpponent] = useState(matchToEdit.opponent || '');
+  const [scoreHome, setScoreHome] = useState<string | number>(matchToEdit.scoreHome ?? '');
+  const [scoreAway, setScoreAway] = useState<string | number>(matchToEdit.scoreAway ?? '');
+  const [location, setLocation] = useState<'home' | 'away' | undefined>(matchToEdit.location);
   const [localScorers, setLocalScorers] = useState(
     matchToEdit.scorers?.map(s => ({ ...s, minute: String(s.minute) })) || []
   );
   const [localAssisters, setLocalAssisters] = useState(
-    matchToEdit.assisters?.map(a => ({ ...a })) || [] // Assisters usually just have playerId
+    matchToEdit.assisters?.map(a => ({ ...a })) || []
   );
   const [localYellowCards, setLocalYellowCards] = useState(
-    matchToEdit.originalPerformanceRef.yellowCardsDetails?.map(yc => ({ ...yc, minute: String(yc.minute) })) || []
+    matchToEdit.yellowCardsDetails?.map(yc => ({ ...yc, minute: String(yc.minute) })) || []
   );
   const [localRedCards, setLocalRedCards] = useState(
-    matchToEdit.originalPerformanceRef.redCardsDetails?.map(rc => ({ ...rc, minute: String(rc.minute) })) || []
+    matchToEdit.redCardsDetails?.map(rc => ({ ...rc, minute: String(rc.minute) })) || []
   );
 
   const sortedPlayers = useMemo(() => {
@@ -46,13 +44,12 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
     });
   }, [allPlayers]);
 
-  // Effect to update form state if matchToEdit changes (e.g., user opens form for a different match)
   useEffect(() => {
-    setDate(matchToEdit.originalPerformanceRef.date || '');
-    setOpponent(matchToEdit.originalPerformanceRef.opponent || '');
-    setScoreHome(matchToEdit.originalPerformanceRef.scoreHome ?? '');
-    setScoreAway(matchToEdit.originalPerformanceRef.scoreAway ?? '');
-    setLocation(matchToEdit.originalPerformanceRef.location);
+    setDate(matchToEdit.date || '');
+    setOpponent(matchToEdit.opponent || '');
+    setScoreHome(matchToEdit.scoreHome ?? '');
+    setScoreAway(matchToEdit.scoreAway ?? '');
+    setLocation(matchToEdit.location);
     setLocalScorers(
       matchToEdit.scorers?.map(s => ({ ...s, minute: String(s.minute) })) || []
     );
@@ -60,53 +57,40 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
       matchToEdit.assisters?.map(a => ({ ...a })) || []
     );
     setLocalYellowCards(
-      matchToEdit.originalPerformanceRef.yellowCardsDetails?.map(yc => ({ ...yc, minute: String(yc.minute) })) || []
+      matchToEdit.yellowCardsDetails?.map(yc => ({ ...yc, minute: String(yc.minute) })) || []
     );
     setLocalRedCards(
-      matchToEdit.originalPerformanceRef.redCardsDetails?.map(rc => ({ ...rc, minute: String(rc.minute) })) || []
+      matchToEdit.redCardsDetails?.map(rc => ({ ...rc, minute: String(rc.minute) })) || []
     );
   }, [matchToEdit]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const updatedPerformanceData: Partial<Performance> = {
-      ...matchToEdit.originalPerformanceRef, // Start with original to preserve other fields
+      ...matchToEdit.originalPerformanceRef,
       date,
       opponent,
       scoreHome: scoreHome === '' ? undefined : Number(scoreHome),
       scoreAway: scoreAway === '' ? undefined : Number(scoreAway),
       location,
       scorers: localScorers
-        .filter(s => s.playerId && s.minute !== '') // Ensure player is selected and minute is not empty
-        .map(s => ({
-          playerId: s.playerId,
-          minute: Number(s.minute), // Convert minute back to number
-        })),
+        .filter(s => s.playerId && s.minute !== '')
+        .map(s => ({ playerId: s.playerId, minute: Number(s.minute) })),
       assisters: localAssisters
-        .filter(a => a.playerId) // Ensure player is selected
-        .map(a => ({
-          playerId: a.playerId,
-        })),
+        .filter(a => a.playerId)
+        .map(a => ({ playerId: a.playerId })),
       yellowCardsDetails: localYellowCards
         .filter(yc => yc.playerId && yc.minute !== '')
-        .map(yc => ({
-          playerId: yc.playerId,
-          minute: Number(yc.minute),
-        })),
+        .map(yc => ({ playerId: yc.playerId, minute: Number(yc.minute) })),
       redCardsDetails: localRedCards
         .filter(rc => rc.playerId && rc.minute !== '')
-        .map(rc => ({
-          playerId: rc.playerId,
-          minute: Number(rc.minute),
-        })),
-      // season: matchToEdit.originalPerformanceRef.season, // Ensure season is preserved
-      // type: 'match', // Ensure type is preserved
+        .map(rc => ({ playerId: rc.playerId, minute: Number(rc.minute) })),
     };
 
-    // We need to ensure that fields not directly edited but part of Performance
-    // are preserved from the originalPerformanceRef if they were not part of MatchDisplayData
-    // or if we are not editing them.
-    // The current structure of MatchDisplayData seems to mirror Performance for these core fields.
+    if (!matchToEdit.originalPerformanceRef) {
+        console.error("Original performance reference is missing in matchToEdit");
+        return;
+    }
 
     onSave(updatedPerformanceData, matchToEdit.originalPerformanceRef);
   };
@@ -115,7 +99,6 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
     return null;
   }
 
-  // Basic modal styling (tailwind classes)
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex justify-center items-center">
       <div className="relative p-8 border w-full max-w-2xl shadow-lg rounded-md bg-white">
@@ -219,7 +202,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
                   value={scorer.minute}
                   onChange={(e) => {
                     const newScorers = [...localScorers];
-                    newScorers[index].minute = e.target.value; // Keep as string for input
+                    newScorers[index].minute = e.target.value;
                     setLocalScorers(newScorers);
                   }}
                   className="mt-1 block w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -234,7 +217,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
                   className="p-2 text-red-500 hover:text-red-700"
                   title="Supprimer buteur"
                 >
-                  &#x2716; {/* Cross mark */}
+                  &#x2716;
                 </button>
               </div>
             ))}
@@ -246,7 +229,6 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
               + Ajouter Buteur
             </button>
           </div>
-          {/* End Scorers Section */}
 
           {/* Assisters Section */}
           <div className="space-y-3">
@@ -278,7 +260,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
                   className="p-2 text-red-500 hover:text-red-700"
                   title="Supprimer passeur"
                 >
-                  &#x2716; {/* Cross mark */}
+                  &#x2716;
                 </button>
               </div>
             ))}
@@ -290,7 +272,6 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
               + Ajouter Passeur
             </button>
           </div>
-          {/* End Assisters Section */}
 
           {/* Yellow Cards Section */}
           <div className="space-y-3">
@@ -319,7 +300,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
                   value={card.minute}
                   onChange={(e) => {
                     const newYellowCards = [...localYellowCards];
-                    newYellowCards[index].minute = e.target.value; // Keep as string for input
+                    newYellowCards[index].minute = e.target.value;
                     setLocalYellowCards(newYellowCards);
                   }}
                   className="mt-1 block w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -334,7 +315,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
                   className="p-2 text-red-500 hover:text-red-700"
                   title="Supprimer carton jaune"
                 >
-                  &#x2716; {/* Cross mark */}
+                  &#x2716;
                 </button>
               </div>
             ))}
@@ -346,7 +327,6 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
               + Ajouter Carton Jaune
             </button>
           </div>
-          {/* End Yellow Cards Section */}
 
           {/* Red Cards Section */}
           <div className="space-y-3">
@@ -375,7 +355,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
                   value={card.minute}
                   onChange={(e) => {
                     const newRedCards = [...localRedCards];
-                    newRedCards[index].minute = e.target.value; // Keep as string for input
+                    newRedCards[index].minute = e.target.value;
                     setLocalRedCards(newRedCards);
                   }}
                   className="mt-1 block w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -390,7 +370,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
                   className="p-2 text-red-500 hover:text-red-700"
                   title="Supprimer carton rouge"
                 >
-                  &#x2716; {/* Cross mark */}
+                  &#x2716;
                 </button>
               </div>
             ))}
@@ -402,9 +382,6 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
               + Ajouter Carton Rouge
             </button>
           </div>
-          {/* End Red Cards Section */}
-
-          {/* Placeholder for Goals Conceded */}
 
           <div className="pt-6 flex justify-end space-x-3">
             <button
