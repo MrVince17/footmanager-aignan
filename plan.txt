@@ -1,0 +1,43 @@
+Plan de modification — Page “Présence”
+1. Analyse de l’existant
+* Front-end
+o Identifier la partie du code qui affiche la liste des entraînements et matchs.
+o Vérifier comment l’option “supprimer” est implémentée pour les entraînements (bouton, menu contextuel, etc.).
+* Back-end / API
+o Voir comment les entraînements sont récupérés, modifiés et supprimés.
+o Vérifier s’il existe déjà une route API pour modifier et supprimer un match, ou s’il faudra les créer.
+
+2. Modification du contenu (entraînements & matchs)
+* Front-end
+o Ajouter un bouton ou une icône “modifier” à côté de chaque élément (entraînement et match).
+o Lors du clic :
+* Ouvrir un formulaire pré-rempli avec les infos actuelles (date, heure, lieu, etc.).
+* Permettre de modifier les champs puis valider.
+* Back-end
+o Créer ou adapter la route API pour mettre à jour un match (PATCH /matches/:id ou PUT /matches/:id).
+o Vérifier les validations (format date/heure, champs obligatoires).
+* Base de données
+o S’assurer que les champs modifiables existent bien et ne sont pas en lecture seule.
+
+3. Suppression d’un match
+* Front-end
+o Ajouter un bouton “supprimer” pour les matchs, identique au comportement des entraînements.
+o Afficher une confirmation (“Voulez-vous vraiment supprimer ce match ?”).
+* Back-end
+o Créer ou adapter la route API pour suppression (DELETE /matches/:id).
+o Retourner un code succès (200 ou 204) si tout s’est bien passé.
+* Base de données
+o Suppression physique ou logique (archivage) selon la logique métier.
+
+4. Tests
+* Tester sur un environnement de développement :
+o Modifier un entraînement ? vérifier en base et sur l’UI.
+o Modifier un match ? vérifier en base et sur l’UI.
+o Supprimer un match ? vérifier disparition de la liste et suppression en base.
+* Vérifier que la gestion des présences reste intacte après modifications.
+
+5. Mise en production
+* Déployer les changements back-end puis front-end.
+* Faire un test rapide sur l’environnement live.
+* Communiquer aux utilisateurs que la modification et suppression des matchs est disponible.
+

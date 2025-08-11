@@ -1,5 +1,5 @@
 import React from "react";
-import { Download, Trash2 } from "lucide-react";
+import { Download, Trash2, Pencil } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -11,6 +11,8 @@ interface PresenceData {
   team: string;
   presentCount: number;
   presentPlayers: string[];
+  opponent?: string;
+  originalPerformanceRef?: any;
 }
 
 interface PresenceTableProps {
@@ -18,7 +20,8 @@ interface PresenceTableProps {
   type: "training" | "match";
   allPlayers: Player[];
   selectedSeason: string;
-  onDelete?: (date: string) => void;
+  onDelete?: (date: string, opponent?: string) => void;
+  onEdit?: (item: PresenceData) => void;
 }
 
 const PresenceTable: React.FC<PresenceTableProps> = ({
@@ -27,6 +30,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
   allPlayers,
   selectedSeason,
   onDelete,
+  onEdit,
 }) => {
   const generatePresenceData = () => {
     const events = getTotalTeamEvents(allPlayers, type, undefined, selectedSeason)
@@ -128,30 +132,84 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
 
       doc.text(title, 14, 22);
 
-      autoTable(doc, {
-        head: [header],
-        body: [...rows, totalRow],
-        startY: 30,
-        theme: "grid",
-        headStyles: { fillColor: [220, 26, 38] },
-        styles: {
-          fontSize: 8,
-          cellPadding: 1,
-          font: "DejaVuSans",
-        },
-        columnStyles: {
-          ...header.reduce((acc, _, index) => {
-            const maxWidth = Math.max(
-              doc.getTextWidth(header[index]),
-              ...rows.map(row => doc.getTextWidth((row[index] || '').toString()))
+      if (type === 'match') {
+        // Build per-player per-match table similar to Excel
+        const events = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason)
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        const headerMatch = ['Nom', 'Prénom', 'Date du match', 'Minutes jouées', '% Présence (saison)'];
+        const bodyMatch: (string | number)[][] = [];
+
+        // Sort players alphabetically
+        const sortedPlayers = [...allPlayers].sort((a, b) => {
+          const ln = a.lastName.localeCompare(b.lastName);
+          return ln !== 0 ? ln : a.firstName.localeCompare(b.firstName);
+        });
+
+        const totalTeamEvents = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
+
+        for (const event of events) {
+          for (const player of sortedPlayers) {
+            const perf = (player.performances || []).find(p =>
+              p.type === 'match' && p.season === selectedSeason && p.date === event.date && (p.opponent || '') === (event.opponent || '')
             );
-            return { ...acc, [index]: { cellWidth: maxWidth + 10 } };
-          }, {}),
-          // Center align for date columns
-          ...Array.from({ length: header.length - 4 }, (_, i) => i + 2).reduce((acc, i) => ({ ...acc, [i]: { halign: 'center' } }), {}),
-          [header.length - 1]: { halign: 'center' },
-        },
-      });
+            const present = !!perf?.present;
+            if (present) {
+              const minutes = perf?.minutesPlayed || 0;
+              let playerPresentMatches = 0;
+              (player.performances || []).forEach(p => {
+                if (p.type === 'match' && p.season === selectedSeason && p.present) {
+                  playerPresentMatches++;
+                }
+              });
+              const presencePct = totalTeamEvents > 0 ? ((playerPresentMatches / totalTeamEvents) * 100) : 0;
+
+              bodyMatch.push([
+                player.lastName,
+                player.firstName,
+                new Date(event.date).toLocaleDateString('fr-FR'),
+                minutes,
+                `${presencePct.toFixed(1)} %`,
+              ]);
+            }
+          }
+        }
+
+        autoTable(doc, {
+          head: [headerMatch],
+          body: bodyMatch,
+          startY: 30,
+          theme: 'grid',
+          headStyles: { fillColor: [220, 26, 38], fontStyle: 'bold' },
+          styles: { fontSize: 8, cellPadding: 1, font: 'DejaVuSans' },
+        });
+      } else {
+        autoTable(doc, {
+          head: [header],
+          body: [...rows, totalRow],
+          startY: 30,
+          theme: "grid",
+          headStyles: { fillColor: [220, 26, 38], fontStyle: "bold" },
+          styles: {
+            fontSize: 8,
+            cellPadding: 1,
+            font: "DejaVuSans",
+          },
+          columnStyles: {
+            ...header.reduce((acc, _, index) => {
+              const maxWidth = Math.max(
+                doc.getTextWidth(header[index]),
+                ...rows.map(row => doc.getTextWidth((row[index] || '').toString()))
+              );
+              return { ...acc, [index]: { cellWidth: maxWidth + 10 } };
+            }, {}),
+            // Center align for date columns
+            ...Array.from({ length: header.length - 4 }, (_, i) => i + 2).reduce((acc, i) => ({ ...acc, [i]: { halign: 'center' } }), {}),
+            [header.length - 2]: { halign: 'center' }, // Center align Total Présences column
+            [header.length - 1]: { halign: 'center' },
+          },
+        });
+      }
 
       doc.save(`presence_${type}_${selectedSeason}.pdf`);
     } catch (error) {
@@ -168,12 +226,89 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
       return;
     }
 
+    // For matches, export rows: Nom, Prénom, Date du match, Minutes jouées, % Présence (saison)
+    if (type === 'match') {
+      const events = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      const header = [
+        'Nom',
+        'Prénom',
+        'Date du match',
+        'Minutes jouées',
+        '% Présence (saison)'
+      ];
+
+      const rows: (string | number)[][] = [];
+
+      // Build per player per match rows, only for players who have minutes > 0
+      // Sort players alphabetically by last name, then first name
+      const sortedPlayers = [...allPlayers].sort((a, b) => {
+        const ln = a.lastName.localeCompare(b.lastName);
+        return ln !== 0 ? ln : a.firstName.localeCompare(b.firstName);
+      });
+
+      for (const event of events) {
+        for (const player of sortedPlayers) {
+          const perf = (player.performances || []).find(p =>
+            p.type === 'match' && p.season === selectedSeason && p.date === event.date && (p.opponent || '') === (event.opponent || '')
+          );
+          const minutes = perf?.minutesPlayed || 0;
+          const present = !!perf?.present;
+          if (present) {
+            const totalTeamEvents = getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).length;
+            let playerPresentMatches = 0;
+            (player.performances || []).forEach(p => {
+              if (p.type === 'match' && p.season === selectedSeason && p.present) {
+                playerPresentMatches++;
+              }
+            });
+            const presencePct = totalTeamEvents > 0 ? ((playerPresentMatches / totalTeamEvents) * 100) : 0;
+
+            rows.push([
+              player.lastName,
+              player.firstName,
+              new Date(event.date).toLocaleDateString('fr-FR'),
+              minutes,
+              `${presencePct.toFixed(1)} %`
+            ]);
+          }
+        }
+      }
+
+      const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+      const wb = XLSX.utils.book_new();
+      const sheetName = 'Présences Matchs - Détails';
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+      // Auto-fit columns
+      const cols = Object.keys(ws).filter(key => key.endsWith('1')).map(key => key.replace('1', ''));
+      const colWidths = cols.map(col => {
+        const addresses = Object.keys(ws).filter(key => key.startsWith(col) && key !== `${col}1`);
+        const maxWidth = Math.max(
+          ...addresses.map(addr => {
+              const cell = ws[addr];
+              if (cell && cell.v) {
+                  return cell.v.toString().length;
+              }
+              return 0;
+          }),
+          (ws[`${col}1`] && ws[`${col}1`].v) ? ws[`${col}1`].v.toString().length : 0
+        );
+        return { wch: Math.min(maxWidth + 2, 40) };
+      });
+      (ws as any)['!cols'] = colWidths;
+
+      XLSX.writeFile(wb, `presences_match_Saison_${selectedSeason}.xlsx`);
+      return;
+    }
+
+    // Default (trainings): keep matrix export
     const { header, rows, totalRow } = generatePresenceData();
     const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totalRow]);
 
     const wb = XLSX.utils.book_new();
-    const sheetName =
-      type === "training" ? "Présences Entraînements" : "Présences Matchs";
+    const sheetName = 'Présences Entraînements';
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
 
     // Auto-fit columns
@@ -196,7 +331,9 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
     ws['!cols'] = colWidths;
 
     // Center align columns
-    const range = XLSX.utils.decode_range(ws['!ref']);
+    const refString: string = (ws['!ref'] as string) || XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: (rows.length + 1), c: header.length - 1 } });
+    ws['!ref'] = refString;
+    const range = XLSX.utils.decode_range(refString);
     for (let R = range.s.r; R <= range.e.r; ++R) {
       for (let C = range.s.c; C <= range.e.c; ++C) {
         const cell_address = { c: C, r: R };
@@ -209,7 +346,7 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
       }
     }
 
-    XLSX.writeFile(wb, `presences_${type}_Saison_${selectedSeason}.xlsx`);
+    XLSX.writeFile(wb, `presences_training_Saison_${selectedSeason}.xlsx`);
   };
 
   return (
@@ -246,37 +383,39 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
       <table className="w-full text-sm text-left text-gray-500">
         <thead className="text-xs text-gray-700 uppercase bg-gray-50">
           <tr>
-            <th scope="col" className="px-6 py-3">
-              Date
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Équipe
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Nombre de présents
-            </th>
-            <th scope="col" className="px-6 py-3">
-              Joueurs présents
-            </th>
-            {type === 'training' && <th scope="col" className="px-6 py-3">Action</th>}
+            <th scope="col" className="px-6 py-3">Date</th>
+            <th scope="col" className="px-6 py-3">{type === 'training' ? 'Équipe' : 'Adversaire'}</th>
+            <th scope="col" className="px-6 py-3">Présents</th>
+            <th scope="col" className="px-6 py-3">Joueurs présents</th>
+            <th scope="col" className="px-6 py-3">Actions</th>
           </tr>
         </thead>
         <tbody>
           {data.map((item, index) => (
             <tr key={index} className="bg-white border-b hover:bg-gray-50">
-              <td className="px-6 py-4">
-                {new Date(item.date).toLocaleDateString("fr-FR")}
-              </td>
-              <td className="px-6 py-4">{item.team}</td>
+              <td className="px-6 py-4">{new Date(item.date).toLocaleDateString("fr-FR")}</td>
+              <td className="px-6 py-4">{type === 'training' ? item.team : item.opponent}</td>
               <td className="px-6 py-4">{item.presentCount}</td>
               <td className="px-6 py-4">{item.presentPlayers.join(", ")}</td>
-              {type === 'training' && (
-                <td className="px-6 py-4">
-                  <button onClick={() => onDelete && onDelete(item.date)} className="text-red-600 hover:text-red-800">
-                    <Trash2 size={18} />
-                  </button>
-                </td>
-              )}
+              <td className="px-6 py-4">
+                <div className="flex items-center space-x-4">
+                  {type === 'match' && onEdit && (
+                    <button onClick={() => onEdit(item)} className="text-blue-600 hover:text-blue-800">
+                      <Pencil size={18} />
+                    </button>
+                  )}
+                  {type === 'training' && onEdit && (
+                    <button onClick={() => onEdit(item)} className="text-blue-600 hover:text-blue-800">
+                      <Pencil size={18} />
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button onClick={() => onDelete(item.date, item.opponent || '')} className="text-red-600 hover:text-red-800">
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </div>
+              </td>
             </tr>
           ))}
         </tbody>

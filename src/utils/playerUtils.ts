@@ -111,10 +111,10 @@ export const getTotalTeamEvents = (
   allPlayers: Player[],
   type: 'training' | 'match',
   teamName?: import('../types').Team,
-  season?: string, // Optional season filter
-  matchType?: string // Optional match type filter
-): { date: string, opponent?: string, season: string }[] => {
-  const uniqueEvents = new Map<string, { date: string, opponent?: string, season: string }>();
+  season?: string,
+  matchType?: string
+): { id?: string, date: string, opponent?: string, season: string }[] => {
+  const uniqueEvents = new Map<string, { id?: string, date: string, opponent?: string, season: string }>();
 
   for (const player of allPlayers) {
     if (teamName && !player.teams.includes(teamName)) {
@@ -131,7 +131,7 @@ export const getTotalTeamEvents = (
             ? `${perf.season}-${perf.date}-${perf.opponent || 'unknown'}`
             : `${perf.season}-${perf.date}`;
           if (!uniqueEvents.has(key)) {
-            uniqueEvents.set(key, { date: perf.date, opponent: perf.opponent, season: perf.season });
+            uniqueEvents.set(key, { id: perf.id, date: perf.date, opponent: perf.opponent, season: perf.season });
           }
         }
       }

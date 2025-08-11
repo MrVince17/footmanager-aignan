@@ -16,8 +16,7 @@ import { auth } from './firebase';
 
 import { 
   Home, 
-  Users, 
-  Plus, 
+  Users,  
   Activity, 
   BarChart3,
   ClipboardList,
@@ -259,7 +258,11 @@ function App() {
     } else if (type === 'matchDelete') {
       await storage.deleteMatch(refData);
     } else if (type === 'trainingDelete') {
-      await storage.deleteTraining(refData);
+      await storage.deleteTraining(refData.date);
+    } else if (type === 'matchPerformancesUpdate') {
+      await storage.updateMatchPerformances(refData.match.originalPerformanceRef, refData.performances);
+    } else if (type === 'trainingPresenceUpdate') {
+      await storage.updateTrainingPresence(refData.training, refData.presences);
     }
     await refreshPlayers();
   };
@@ -297,7 +300,7 @@ function App() {
         <Route path="/players" element={<PlayerList players={players} allPlayers={players} onDeletePlayer={handleDeletePlayer} onImportPlayers={handleImportPlayers} onDeleteMultiple={handleDeleteMultiplePlayers} />} />
         <Route path="/players/add" element={<PlayerFormWrapper onSave={handleSavePlayer} players={players} />} />
         <Route path="/players/edit/:playerId" element={<PlayerFormWrapper players={players} onSave={handleSavePlayer} />} />
-        <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} allPlayers={players} onPlayerUpdate={handleUpdatePlayerStorage} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />
+        <Route path="/players/:playerId" element={<PlayerDetailWrapper players={players} allPlayers={players} onPlayerUpdate={refreshPlayers} onDeletePlayer={handleDeletePlayer} onEditPlayerRedirect={(id) => navigate(`/players/edit/${id}`)} />} />
         <Route path="/performance" element={<PerformanceEntry players={players} onSavePerformance={handleSavePerformance} />} />
         <Route path="/presence" element={<PresencePage allPlayers={players} onUpdatePlayerStorage={handleUpdatePlayerStorage} />} />
         <Route path="/statistics" element={<Statistics players={players} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} allPlayers={players} />} />
@@ -316,7 +319,7 @@ const PlayerFormWrapper: React.FC<{players?: Player[], onSave: (player: Player) 
   return <PlayerForm player={playerToEdit} onSave={onSave} onCancel={() => navigate('/players')} />;
 };
 
-const PlayerDetailWrapper: React.FC<{players: Player[], allPlayers: Player[], onPlayerUpdate: () => Promise<void>, onDeletePlayer: (id: string) => Promise<void>, onEditPlayerRedirect: (id: string) => void}> = ({players, allPlayers, onPlayerUpdate, onDeletePlayer, onEditPlayerRedirect }) => {
+const PlayerDetailWrapper: React.FC<{players: Player[], allPlayers: Player[], onPlayerUpdate: (type: string, refData: any, value?: any) => Promise<void>, onDeletePlayer: (id: string) => Promise<void>, onEditPlayerRedirect: (id: string) => void}> = ({players, allPlayers, onPlayerUpdate, onEditPlayerRedirect }) => {
   const { playerId } = useParams<{ playerId: string }>();
   const navigate = useNavigate();
   const player = players.find(p => p.id === playerId);

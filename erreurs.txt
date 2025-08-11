@@ -1,0 +1,14 @@
+PresencePage.tsx:58 Matches useMemo - allPlayers[0].performances: Array(0)
+PresencePage.tsx:60 Matches useMemo - originalPerformanceRef (match): Object
+PresenceTable.tsx:35 PresenceTable for training - onEdit prop: (item) => {
+    console.log("handleEdit called with item:", item);
+    console.log("item.originalPerformanceRef before type check:", item.originalPerformanceRef);
+    try {
+      if (item.originalPer…
+PresenceTable.tsx:35 PresenceTable for training - onEdit prop: (item) => {
+    console.log("handleEdit called with item:", item);
+    console.log("item.originalPerformanceRef before type check:", item.originalPerformanceRef);
+    try {
+      if (item.originalPer…
+PresencePage.tsx:84 handleEdit called with item: {date: '2025-08-08', team: 'Dirigeant/Dirigeante, Senior, U19, U18', presentCount: 10, presentPlayers: Array(10), originalPerformanceRef: {…}}
+PresencePage.tsx:85 item.originalPerformanceRef before type check: {id: '1754751350888-gm78umfd3', date: '2025-08-08', opponent: null, season: '2025-2026'}

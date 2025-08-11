@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Player, Performance, Team } from '../types';
+import { Player, Performance } from '../types';
 import { Save, Calendar, Target, Users, AlertTriangle, Home, Bus } from 'lucide-react';
 import { Header } from './Header';
 
