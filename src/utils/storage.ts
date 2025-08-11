@@ -235,7 +235,7 @@ export const storage = {
           let updatedPerformances: Performance[] = performances.map(p => {
             if (p.type === 'match' && p.date === originalPerf.date && (p.opponent || '') === (originalPerf.opponent || '')) {
               found = true;
-              const merged: Performance = {
+              const merged: Performance = sanitizeObject({
                 ...p,
                 present: perfUpdate.present,
                 minutesPlayed: perfUpdate.present ? perfUpdate.minutesPlayed : 0,
@@ -243,7 +243,15 @@ export const storage = {
                 assists: perfUpdate.present ? perfUpdate.assists : 0,
                 yellowCards: perfUpdate.present ? perfUpdate.yellowCards : 0,
                 redCards: perfUpdate.present ? perfUpdate.redCards : 0,
-              } as Performance;
+                // propagate existing match metadata if present
+                date: p.date,
+                opponent: p.opponent,
+                season: p.season,
+                matchType: p.matchType,
+                location: p.location,
+                scoreHome: p.scoreHome,
+                scoreAway: p.scoreAway,
+              } as Performance);
               return merged;
             }
             return p;
