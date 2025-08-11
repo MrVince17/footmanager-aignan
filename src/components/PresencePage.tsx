@@ -62,14 +62,18 @@ export const PresencePage: React.FC<PresencePageProps> = ({ allPlayers, onUpdate
           p.present
         )
       );
+      const sortedPresentPlayers = [...presentPlayers].sort((a, b) => {
+        const ln = a.lastName.localeCompare(b.lastName);
+        return ln !== 0 ? ln : a.firstName.localeCompare(b.firstName);
+      });
       const teams = new Set<string>();
-      presentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
+      sortedPresentPlayers.forEach(p => p.teams.forEach(t => teams.add(t)));
       return {
         date: event.date,
         opponent: event.opponent,
         team: Array.from(teams).join(', ') || 'N/A',
-        presentCount: presentPlayers.length,
-        presentPlayers: presentPlayers.map(p => `${p.firstName} ${p.lastName}`),
+        presentCount: sortedPresentPlayers.length,
+        presentPlayers: sortedPresentPlayers.map(p => `${p.firstName} ${p.lastName}`),
         originalPerformanceRef: { ...event, type: 'match' as const },
       };
     });
