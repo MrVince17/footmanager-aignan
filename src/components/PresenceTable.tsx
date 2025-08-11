@@ -201,7 +201,9 @@ const PresenceTable: React.FC<PresenceTableProps> = ({
     ws['!cols'] = colWidths;
 
     // Center align columns
-    const range = XLSX.utils.decode_range(ws['!ref']);
+    const refString: string = (ws['!ref'] as string) || XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: (rows.length + 1), c: header.length - 1 } });
+    ws['!ref'] = refString;
+    const range = XLSX.utils.decode_range(refString);
     for (let R = range.s.r; R <= range.e.r; ++R) {
       for (let C = range.s.c; C <= range.e.c; ++C) {
         const cell_address = { c: C, r: R };
