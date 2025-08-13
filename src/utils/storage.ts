@@ -220,7 +220,7 @@ export const storage = {
   },
 
   // New: update per-player match performances (present, minutes, goals, etc.)
-  updateMatchPerformances: async (originalPerf: Performance, performancesUpdate: Array<{ playerId: string; present: boolean; minutesPlayed: number; goals: number; assists: number; yellowCards: number; redCards: number; }>): Promise<void> => {
+  updateMatchPerformances: async (originalPerf: Performance, performancesUpdate: Array<{ playerId: string; present: boolean; minutesPlayed: number; goals: number; assists: number; yellowCards: number; redCards: number; cleanSheet?: boolean; }>): Promise<void> => {
     const batch = writeBatch(db);
 
     for (const perfUpdate of performancesUpdate) {
@@ -243,6 +243,7 @@ export const storage = {
                 assists: perfUpdate.present ? perfUpdate.assists : 0,
                 yellowCards: perfUpdate.present ? perfUpdate.yellowCards : 0,
                 redCards: perfUpdate.present ? perfUpdate.redCards : 0,
+                cleanSheet: perfUpdate.cleanSheet !== undefined ? !!perfUpdate.cleanSheet : p.cleanSheet,
                 // propagate existing match metadata if present
                 date: p.date,
                 opponent: p.opponent,
@@ -272,6 +273,7 @@ export const storage = {
               assists: perfUpdate.present ? perfUpdate.assists : 0,
               yellowCards: perfUpdate.present ? perfUpdate.yellowCards : 0,
               redCards: perfUpdate.present ? perfUpdate.redCards : 0,
+              cleanSheet: perfUpdate.cleanSheet || false,
             } as Performance);
             updatedPerformances.push(newPerf);
           }
