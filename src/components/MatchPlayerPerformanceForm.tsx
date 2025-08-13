@@ -97,6 +97,7 @@ const MatchPlayerPerformanceForm: React.FC<MatchPlayerPerformanceFormProps> = ({
                         type="number"
                         className="w-20 p-1 border border-gray-300 rounded-md text-sm"
                         value={perf.minutesPlayed}
+                        disabled={!perf.present}
                         onChange={e => {
                           const val = Math.max(0, parseInt(e.target.value) || 0);
                           handlePerformanceChange(player.id, 'minutesPlayed', val);
