@@ -403,6 +403,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
     })
     .slice(0, 3);
 
+  const topCleanSheets = [...playersWithSeasonStats]
+    .filter((p) => p.position === "Gardien")
+    .sort((a, b) => {
+      const csDiff = b.seasonStats.cleanSheets - a.seasonStats.cleanSheets;
+      if (csDiff !== 0) {
+        return csDiff;
+      }
+      const lastNameDiff = a.lastName.localeCompare(b.lastName);
+      if (lastNameDiff !== 0) {
+        return lastNameDiff;
+      }
+      return a.firstName.localeCompare(b.firstName);
+    })
+    .slice(0, 3);
+
   const bestMatchAttendance = [...playersWithSeasonStats]
     .sort((a, b) => {
       const attendanceDiff = b.matchAttendanceRateSeason - a.matchAttendanceRateSeason;
@@ -784,6 +799,38 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       </span>
                     </div>
                     <span className="font-bold text-lg">{player.seasonStats.yellowCards}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Top Clean Sheets (Gardiens)
+              </h3>
+              <div className="space-y-3">
+                {topCleanSheets.map((player, index) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                          index === 0
+                            ? "bg-green-600"
+                            : index === 1
+                            ? "bg-black"
+                            : "bg-gray-500"
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                      <span className="font-medium">
+                        {player.firstName} {player.lastName}
+                      </span>
+                    </div>
+                    <span className="font-bold text-lg">{player.seasonStats.cleanSheets}</span>
                   </div>
                 ))}
               </div>
