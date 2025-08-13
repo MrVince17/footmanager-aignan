@@ -67,7 +67,6 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const updatedPerformanceData: Partial<Performance> = {
-      ...matchToEdit.originalPerformanceRef,
       date,
       opponent,
       scoreHome: scoreHome === '' ? undefined : Number(scoreHome),
