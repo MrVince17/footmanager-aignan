@@ -694,14 +694,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     {adminIssues.length} dossier(s) nécessite(nt) une attention
                   </span>
                 </div>
-                {adminIssues.map((player) => (
-                  <div key={player.id} className="text-sm text-gray-600 pl-6">
-                    {player.firstName} {player.lastName} -
-                    {!player.licenseValid && " Licence"}
-                    {!player.licenseValid && !getPaymentSummary(player, selectedSeason).isUpToDate && " et"}
-                    {!getPaymentSummary(player, selectedSeason).isUpToDate && " Paiement"}
-                  </div>
-                ))}
+                {adminIssues.map((player) => {
+                  const payment = getPaymentSummary(player, selectedSeason);
+                  return (
+                    <div key={player.id} className="text-sm text-gray-600 pl-6">
+                      {player.firstName} {player.lastName} -
+                      {!player.licenseValid && " Licence"}
+                      {!player.licenseValid && !payment.isUpToDate && " et"}
+                      {!payment.isUpToDate && (
+                        <>
+                          {" Paiement (reste "}{payment.remaining.toFixed(2)}{" €)"}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
