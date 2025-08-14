@@ -150,3 +150,41 @@ export const isDateInUnavailabilityPeriod = (player: Player, date: string): bool
       return checkDate >= startDate && checkDate <= endDate;
     });
 };
+
+// Payments utilities
+export interface PaymentSummary {
+  totalPaid: number;
+  licenseFee: number;
+  remaining: number;
+  isUpToDate: boolean;
+}
+
+export const getPaymentsForSeason = (player: Player, season: string) => {
+  const payments = Array.isArray(player.payments) ? player.payments : [];
+  return payments.filter(p => p.season === season);
+};
+
+export const computeLicenseFeeFromTeams = (teams: import('../types').Team[]): number => {
+  if (!Array.isArray(teams) || teams.length === 0) return 125;
+  let highestFee = 0;
+  const playerTeams: Set<import('../types').Team> = new Set(['Senior', 'U20', 'U19', 'U18', 'U17', 'U6-U11']);
+  if (teams.some(t => playerTeams.has(t))) {
+    highestFee = Math.max(highestFee, 125);
+  }
+  if (teams.includes('Dirigeant/Dirigeante')) {
+    highestFee = Math.max(highestFee, 80);
+  }
+  if (teams.includes('Arbitre')) {
+    highestFee = Math.max(highestFee, 0);
+  }
+  return highestFee;
+};
+
+export const getPaymentSummary = (player: Player, season: string): PaymentSummary => {
+  const seasonPayments = getPaymentsForSeason(player, season);
+  const totalPaid = seasonPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+  const licenseFee = typeof player.licenseFee === 'number' ? player.licenseFee : computeLicenseFeeFromTeams(player.teams || []);
+  const remaining = Math.max(licenseFee - totalPaid, 0);
+  const isUpToDate = licenseFee > 0 ? totalPaid >= licenseFee : true;
+  return { totalPaid, licenseFee, remaining, isUpToDate };
+};

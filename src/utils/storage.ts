@@ -437,6 +437,49 @@ export const storage = {
         console.error("Error deleting unavailability:", error);
     }
   },
+
+  // Payments management
+  addPayment: async (playerId: string, payment: { id: string; date: string; season: string; amount: number; note?: string }): Promise<void> => {
+    const playerDocRef = doc(db, PLAYERS_COLLECTION, playerId);
+    try {
+      const docSnap = await getDoc(playerDocRef);
+      if (docSnap.exists()) {
+        const player = docSnap.data() as Player;
+        const existingPayments = Array.isArray(player.payments) ? player.payments : [];
+        const updatedPayments = [...existingPayments, payment];
+        await setDoc(playerDocRef, { payments: sanitizeObject(updatedPayments) }, { merge: true });
+      } else {
+        console.error(`Player with id ${playerId} not found!`);
+      }
+    } catch (error) {
+      console.error('Error adding payment:', error);
+    }
+  },
+
+  deletePayment: async (playerId: string, paymentId: string): Promise<void> => {
+    const playerDocRef = doc(db, PLAYERS_COLLECTION, playerId);
+    try {
+      const docSnap = await getDoc(playerDocRef);
+      if (docSnap.exists()) {
+        const player = docSnap.data() as Player;
+        const updatedPayments = (Array.isArray(player.payments) ? player.payments : []).filter(p => p.id !== paymentId);
+        await setDoc(playerDocRef, { payments: sanitizeObject(updatedPayments) }, { merge: true });
+      } else {
+        console.error(`Player with id ${playerId} not found!`);
+      }
+    } catch (error) {
+      console.error('Error deleting payment:', error);
+    }
+  },
+
+  setLicenseFee: async (playerId: string, licenseFee: number): Promise<void> => {
+    const playerDocRef = doc(db, PLAYERS_COLLECTION, playerId);
+    try {
+      await setDoc(playerDocRef, { licenseFee }, { merge: true });
+    } catch (error) {
+      console.error('Error setting license fee:', error);
+    }
+  },
 };
 
 // Note: Any functions that used to be in storage.ts but were pure data

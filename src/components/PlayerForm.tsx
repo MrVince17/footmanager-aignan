@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Player, Team } from '../types';
 import { Save, X, User, Calendar, Hash, Users, MapPin } from 'lucide-react';
+import { computeLicenseFeeFromTeams } from '../utils/playerUtils';
 
 interface PlayerFormProps {
   player?: Player;
@@ -17,12 +18,14 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
     teams: [],
     position: 'Défenseur',
     licenseValid: true,
-    paymentValid: true,
+    licenseFee: 0,
+    payments: [],
     absences: [],
     injuries: [],
     unavailabilities: [],
     performances: []
   });
+  const [licenseFeeEdited, setLicenseFeeEdited] = useState(false);
 
   useEffect(() => {
     if (player) {
@@ -30,6 +33,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
       console.log('dateOfBirth:', player.dateOfBirth);
       console.log('licenseValidationDate:', player.licenseValidationDate);
       setFormData(player);
+      setLicenseFeeEdited(false);
     }
   }, [player]);
 
@@ -46,8 +50,10 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
       teams: formData.teams || [],
       position: formData.position || 'Défenseur',
       licenseValid: formData.licenseValid ?? true,
-      paymentValid: formData.paymentValid ?? true,
+      paymentValid: formData.paymentValid ?? true, // conservé pour compatibilité mais non affiché
       licenseValidationDate: formData.licenseValidationDate || undefined,
+      licenseFee: typeof formData.licenseFee === 'number' ? formData.licenseFee : computeLicenseFeeFromTeams(formData.teams || []),
+      payments: formData.payments || [],
       absences: formData.absences || [],
       injuries: formData.injuries || [],
       unavailabilities: formData.unavailabilities || [],
@@ -59,11 +65,12 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
 
   const handleTeamChange = (team: Team, checked: boolean) => {
     const currentTeams = formData.teams || [];
-    if (checked) {
-      setFormData({ ...formData, teams: [...currentTeams, team] });
-    } else {
-      setFormData({ ...formData, teams: currentTeams.filter(t => t !== team) });
+    const nextTeams = checked ? [...currentTeams, team] : currentTeams.filter(t => t !== team);
+    const nextData: Partial<Player> = { ...formData, teams: nextTeams };
+    if (!licenseFeeEdited) {
+      nextData.licenseFee = computeLicenseFeeFromTeams(nextTeams);
     }
+    setFormData(nextData);
   };
 
   const teams: Team[] = ['Senior', 'U20', 'U19', 'U18', 'U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
@@ -209,15 +216,19 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
                 <span className="ml-2 text-sm text-gray-700">Licence valide</span>
               </label>
               
-              <label className="flex items-center">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Montant licence (€)
+                </label>
                 <input
-                  type="checkbox"
-                  checked={formData.paymentValid ?? true}
-                  onChange={(e) => setFormData({ ...formData, paymentValid: e.target.checked })}
-                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={formData.licenseFee ?? computeLicenseFeeFromTeams(formData.teams || [])}
+                  onChange={(e) => { setLicenseFeeEdited(true); setFormData({ ...formData, licenseFee: Number(e.target.value) }); }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 />
-                <span className="ml-2 text-sm text-gray-700">Paiement à jour</span>
-              </label>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

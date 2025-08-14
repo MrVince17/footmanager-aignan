@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { Header } from './Header';
 import { Link } from 'react-router-dom';
 import { formatDateToYYYYMMDD } from '../utils/dateUtils';
-import { getPlayerStatsForSeason } from '../utils/playerUtils';
+import { getPlayerStatsForSeason, getPaymentSummary, computeLicenseFeeFromTeams } from '../utils/playerUtils';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 
 interface PlayerListProps {
@@ -41,6 +41,9 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     'Paiement Valide',
   ];
 
+  const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
+  const latestSeason = availableSeasons[0] || '';
+
   const handleExport = () => {
     const dataToExport = players.map(p => ({
       [excelHeaders[0]]: p.lastName,
@@ -51,7 +54,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
       [excelHeaders[5]]: p.position,
       [excelHeaders[6]]: p.licenseValid ? 'Oui' : 'Non',
       [excelHeaders[7]]: p.licenseValidationDate,
-      [excelHeaders[8]]: p.paymentValid ? 'Oui' : 'Non',
+      [excelHeaders[8]]: getPaymentSummary(p, latestSeason).isUpToDate ? 'Oui' : 'Non',
     }));
     const ws = XLSX.utils.json_to_sheet(dataToExport, { header: excelHeaders });
     const wb = XLSX.utils.book_new();
@@ -120,6 +123,8 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             licenseValid: licenseValid,
             licenseValidationDate: licenseValidationDate,
             paymentValid: paymentValid,
+            licenseFee: computeLicenseFeeFromTeams(teams),
+            payments: [],
             absences: [],
             injuries: [],
             unavailabilities: [],
@@ -152,9 +157,6 @@ export const PlayerList: React.FC<PlayerListProps> = ({
       setSelectedPlayers([]);
     }
   };
-
-  const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
-  const latestSeason = availableSeasons[0] || '';
 
   const playersWithStats = useMemo(() => {
     return players.map(player => {
@@ -415,7 +417,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                     <span className="text-gray-600">Licence</span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <div className={`w-2 h-2 rounded-full ${player.paymentValid ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <div className={`w-2 h-2 rounded-full ${getPaymentSummary(player, latestSeason).isUpToDate ? 'bg-green-500' : 'bg-red-500'}`}></div>
                     <span className="text-gray-600">Paiement</span>
                   </div>
                 </div>
@@ -430,7 +432,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
               <Link
                 to={`/players/${player.id}`}
-                className="w-full mt-4 bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 block text-center" // Ajout de block et text-center pour style de lien
+                className="w-full mt-4 bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 block text-center"
               >
                 Voir les détails
               </Link>

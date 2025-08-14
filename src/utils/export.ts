@@ -1,6 +1,6 @@
 import { Player } from '../types';
 import * as XLSX from 'xlsx';
-import { getPlayerStatsForSeason } from './playerUtils';
+import { getPlayerStatsForSeason, getPaymentSummary } from './playerUtils';
 import { getAvailableSeasons } from './seasonUtils';
 import html2pdf from 'html2pdf.js';
 
@@ -33,6 +33,7 @@ export const exportToExcel = (players: Player[], allPlayers: Player[], filename:
 
   const data = players.map(player => {
     const stats = getPlayerStatsForSeason(player, latestSeason, allPlayers);
+    const payment = getPaymentSummary(player, latestSeason);
     return [
       player.lastName,
       player.firstName,
@@ -51,7 +52,7 @@ export const exportToExcel = (players: Player[], allPlayers: Player[], filename:
       `${(stats.trainingAttendanceRateSeason || 0).toFixed(1)}%`,
       `${(stats.matchAttendanceRateSeason || 0).toFixed(1)}%`,
       player.licenseValid ? 'Oui' : 'Non',
-      player.paymentValid ? 'Oui' : 'Non'
+      payment.isUpToDate ? 'Oui' : 'Non'
     ];
   });
 
@@ -121,6 +122,7 @@ export const exportPlayerStats = (player: Player, allPlayers: Player[]) => {
   const availableSeasons = getAvailableSeasons(allPlayers);
   const latestSeason = availableSeasons[0] || '';
   const stats = getPlayerStatsForSeason(player, latestSeason, allPlayers);
+  const payment = getPaymentSummary(player, latestSeason);
 
   const data = {
     'Informations générales': {
@@ -147,7 +149,7 @@ export const exportPlayerStats = (player: Player, allPlayers: Player[]) => {
     'Administratif': {
       'Licence valide': player.licenseValid ? 'Oui' : 'Non',
       'Date Validation Licence': player.licenseValidationDate ? new Date(player.licenseValidationDate).toLocaleDateString('fr-FR') : 'Non définie',
-      'Paiement à jour': player.paymentValid ? 'Oui' : 'Non'
+      'Paiement à jour': payment.isUpToDate ? 'Oui' : 'Non'
     }
   };
 

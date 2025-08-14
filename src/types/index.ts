@@ -13,6 +13,8 @@ export interface Player {
   licenseValid: boolean;
   licenseValidationDate?: string;
   paymentValid: boolean;
+  licenseFee?: number;
+  payments?: Payment[];
   
   // History
   absences: Absence[];
@@ -47,6 +49,14 @@ export interface Unavailability {
   reason: string;
   type: 'injury' | 'personal' | 'other';
   description: string;
+}
+
+export interface Payment {
+  id: string;
+  date: string; // YYYY-MM-DD
+  amount: number; // Montant payé en euros
+  season: string; // e.g., "2024-2025"
+  note?: string;
 }
 
 export interface Performance {
