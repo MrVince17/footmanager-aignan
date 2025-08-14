@@ -165,10 +165,19 @@ export const getPaymentsForSeason = (player: Player, season: string) => {
 };
 
 export const computeLicenseFeeFromTeams = (teams: import('../types').Team[]): number => {
-  if (!Array.isArray(teams)) return 125;
-  if (teams.includes('Arbitre')) return 0;
-  if (teams.includes('Dirigeant/Dirigeante')) return 80;
-  return 125;
+  if (!Array.isArray(teams) || teams.length === 0) return 125;
+  let highestFee = 0;
+  const playerTeams: Set<import('../types').Team> = new Set(['Senior', 'U20', 'U19', 'U18', 'U17', 'U6-U11']);
+  if (teams.some(t => playerTeams.has(t))) {
+    highestFee = Math.max(highestFee, 125);
+  }
+  if (teams.includes('Dirigeant/Dirigeante')) {
+    highestFee = Math.max(highestFee, 80);
+  }
+  if (teams.includes('Arbitre')) {
+    highestFee = Math.max(highestFee, 0);
+  }
+  return highestFee;
 };
 
 export const getPaymentSummary = (player: Player, season: string): PaymentSummary => {
