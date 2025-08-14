@@ -16,6 +16,7 @@ import autoTable from 'jspdf-autotable';
 import { exportToPDF } from "../utils/export";
 import { getTotalTeamEvents, getAge } from "../utils/playerUtils";
 import { Header } from './Header';
+import { getPaymentSummary } from "../utils/playerUtils";
 
 interface PlayerSeasonStats {
   totalMatches: number;
@@ -133,7 +134,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           player.lastName || '',
           player.firstName || '',
           player.licenseValid ? "Valide" : "Non valide",
-          player.paymentValid ? "OK" : "En retard",
+          getPaymentSummary(player, selectedSeason).isUpToDate ? "OK" : "En retard",
         ];
         tableRows.push(playerData);
       });
@@ -222,8 +223,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             : 0; // Fallback to 0 if no trainings
         const matchAttendanceRate =
           allTeamMatchesForPlayerForSeason > 0
-            ? (seasonStats.presentMatches / allTeamMatchesForPlayerForSeason) *
-              100
+            ? (seasonStats.presentMatches / allTeamMatchesForPlayerForSeason) * 100
             : 0; // Fallback to 0 if no matches
 
         return {
@@ -302,7 +302,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   // Admin issues are global, not season-specific
   const adminIssues = allPlayers
-    .filter((p) => (!p.licenseValid || !p.paymentValid) && (filterTeam === 'all' || p.teams.includes(filterTeam)))
+    .filter((p) => (!p.licenseValid || !getPaymentSummary(p, selectedSeason).isUpToDate) && (filterTeam === 'all' || p.teams.includes(filterTeam)))
     .sort((a, b) => {
       const lastNameComparison = a.lastName.localeCompare(b.lastName);
       if (lastNameComparison !== 0) {
@@ -698,8 +698,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <div key={player.id} className="text-sm text-gray-600 pl-6">
                     {player.firstName} {player.lastName} -
                     {!player.licenseValid && " Licence"}
-                    {!player.licenseValid && !player.paymentValid && " et"}
-                    {!player.paymentValid && " Paiement"}
+                    {!player.licenseValid && !getPaymentSummary(player, selectedSeason).isUpToDate && " et"}
+                    {!getPaymentSummary(player, selectedSeason).isUpToDate && " Paiement"}
                   </div>
                 ))}
               </div>

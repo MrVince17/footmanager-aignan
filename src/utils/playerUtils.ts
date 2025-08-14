@@ -150,3 +150,25 @@ export const isDateInUnavailabilityPeriod = (player: Player, date: string): bool
       return checkDate >= startDate && checkDate <= endDate;
     });
 };
+
+// Payments utilities
+export interface PaymentSummary {
+  totalPaid: number;
+  licenseFee: number;
+  remaining: number;
+  isUpToDate: boolean;
+}
+
+export const getPaymentsForSeason = (player: Player, season: string) => {
+  const payments = Array.isArray(player.payments) ? player.payments : [];
+  return payments.filter(p => p.season === season);
+};
+
+export const getPaymentSummary = (player: Player, season: string): PaymentSummary => {
+  const seasonPayments = getPaymentsForSeason(player, season);
+  const totalPaid = seasonPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+  const licenseFee = typeof player.licenseFee === 'number' ? player.licenseFee : 0;
+  const remaining = Math.max(licenseFee - totalPaid, 0);
+  const isUpToDate = licenseFee > 0 ? totalPaid >= licenseFee : true;
+  return { totalPaid, licenseFee, remaining, isUpToDate };
+};

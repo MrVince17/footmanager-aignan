@@ -17,11 +17,12 @@ import {
   X,
   Save,
   Home,
-  Bus
+  Bus,
+  Trash2
 } from 'lucide-react';
 import { exportPlayerStats, exportToPDF } from '../utils/export';
 import { storage } from '../utils/storage';
-import { getMatchStats, getAge, getPlayerStatsForSeason } from '../utils/playerUtils';
+import { getMatchStats, getAge, getPlayerStatsForSeason, getPaymentSummary, getPaymentsForSeason } from '../utils/playerUtils';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 import { formatDateToDDMMYYYY } from '../utils/dateUtils';
 
@@ -39,6 +40,8 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, allPlayers, 
   const availableSeasons = getAvailableSeasons(allPlayers);
   const latestSeason = availableSeasons[0] || '';
   const playerStats = getPlayerStatsForSeason(player, latestSeason, allPlayers);
+  const payment = getPaymentSummary(player, latestSeason);
+  const seasonPayments = getPaymentsForSeason(player, latestSeason);
 
   const [unavailabilityForm, setUnavailabilityForm] = useState({
     startDate: '',
@@ -46,6 +49,12 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, allPlayers, 
     reason: '',
     type: 'injury' as 'injury' | 'personal' | 'other',
     description: ''
+  });
+
+  const [paymentForm, setPaymentForm] = useState({
+    date: '',
+    amount: '' as string,
+    note: ''
   });
 
   const getPositionColor = (position: string) => {
@@ -88,6 +97,31 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, allPlayers, 
   const handleDeleteUnavailability = (unavailabilityId: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette indisponibilité ?')) {
       storage.deleteUnavailability(player.id, unavailabilityId);
+      onPlayerUpdate();
+    }
+  };
+
+  const handleAddPayment = async () => {
+    const amountNumber = Number(paymentForm.amount);
+    if (!paymentForm.date || isNaN(amountNumber) || amountNumber <= 0) {
+      alert('Veuillez saisir une date et un montant valide (> 0)');
+      return;
+    }
+    const newPayment = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      date: paymentForm.date,
+      amount: amountNumber,
+      season: latestSeason,
+      note: paymentForm.note || undefined,
+    };
+    await storage.addPayment(player.id, newPayment);
+    setPaymentForm({ date: '', amount: '', note: '' });
+    onPlayerUpdate();
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
+    if (confirm('Supprimer ce paiement ?')) {
+      await storage.deletePayment(player.id, paymentId);
       onPlayerUpdate();
     }
   };
@@ -232,13 +266,13 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, allPlayers, 
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <span className="text-gray-700">Paiement</span>
               <div className="flex items-center space-x-2">
-                {player.paymentValid ? (
+                {payment.isUpToDate ? (
                   <CheckCircle size={20} className="text-green-500" />
                 ) : (
                   <AlertCircle size={20} className="text-red-500" />
                 )}
-                <span className={`font-medium ${player.paymentValid ? 'text-green-600' : 'text-red-600'}`}>
-                  {player.paymentValid ? 'À jour' : 'En retard'}
+                <span className={`font-medium ${payment.isUpToDate ? 'text-green-600' : 'text-red-600'}`}>
+                  {payment.isUpToDate ? 'À jour' : 'En retard'}
                 </span>
               </div>
             </div>
@@ -344,6 +378,94 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, allPlayers, 
             />
           </div>
         </div>
+      </div>
+
+      {/* Payments Management */}
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Paiements licence ({latestSeason})</h3>
+          <div className="text-sm text-gray-700">
+            Montant licence: <span className="font-semibold">{(player.licenseFee ?? 0).toFixed(2)} €</span> · Déjà payé: <span className="font-semibold">{payment.totalPaid.toFixed(2)} €</span> · Reste: <span className="font-semibold">{payment.remaining.toFixed(2)} €</span>
+          </div>
+        </div>
+
+        <div className="mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+          <h4 className="font-medium text-gray-900 mb-3">Ajouter un paiement</h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+              <input
+                type="date"
+                value={paymentForm.date}
+                onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Montant (€) *</label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={paymentForm.amount}
+                onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                placeholder="Ex: 50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Note</label>
+              <input
+                type="text"
+                value={paymentForm.note}
+                onChange={(e) => setPaymentForm({ ...paymentForm, note: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                placeholder="Ex: CB, chèque, etc."
+              />
+            </div>
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={handleAddPayment}
+              className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"
+            >
+              <Save size={20} />
+              <span>Enregistrer le paiement</span>
+            </button>
+          </div>
+        </div>
+
+        {seasonPayments.length > 0 ? (
+          <div className="space-y-3">
+            {seasonPayments
+              .slice()
+              .sort((a, b) => a.date.localeCompare(b.date))
+              .map((pmt) => (
+              <div key={pmt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">{formatDateToDDMMYYYY(pmt.date)}</span>
+                    <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded text-sm font-semibold">{pmt.amount.toFixed(2)} €</span>
+                  </div>
+                  {pmt.note && (
+                    <p className="text-sm text-gray-600 mt-1">{pmt.note}</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleDeletePayment(pmt.id)}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <AlertCircle size={48} className="mx-auto mb-4 text-gray-300" />
+            <p>Aucun paiement enregistré pour {latestSeason}</p>
+          </div>
+        )}
       </div>
 
       {/* Unavailabilities Management */}

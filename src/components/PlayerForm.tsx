@@ -17,7 +17,8 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
     teams: [],
     position: 'Défenseur',
     licenseValid: true,
-    paymentValid: true,
+    licenseFee: 0,
+    payments: [],
     absences: [],
     injuries: [],
     unavailabilities: [],
@@ -46,8 +47,10 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
       teams: formData.teams || [],
       position: formData.position || 'Défenseur',
       licenseValid: formData.licenseValid ?? true,
-      paymentValid: formData.paymentValid ?? true,
+      paymentValid: formData.paymentValid ?? true, // conservé pour compatibilité mais non affiché
       licenseValidationDate: formData.licenseValidationDate || undefined,
+      licenseFee: typeof formData.licenseFee === 'number' ? formData.licenseFee : 0,
+      payments: formData.payments || [],
       absences: formData.absences || [],
       injuries: formData.injuries || [],
       unavailabilities: formData.unavailabilities || [],
@@ -209,15 +212,19 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
                 <span className="ml-2 text-sm text-gray-700">Licence valide</span>
               </label>
               
-              <label className="flex items-center">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Montant licence (€)
+                </label>
                 <input
-                  type="checkbox"
-                  checked={formData.paymentValid ?? true}
-                  onChange={(e) => setFormData({ ...formData, paymentValid: e.target.checked })}
-                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={formData.licenseFee ?? 0}
+                  onChange={(e) => setFormData({ ...formData, licenseFee: Number(e.target.value) })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 />
-                <span className="ml-2 text-sm text-gray-700">Paiement à jour</span>
-              </label>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
