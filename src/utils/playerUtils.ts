@@ -164,10 +164,17 @@ export const getPaymentsForSeason = (player: Player, season: string) => {
   return payments.filter(p => p.season === season);
 };
 
+export const computeLicenseFeeFromTeams = (teams: import('../types').Team[]): number => {
+  if (!Array.isArray(teams)) return 125;
+  if (teams.includes('Arbitre')) return 0;
+  if (teams.includes('Dirigeant/Dirigeante')) return 80;
+  return 125;
+};
+
 export const getPaymentSummary = (player: Player, season: string): PaymentSummary => {
   const seasonPayments = getPaymentsForSeason(player, season);
   const totalPaid = seasonPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-  const licenseFee = typeof player.licenseFee === 'number' ? player.licenseFee : 0;
+  const licenseFee = typeof player.licenseFee === 'number' ? player.licenseFee : computeLicenseFeeFromTeams(player.teams || []);
   const remaining = Math.max(licenseFee - totalPaid, 0);
   const isUpToDate = licenseFee > 0 ? totalPaid >= licenseFee : true;
   return { totalPaid, licenseFee, remaining, isUpToDate };

@@ -385,7 +385,7 @@ export const PlayerDetail: React.FC<PlayerDetailProps> = ({ player, allPlayers, 
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-900">Paiements licence ({latestSeason})</h3>
           <div className="text-sm text-gray-700">
-            Montant licence: <span className="font-semibold">{(player.licenseFee ?? 0).toFixed(2)} €</span> · Déjà payé: <span className="font-semibold">{payment.totalPaid.toFixed(2)} €</span> · Reste: <span className="font-semibold">{payment.remaining.toFixed(2)} €</span>
+            Montant licence: <span className="font-semibold">{payment.licenseFee.toFixed(2)} €</span> · Déjà payé: <span className="font-semibold">{payment.totalPaid.toFixed(2)} €</span> · Reste: <span className="font-semibold">{payment.remaining.toFixed(2)} €</span>
           </div>
         </div>
 

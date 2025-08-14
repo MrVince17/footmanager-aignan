@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { Header } from './Header';
 import { Link } from 'react-router-dom';
 import { formatDateToYYYYMMDD } from '../utils/dateUtils';
-import { getPlayerStatsForSeason, getPaymentSummary } from '../utils/playerUtils';
+import { getPlayerStatsForSeason, getPaymentSummary, computeLicenseFeeFromTeams } from '../utils/playerUtils';
 import { getAvailableSeasons } from '../utils/seasonUtils';
 
 interface PlayerListProps {
@@ -123,6 +123,8 @@ export const PlayerList: React.FC<PlayerListProps> = ({
             licenseValid: licenseValid,
             licenseValidationDate: licenseValidationDate,
             paymentValid: paymentValid,
+            licenseFee: computeLicenseFeeFromTeams(teams),
+            payments: [],
             absences: [],
             injuries: [],
             unavailabilities: [],
@@ -430,7 +432,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
 
               <Link
                 to={`/players/${player.id}`}
-                className="w-full mt-4 bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 block text-center" // Ajout de block et text-center pour style de lien
+                className="w-full mt-4 bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 block text-center"
               >
                 Voir les détails
               </Link>

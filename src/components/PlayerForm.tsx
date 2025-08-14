@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Player, Team } from '../types';
 import { Save, X, User, Calendar, Hash, Users, MapPin } from 'lucide-react';
+import { computeLicenseFeeFromTeams } from '../utils/playerUtils';
 
 interface PlayerFormProps {
   player?: Player;
@@ -24,6 +25,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
     unavailabilities: [],
     performances: []
   });
+  const [licenseFeeEdited, setLicenseFeeEdited] = useState(false);
 
   useEffect(() => {
     if (player) {
@@ -31,6 +33,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
       console.log('dateOfBirth:', player.dateOfBirth);
       console.log('licenseValidationDate:', player.licenseValidationDate);
       setFormData(player);
+      setLicenseFeeEdited(false);
     }
   }, [player]);
 
@@ -49,7 +52,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
       licenseValid: formData.licenseValid ?? true,
       paymentValid: formData.paymentValid ?? true, // conservé pour compatibilité mais non affiché
       licenseValidationDate: formData.licenseValidationDate || undefined,
-      licenseFee: typeof formData.licenseFee === 'number' ? formData.licenseFee : 0,
+      licenseFee: typeof formData.licenseFee === 'number' ? formData.licenseFee : computeLicenseFeeFromTeams(formData.teams || []),
       payments: formData.payments || [],
       absences: formData.absences || [],
       injuries: formData.injuries || [],
@@ -62,11 +65,12 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
 
   const handleTeamChange = (team: Team, checked: boolean) => {
     const currentTeams = formData.teams || [];
-    if (checked) {
-      setFormData({ ...formData, teams: [...currentTeams, team] });
-    } else {
-      setFormData({ ...formData, teams: currentTeams.filter(t => t !== team) });
+    const nextTeams = checked ? [...currentTeams, team] : currentTeams.filter(t => t !== team);
+    const nextData: Partial<Player> = { ...formData, teams: nextTeams };
+    if (!licenseFeeEdited) {
+      nextData.licenseFee = computeLicenseFeeFromTeams(nextTeams);
     }
+    setFormData(nextData);
   };
 
   const teams: Team[] = ['Senior', 'U20', 'U19', 'U18', 'U17', 'U6-U11', 'Arbitre', 'Dirigeant/Dirigeante'];
@@ -220,8 +224,8 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onSave, onCancel
                   type="number"
                   min={0}
                   step={1}
-                  value={formData.licenseFee ?? 0}
-                  onChange={(e) => setFormData({ ...formData, licenseFee: Number(e.target.value) })}
+                  value={formData.licenseFee ?? computeLicenseFeeFromTeams(formData.teams || [])}
+                  onChange={(e) => { setLicenseFeeEdited(true); setFormData({ ...formData, licenseFee: Number(e.target.value) }); }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 />
               </div>
