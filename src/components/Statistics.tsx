@@ -130,12 +130,25 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       'Défenseur': 0,
       'Milieu': 0,
       'Attaquant': 0,
-      'Non Joueur': 0,
       'Coach': 0,
+      'Dirigeant': 0,
+      'Arbitre': 0,
       'Non Défini': 0,
     };
 
     currentTeamPlayers.forEach(p => {
+      // Separate non-players by role
+      const isDirigeant = (p.teams || []).some(t => t === 'Dirigeant/Dirigeante');
+      const isArbitre = (p.teams || []).some(t => t === 'Arbitre');
+      if (isDirigeant) {
+        stats['Dirigeant']++;
+        return;
+      }
+      if (isArbitre) {
+        stats['Arbitre']++;
+        return;
+      }
+
       const normalizedPosition = normalize(p.position);
       if (normalizedPosition.includes('gardien')) {
         stats['Gardien']++;
@@ -145,8 +158,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
         stats['Milieu']++;
       } else if (normalizedPosition.includes('attaquant')) {
         stats['Attaquant']++;
-      } else if (['dirigeant', 'dirigeant / dirigeante', 'arbitre'].includes(normalizedPosition)) {
-        stats['Non Joueur']++;
       } else if (p.position && p.position.toUpperCase().includes('C')) {
         stats['Coach']++;
       } else {

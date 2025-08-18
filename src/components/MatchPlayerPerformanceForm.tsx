@@ -90,13 +90,18 @@ const MatchPlayerPerformanceForm: React.FC<MatchPlayerPerformanceFormProps> = ({
                       />
                     </td>
                     <td className="px-4 py-2">
-                      <input
-                        type="number"
-                        className="w-20 p-1 border border-gray-300 rounded-md text-sm"
-                        disabled={!perf.present}
-                        value={perf.minutesPlayed}
-                        onChange={e => handlePerformanceChange(player.id, 'minutesPlayed', parseInt(e.target.value) || 0)}
-                      />
+                                          <input
+                      type="number"
+                      className="w-20 p-1 border border-gray-300 rounded-md text-sm"
+                      value={perf.minutesPlayed}
+                      onChange={e => {
+                        const val = Math.max(0, parseInt(e.target.value) || 0);
+                        handlePerformanceChange(player.id, 'minutesPlayed', val);
+                        if (val > 0 && !perf.present) {
+                          handlePerformanceChange(player.id, 'present', true);
+                        }
+                      }}
+                    />
                     </td>
                     <td className="px-4 py-2">
                       <input
