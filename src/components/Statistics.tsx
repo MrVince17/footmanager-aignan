@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Player, Team } from '../types';
-import { BarChart3, Download, Filter, Trophy, Target, Users, Activity } from 'lucide-react';
+import { BarChart3, Download, Filter, Trophy, Target, Users, Activity, ArrowUpDown } from 'lucide-react';
 import { exportStatsToExcel, exportToPDF } from '../utils/export';
 import { getTotalTeamEvents, getPlayerStatsForSeason } from '../utils/playerUtils';
 import { getAvailableSeasons } from '../utils/seasonUtils';
@@ -32,6 +32,21 @@ interface StatisticsProps {
 
 export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason, onSeasonChange, allPlayers }) => {
   const [filterTeam, setFilterTeam] = useState<Team | 'all'>('all');
+  type SortField =
+    | 'name'
+    | 'position'
+    | 'totalMatches'
+    | 'presentTrainings'
+    | 'totalMinutes'
+    | 'goals'
+    | 'assists'
+    | 'yellowCards'
+    | 'redCards'
+    | 'cleanSheets'
+    | 'matchAttendanceRateSeason'
+    | 'trainingAttendanceRateSeason';
+  const [sortField, setSortField] = useState<SortField>('goals');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
@@ -52,28 +67,71 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
     return player.teams.includes(filterTeam);
   });
 
-  const sortedPlayers = [...filteredPlayersByTeam].sort((a, b) => {
-    const goalsDiff = b.seasonStats.goals - a.seasonStats.goals;
-    if (goalsDiff !== 0) return goalsDiff;
+  const getSortValue = (p: typeof filteredPlayersByTeam[number], field: SortField): number | string => {
+    switch (field) {
+      case 'name':
+        return `${p.lastName?.trim() || ''} ${p.firstName?.trim() || ''}`;
+      case 'position':
+        return p.position || '';
+      case 'totalMatches':
+        return p.seasonStats.totalMatches;
+      case 'presentTrainings':
+        return p.seasonStats.presentTrainings;
+      case 'totalMinutes':
+        return p.seasonStats.totalMinutes;
+      case 'goals':
+        return p.seasonStats.goals;
+      case 'assists':
+        return p.seasonStats.assists;
+      case 'yellowCards':
+        return p.seasonStats.yellowCards;
+      case 'redCards':
+        return p.seasonStats.redCards;
+      case 'cleanSheets':
+        return p.position === 'Gardien' ? p.seasonStats.cleanSheets : 0;
+      case 'matchAttendanceRateSeason':
+        return p.seasonStats.matchAttendanceRateSeason;
+      case 'trainingAttendanceRateSeason':
+        return p.seasonStats.trainingAttendanceRateSeason;
+      default:
+        return 0;
+    }
+  };
 
-    const assistsDiff = b.seasonStats.assists - a.seasonStats.assists;
-    if (assistsDiff !== 0) return assistsDiff;
+  const sortedPlayers = useMemo(() => {
+    const playersCopy = [...filteredPlayersByTeam];
+    playersCopy.sort((a, b) => {
+      const aVal = getSortValue(a, sortField);
+      const bVal = getSortValue(b, sortField);
+      if (typeof aVal === 'string' || typeof bVal === 'string') {
+        const aStr = String(aVal).toLowerCase();
+        const bStr = String(bVal).toLowerCase();
+        const cmp = aStr.localeCompare(bStr);
+        if (cmp !== 0) return sortDirection === 'asc' ? cmp : -cmp;
+      } else {
+        const cmp = (aVal as number) - (bVal as number);
+        if (cmp !== 0) return sortDirection === 'asc' ? cmp : -cmp;
+      }
+      const nameA = `${a.lastName?.trim() || ''} ${a.firstName?.trim() || ''}`.toLowerCase();
+      const nameB = `${b.lastName?.trim() || ''} ${b.firstName?.trim() || ''}`.toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+    return playersCopy;
+  }, [filteredPlayersByTeam, sortField, sortDirection]);
 
-    const matchesDiff = b.seasonStats.totalMatches - a.seasonStats.totalMatches;
-    if (matchesDiff !== 0) return matchesDiff;
+  const defaultDirectionForField = (field: SortField): 'asc' | 'desc' => {
+    if (field === 'name' || field === 'position') return 'asc';
+    return 'desc';
+  };
 
-    const trainingsDiff = b.seasonStats.presentTrainings - a.seasonStats.presentTrainings;
-    if (trainingsDiff !== 0) return trainingsDiff;
-
-    const lastNameA = a.lastName.trim();
-    const lastNameB = b.lastName.trim();
-    const lastNameDiff = lastNameA.localeCompare(lastNameB);
-    if (lastNameDiff !== 0) return lastNameDiff;
-
-    const firstNameA = a.firstName.trim();
-    const firstNameB = b.firstName.trim();
-    return firstNameA.localeCompare(firstNameB);
-  });
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDirection(defaultDirectionForField(field));
+    }
+  };
 
   const teamStats = useMemo(() => {
     const currentTeamPlayers = filteredPlayersByTeam;
@@ -376,18 +434,78 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
             <thead>
               <tr className="bg-gray-50">
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Rang</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Joueur</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Pos.</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Matchs</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Entraînements</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Minutes</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Buts</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Passes</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">CJ</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">CR</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">CS</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Assiduité M</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Assiduité E</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  <button onClick={() => handleSort('name')} className="inline-flex items-center space-x-1 text-gray-700">
+                    <span>Joueur</span>
+                    <ArrowUpDown size={14} className={sortField === 'name' ? 'text-red-600' : 'text-gray-400'} />
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  <button onClick={() => handleSort('position')} className="inline-flex items-center space-x-1 text-gray-700">
+                    <span>Pos.</span>
+                    <ArrowUpDown size={14} className={sortField === 'position' ? 'text-red-600' : 'text-gray-400'} />
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  <button onClick={() => handleSort('totalMatches')} className="inline-flex items-center space-x-1 text-gray-700">
+                    <span>Matchs</span>
+                    <ArrowUpDown size={14} className={sortField === 'totalMatches' ? 'text-red-600' : 'text-gray-400'} />
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  <button onClick={() => handleSort('presentTrainings')} className="inline-flex items-center space-x-1 text-gray-700">
+                    <span>Entraînements</span>
+                    <ArrowUpDown size={14} className={sortField === 'presentTrainings' ? 'text-red-600' : 'text-gray-400'} />
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  <button onClick={() => handleSort('totalMinutes')} className="inline-flex items-center space-x-1 text-gray-700">
+                    <span>Minutes</span>
+                    <ArrowUpDown size={14} className={sortField === 'totalMinutes' ? 'text-red-600' : 'text-gray-400'} />
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  <button onClick={() => handleSort('goals')} className="inline-flex items-center space-x-1 text-gray-700">
+                    <span>Buts</span>
+                    <ArrowUpDown size={14} className={sortField === 'goals' ? 'text-red-600' : 'text-gray-400'} />
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  <button onClick={() => handleSort('assists')} className="inline-flex items-center space-x-1 text-gray-700">
+                    <span>Passes</span>
+                    <ArrowUpDown size={14} className={sortField === 'assists' ? 'text-red-600' : 'text-gray-400'} />
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  <button onClick={() => handleSort('yellowCards')} className="inline-flex items-center space-x-1 text-gray-700">
+                    <span>CJ</span>
+                    <ArrowUpDown size={14} className={sortField === 'yellowCards' ? 'text-red-600' : 'text-gray-400'} />
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  <button onClick={() => handleSort('redCards')} className="inline-flex items-center space-x-1 text-gray-700">
+                    <span>CR</span>
+                    <ArrowUpDown size={14} className={sortField === 'redCards' ? 'text-red-600' : 'text-gray-400'} />
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  <button onClick={() => handleSort('cleanSheets')} className="inline-flex items-center space-x-1 text-gray-700">
+                    <span>CS</span>
+                    <ArrowUpDown size={14} className={sortField === 'cleanSheets' ? 'text-red-600' : 'text-gray-400'} />
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  <button onClick={() => handleSort('matchAttendanceRateSeason')} className="inline-flex items-center space-x-1 text-gray-700">
+                    <span>Assiduité M</span>
+                    <ArrowUpDown size={14} className={sortField === 'matchAttendanceRateSeason' ? 'text-red-600' : 'text-gray-400'} />
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                  <button onClick={() => handleSort('trainingAttendanceRateSeason')} className="inline-flex items-center space-x-1 text-gray-700">
+                    <span>Assiduité E</span>
+                    <ArrowUpDown size={14} className={sortField === 'trainingAttendanceRateSeason' ? 'text-red-600' : 'text-gray-400'} />
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
