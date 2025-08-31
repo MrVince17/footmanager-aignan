@@ -62,7 +62,7 @@ export const storage = {
   addPlayer: async (player: Player): Promise<void> => {
     try {
       const playerDocRef = doc(db, PLAYERS_COLLECTION, player.id);
-      await setDoc(playerDocRef, player);
+      await setDoc(playerDocRef, sanitizeObject(player));
     } catch (error) {
       console.error("Error adding player: ", error);
     }
@@ -73,7 +73,7 @@ export const storage = {
     try {
       const playerDocRef = doc(db, PLAYERS_COLLECTION, updatedPlayer.id);
       // 'merge: true' prevents overwriting fields that are not in the updatedPlayer object
-      await setDoc(playerDocRef, updatedPlayer, { merge: true });
+      await setDoc(playerDocRef, sanitizeObject(updatedPlayer), { merge: true });
     } catch (error) {
       console.error("Error updating player: ", error);
     }
@@ -108,7 +108,7 @@ export const storage = {
     const batch = writeBatch(db);
     newPlayers.forEach(player => {
       const playerDocRef = doc(db, PLAYERS_COLLECTION, player.id);
-      batch.set(playerDocRef, player);
+      batch.set(playerDocRef, sanitizeObject(player));
     });
     try {
       await batch.commit();
