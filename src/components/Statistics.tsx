@@ -503,41 +503,47 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
         <div className="mb-6 p-4 bg-gray-50 rounded-lg no-print" data-html2canvas-ignore>
           <h4 className="text-md font-semibold text-gray-800 mb-3">Filtres Détaillés</h4>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {/* Position Filter (Select) */}
+            <div>
+              <label htmlFor="pos-filter" className="block text-xs font-medium text-gray-600 mb-1">Position</label>
+              <select
+                id="pos-filter"
+                value={detailedFilters.position}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handlePositionFilterChange(e.target.value)}
+                className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-red-500 focus:border-red-500"
+              >
+                <option value="all">Tous</option>
+                <option value="Gardien">Gardien</option>
+                <option value="Défenseur">Défenseur</option>
+                <option value="Milieu">Milieu</option>
+                <option value="Attaquant">Attaquant</option>
+              </select>
+            </div>
+
+            {/* Numeric Filters (Inputs) */}
             {[
-              { id: 'pos-filter', label: 'Position', value: detailedFilters.position, type: 'select', options: ['all', 'Gardien', 'Défenseur', 'Milieu', 'Attaquant'], handler: (e) => handlePositionFilterChange(e.target.value) },
-              { id: 'matches-filter', label: 'Matchs (min)', value: detailedFilters.minMatches, handler: (e) => handleDetailedFilterChange('minMatches', e.target.value) },
-              { id: 'trainings-filter', label: 'Entr. (min)', value: detailedFilters.minTrainings, handler: (e) => handleDetailedFilterChange('minTrainings', e.target.value) },
-              { id: 'minutes-filter', label: 'Minutes (min)', value: detailedFilters.minMinutes, handler: (e) => handleDetailedFilterChange('minMinutes', e.target.value) },
-              { id: 'goals-filter', label: 'Buts (min)', value: detailedFilters.minGoals, handler: (e) => handleDetailedFilterChange('minGoals', e.target.value) },
-              { id: 'assists-filter', label: 'Passes (min)', value: detailedFilters.minAssists, handler: (e) => handleDetailedFilterChange('minAssists', e.target.value) },
-              { id: 'yc-filter', label: 'CJ (min)', value: detailedFilters.minYellowCards, handler: (e) => handleDetailedFilterChange('minYellowCards', e.target.value) },
-              { id: 'rc-filter', label: 'CR (min)', value: detailedFilters.minRedCards, handler: (e) => handleDetailedFilterChange('minRedCards', e.target.value) },
-              { id: 'cs-filter', label: 'CS (min)', value: detailedFilters.minCleanSheets, handler: (e) => handleDetailedFilterChange('minCleanSheets', e.target.value) },
-              { id: 'match-attend-filter', label: 'Assid. M (%)', value: detailedFilters.minMatchAttendance, handler: (e) => handleDetailedFilterChange('minMatchAttendance', e.target.value) },
-              { id: 'training-attend-filter', label: 'Assid. E (%)', value: detailedFilters.minTrainingAttendance, handler: (e) => handleDetailedFilterChange('minTrainingAttendance', e.target.value) },
+              { id: 'matches-filter', label: 'Matchs (min)', key: 'minMatches' as const, value: detailedFilters.minMatches },
+              { id: 'trainings-filter', label: 'Entr. (min)', key: 'minTrainings' as const, value: detailedFilters.minTrainings },
+              { id: 'minutes-filter', label: 'Minutes (min)', key: 'minMinutes' as const, value: detailedFilters.minMinutes },
+              { id: 'goals-filter', label: 'Buts (min)', key: 'minGoals' as const, value: detailedFilters.minGoals },
+              { id: 'assists-filter', label: 'Passes (min)', key: 'minAssists' as const, value: detailedFilters.minAssists },
+              { id: 'yc-filter', label: 'CJ (min)', key: 'minYellowCards' as const, value: detailedFilters.minYellowCards },
+              { id: 'rc-filter', label: 'CR (min)', key: 'minRedCards' as const, value: detailedFilters.minRedCards },
+              { id: 'cs-filter', label: 'CS (min)', key: 'minCleanSheets' as const, value: detailedFilters.minCleanSheets },
+              { id: 'match-attend-filter', label: 'Assid. M (%)', key: 'minMatchAttendance' as const, value: detailedFilters.minMatchAttendance },
+              { id: 'training-attend-filter', label: 'Assid. E (%)', key: 'minTrainingAttendance' as const, value: detailedFilters.minTrainingAttendance },
             ].map(filter => (
               <div key={filter.id}>
                 <label htmlFor={filter.id} className="block text-xs font-medium text-gray-600 mb-1">{filter.label}</label>
-                {filter.type === 'select' ? (
-                  <select
-                    id={filter.id}
-                    value={filter.value}
-                    onChange={filter.handler as React.ChangeEventHandler<HTMLSelectElement>}
-                    className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-red-500 focus:border-red-500"
-                  >
-                    {filter.options?.map(opt => <option key={opt} value={opt}>{opt === 'all' ? 'Tous' : opt}</option>)}
-                  </select>
-                ) : (
-                  <input
-                    id={filter.id}
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    value={filter.value === 0 ? '' : filter.value}
-                    onChange={filter.handler as React.ChangeEventHandler<HTMLInputElement>}
-                    className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-red-500 focus:border-red-500"
-                  />
-                )}
+                <input
+                  id={filter.id}
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={filter.value === 0 ? '' : filter.value}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleDetailedFilterChange(filter.key, e.target.value)}
+                  className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                />
               </div>
             ))}
           </div>
