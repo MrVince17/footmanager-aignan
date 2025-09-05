@@ -48,6 +48,43 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
   const [sortField, setSortField] = useState<SortField>('goals');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
+  interface DetailedFilters {
+    position: string;
+    minMatches: number;
+    minTrainings: number;
+    minMinutes: number;
+    minGoals: number;
+    minAssists: number;
+    minYellowCards: number;
+    minRedCards: number;
+    minCleanSheets: number;
+    minMatchAttendance: number;
+    minTrainingAttendance: number;
+  }
+
+  const [detailedFilters, setDetailedFilters] = useState<DetailedFilters>({
+    position: 'all',
+    minMatches: 0,
+    minTrainings: 0,
+    minMinutes: 0,
+    minGoals: 0,
+    minAssists: 0,
+    minYellowCards: 0,
+    minRedCards: 0,
+    minCleanSheets: 0,
+    minMatchAttendance: 0,
+    minTrainingAttendance: 0,
+  });
+
+  const handleDetailedFilterChange = (filterName: keyof DetailedFilters, value: string | number) => {
+    const numericValue = typeof value === 'string' ? parseInt(value, 10) : value;
+    setDetailedFilters(prev => ({ ...prev, [filterName]: isNaN(numericValue) ? 0 : numericValue }));
+  };
+
+  const handlePositionFilterChange = (value: string) => {
+    setDetailedFilters(prev => ({ ...prev, position: value }));
+  };
+
   const availableSeasons = useMemo(() => getAvailableSeasons(allPlayers), [allPlayers]);
 
   const playersWithSeasonStats = useMemo(() => {
@@ -59,15 +96,49 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       }));
   }, [players, selectedSeason, allPlayers]);
 
-  const filteredPlayersByTeam = playersWithSeasonStats.filter(player => {
-    if (filterTeam === 'all') return true;
-    if (filterTeam === 'Senior') {
-      return player.teams.some(team => team === 'Senior');
-    }
-    return player.teams.includes(filterTeam);
-  });
+  const getPlayerPositionCategory = (player: Player): string => {
+    const normalize = (str: string | undefined) => str ? str.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : '';
+    const normalizedPosition = normalize(player.position);
 
-  const getSortValue = (p: typeof filteredPlayersByTeam[number], field: SortField): number | string => {
+    if (normalizedPosition.includes('gardien')) return 'Gardien';
+    if (normalizedPosition.includes('defenseur')) return 'Défenseur';
+    if (normalizedPosition.includes('milieu')) return 'Milieu';
+    if (normalizedPosition.includes('attaquant')) return 'Attaquant';
+    return 'Autre';
+  }
+
+  const filteredPlayersByTeam = useMemo(() => {
+    const byTeam = playersWithSeasonStats.filter(player => {
+      if (filterTeam === 'all') return true;
+      if (filterTeam === 'Senior') {
+        return player.teams.some(team => team === 'Senior');
+      }
+      return player.teams.includes(filterTeam);
+    });
+
+    return byTeam.filter(p => {
+      const {
+        position, minMatches, minTrainings, minMinutes, minGoals, minAssists,
+        minYellowCards, minRedCards, minCleanSheets, minMatchAttendance, minTrainingAttendance
+      } = detailedFilters;
+
+      if (position !== 'all' && getPlayerPositionCategory(p) !== position) return false;
+      if (p.seasonStats.totalMatches < minMatches) return false;
+      if (p.seasonStats.presentTrainings < minTrainings) return false;
+      if (p.seasonStats.totalMinutes < minMinutes) return false;
+      if (p.seasonStats.goals < minGoals) return false;
+      if (p.seasonStats.assists < minAssists) return false;
+      if (p.seasonStats.yellowCards < minYellowCards) return false;
+      if (p.seasonStats.redCards < minRedCards) return false;
+      if (p.position === 'Gardien' && p.seasonStats.cleanSheets < minCleanSheets) return false;
+      if (p.seasonStats.matchAttendanceRateSeason < minMatchAttendance) return false;
+      if (p.seasonStats.trainingAttendanceRateSeason < minTrainingAttendance) return false;
+
+      return true;
+    });
+  }, [playersWithSeasonStats, filterTeam, detailedFilters]);
+
+  const getSortValue = React.useCallback((p: typeof filteredPlayersByTeam[number], field: SortField): number | string => {
     switch (field) {
       case 'name':
         return `${p.lastName?.trim() || ''} ${p.firstName?.trim() || ''}`;
@@ -96,7 +167,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       default:
         return 0;
     }
-  };
+  }, []);
 
   const sortedPlayers = useMemo(() => {
     const playersCopy = [...filteredPlayersByTeam];
@@ -117,7 +188,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
       return nameA.localeCompare(nameB);
     });
     return playersCopy;
-  }, [filteredPlayersByTeam, sortField, sortDirection]);
+  }, [filteredPlayersByTeam, sortField, sortDirection, getSortValue]);
 
   const defaultDirectionForField = (field: SortField): 'asc' | 'desc' => {
     if (field === 'name' || field === 'position') return 'asc';
@@ -227,7 +298,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
   }, [filteredPlayersByTeam]);
 
 
-  const prepareDataForExport = (playersToExport: typeof filteredPlayersByTeam): ExportPlayerData[] => {
+  const prepareDataForExport = (playersToExport: typeof sortedPlayers): ExportPlayerData[] => {
     return playersToExport.map(p => ({
       'Nom': `${p.firstName} ${p.lastName}`,
       'Numéro': p.licenseNumber,
@@ -428,7 +499,49 @@ export const Statistics: React.FC<StatisticsProps> = ({ players, selectedSeason,
         </div>
       </div>
       <div className="bg-white rounded-xl shadow-md p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">Classement des Joueurs</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Classement des Joueurs</h3>
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg no-print" data-html2canvas-ignore>
+          <h4 className="text-md font-semibold text-gray-800 mb-3">Filtres Détaillés</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {[
+              { id: 'pos-filter', label: 'Position', value: detailedFilters.position, type: 'select', options: ['all', 'Gardien', 'Défenseur', 'Milieu', 'Attaquant'], handler: (e) => handlePositionFilterChange(e.target.value) },
+              { id: 'matches-filter', label: 'Matchs (min)', value: detailedFilters.minMatches, handler: (e) => handleDetailedFilterChange('minMatches', e.target.value) },
+              { id: 'trainings-filter', label: 'Entr. (min)', value: detailedFilters.minTrainings, handler: (e) => handleDetailedFilterChange('minTrainings', e.target.value) },
+              { id: 'minutes-filter', label: 'Minutes (min)', value: detailedFilters.minMinutes, handler: (e) => handleDetailedFilterChange('minMinutes', e.target.value) },
+              { id: 'goals-filter', label: 'Buts (min)', value: detailedFilters.minGoals, handler: (e) => handleDetailedFilterChange('minGoals', e.target.value) },
+              { id: 'assists-filter', label: 'Passes (min)', value: detailedFilters.minAssists, handler: (e) => handleDetailedFilterChange('minAssists', e.target.value) },
+              { id: 'yc-filter', label: 'CJ (min)', value: detailedFilters.minYellowCards, handler: (e) => handleDetailedFilterChange('minYellowCards', e.target.value) },
+              { id: 'rc-filter', label: 'CR (min)', value: detailedFilters.minRedCards, handler: (e) => handleDetailedFilterChange('minRedCards', e.target.value) },
+              { id: 'cs-filter', label: 'CS (min)', value: detailedFilters.minCleanSheets, handler: (e) => handleDetailedFilterChange('minCleanSheets', e.target.value) },
+              { id: 'match-attend-filter', label: 'Assid. M (%)', value: detailedFilters.minMatchAttendance, handler: (e) => handleDetailedFilterChange('minMatchAttendance', e.target.value) },
+              { id: 'training-attend-filter', label: 'Assid. E (%)', value: detailedFilters.minTrainingAttendance, handler: (e) => handleDetailedFilterChange('minTrainingAttendance', e.target.value) },
+            ].map(filter => (
+              <div key={filter.id}>
+                <label htmlFor={filter.id} className="block text-xs font-medium text-gray-600 mb-1">{filter.label}</label>
+                {filter.type === 'select' ? (
+                  <select
+                    id={filter.id}
+                    value={filter.value}
+                    onChange={filter.handler as React.ChangeEventHandler<HTMLSelectElement>}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                  >
+                    {filter.options?.map(opt => <option key={opt} value={opt}>{opt === 'all' ? 'Tous' : opt}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    id={filter.id}
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={filter.value === 0 ? '' : filter.value}
+                    onChange={filter.handler as React.ChangeEventHandler<HTMLInputElement>}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-red-500 focus:border-red-500"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto">
             <thead>
