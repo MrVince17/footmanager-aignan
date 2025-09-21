@@ -57,7 +57,9 @@ export const PresencePage: React.FC<PresencePageProps> = ({ allPlayers, onUpdate
   }, [allPlayers, selectedSeason]);
 
   const matches = useMemo(() => {
-    return getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason).map(event => {
+    return getTotalTeamEvents(allPlayers, 'match', undefined, selectedSeason)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .map(event => {
       const presentPlayers = allPlayers.filter(player =>
         player.performances?.some(p =>
           p.type === 'match' &&
