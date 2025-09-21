@@ -432,6 +432,7 @@ export const PerformanceEntry: React.FC<PerformanceEntryProps> = ({ players, onS
               <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
                 <Target size={20} />
                 <span>Détails des performances</span>
+                <span className="text-sm font-normal text-gray-500">({selectedPlayersList.length} joueur(s))</span>
               </h3>
               
               <div className="overflow-x-auto">
