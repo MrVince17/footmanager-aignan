@@ -42,11 +42,15 @@ const TrainingPresenceForm: React.FC<TrainingPresenceFormProps> = ({ training, a
   };
 
   const sortedPlayers = [...allPlayers].sort((a, b) => a.lastName.localeCompare(b.lastName));
+  const presentPlayersCount = presences.filter(p => p.present).length;
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex justify-center items-center">
       <div className="relative p-8 border w-full max-w-lg shadow-lg rounded-md bg-white">
-        <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800">Présences pour l'entraînement du {new Date(training.date).toLocaleDateString('fr-FR')}</h3>
+        <div className="flex justify-center items-center mb-6">
+          <h3 className="text-2xl font-semibold text-center text-gray-800">Présences pour l'entraînement du {new Date(training.date).toLocaleDateString('fr-FR')}</h3>
+          <span className="ml-4 text-lg font-medium text-gray-600">({presentPlayersCount} / {allPlayers.length} joueurs)</span>
+        </div>
         <div className="overflow-y-auto" style={{ maxHeight: '60vh' }}>
           <ul className="space-y-2">
             {sortedPlayers.map(player => {
