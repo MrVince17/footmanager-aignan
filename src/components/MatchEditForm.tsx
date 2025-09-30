@@ -23,6 +23,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
   const [scoreHomePenalties, setScoreHomePenalties] = useState<string | number>(matchToEdit.scoreHomePenalties ?? '');
   const [scoreAwayPenalties, setScoreAwayPenalties] = useState<string | number>(matchToEdit.scoreAwayPenalties ?? '');
   const [location, setLocation] = useState<'home' | 'away' | undefined>(matchToEdit.location);
+  const [matchType, setMatchType] = useState(matchToEdit.matchType);
   const [localScorers, setLocalScorers] = useState(
     matchToEdit.scorers?.map(s => ({ ...s, minute: String(s.minute) })) || []
   );
@@ -38,8 +39,8 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
 
   const isCupMatch = useMemo(() => {
     const cupTypes = ['CdF', 'CO', 'CG', 'CR'];
-    return cupTypes.includes(matchToEdit.matchType || '');
-  }, [matchToEdit.matchType]);
+    return cupTypes.includes(matchType || '');
+  }, [matchType]);
 
   const isDraw = useMemo(() => {
     const sh = Number(scoreHome);
@@ -67,6 +68,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
     setScoreHomePenalties(matchToEdit.scoreHomePenalties ?? '');
     setScoreAwayPenalties(matchToEdit.scoreAwayPenalties ?? '');
     setLocation(matchToEdit.location);
+    setMatchType(matchToEdit.matchType);
     setLocalScorers(
       matchToEdit.scorers?.map(s => ({ ...s, minute: String(s.minute) })) || []
     );
@@ -91,6 +93,7 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
       scoreHomePenalties: showPenalties && scoreHomePenalties !== '' ? Number(scoreHomePenalties) : undefined,
       scoreAwayPenalties: showPenalties && scoreAwayPenalties !== '' ? Number(scoreAwayPenalties) : undefined,
       location,
+      matchType,
       scorers: localScorers
         .filter(s => s.playerId && s.minute !== '')
         .map(s => ({ playerId: s.playerId, minute: Number(s.minute) })),
@@ -223,6 +226,26 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
               <option value="" disabled>Sélectionner le lieu</option>
               <option value="home">Domicile</option>
               <option value="away">Extérieur</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="match-type" className="block text-sm font-medium text-gray-700 mb-1">Type de Match</label>
+            <select
+              id="match-type"
+              value={matchType || ''}
+              onChange={(e) => setMatchType(e.target.value as any)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            >
+              <option value="" disabled>Sélectionner le type</option>
+              <option value="D2">Championnat D2</option>
+              <option value="R2">Championnat R2</option>
+              <option value="CdF">Coupe de France</option>
+              <option value="CO">Coupe Occitannie</option>
+              <option value="CG">Coupe du Gers</option>
+              <option value="ChD">Challenge District</option>
+              <option value="CR">Coupe des Réserves</option>
+              <option value="CS">Coupe Savoldelli</option>
             </select>
           </div>
 
