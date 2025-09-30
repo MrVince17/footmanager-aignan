@@ -46,6 +46,8 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit,
     opponent,
     scoreHome,
     scoreAway,
+    scoreHomePenalties,
+    scoreAwayPenalties,
     location,
     scorers,
     assisters,
@@ -64,12 +66,23 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, allPlayers, onEdit,
   const renderScore = () => {
     const home = scoreHome ?? '?';
     const away = scoreAway ?? '?';
-    if (location === 'home') {
-      return `<strong>${home} - ${away}</strong>`;
-    } else if (location === 'away') {
-      return `${home} - <strong>${away}</strong>`;
+    let penaltyPart = '';
+
+    const cupMatchTypes = ['CdF', 'CO', 'CG', 'CR'];
+    const isCupMatch = matchType && cupMatchTypes.includes(matchType);
+    const isDraw = typeof scoreHome === 'number' && scoreHome === scoreAway;
+    const hasPenalties = typeof scoreHomePenalties === 'number' && typeof scoreAwayPenalties === 'number';
+
+    if (isCupMatch && isDraw && hasPenalties) {
+      penaltyPart = ` (${scoreHomePenalties} - ${scoreAwayPenalties})`;
     }
-    return `${home} - ${away}`;
+
+    if (location === 'home') {
+      return `<strong>${home} - ${away}</strong>${penaltyPart}`;
+    } else if (location === 'away') {
+      return `${home} - <strong>${away}</strong>${penaltyPart}`;
+    }
+    return `${home} - ${away}${penaltyPart}`;
   };
 
   return (
