@@ -74,6 +74,8 @@ export interface Performance {
   opponent?: string;
   scoreHome?: number;
   scoreAway?: number;
+  scoreHomePenalties?: number;
+  scoreAwayPenalties?: number;
   location?: 'home' | 'away';
   scorers?: Scorer[];
   assisters?: Assister[];
@@ -119,6 +121,8 @@ export interface MatchDisplayData {
   opponent?: string;
   scoreHome?: number;
   scoreAway?: number;
+  scoreHomePenalties?: number;
+  scoreAwayPenalties?: number;
   location?: 'home' | 'away';
   scorers?: Scorer[];
   assisters?: Assister[];

@@ -20,6 +20,8 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
   const [opponent, setOpponent] = useState(matchToEdit.opponent || '');
   const [scoreHome, setScoreHome] = useState<string | number>(matchToEdit.scoreHome ?? '');
   const [scoreAway, setScoreAway] = useState<string | number>(matchToEdit.scoreAway ?? '');
+  const [scoreHomePenalties, setScoreHomePenalties] = useState<string | number>(matchToEdit.scoreHomePenalties ?? '');
+  const [scoreAwayPenalties, setScoreAwayPenalties] = useState<string | number>(matchToEdit.scoreAwayPenalties ?? '');
   const [location, setLocation] = useState<'home' | 'away' | undefined>(matchToEdit.location);
   const [localScorers, setLocalScorers] = useState(
     matchToEdit.scorers?.map(s => ({ ...s, minute: String(s.minute) })) || []
@@ -33,6 +35,19 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
   const [localRedCards, setLocalRedCards] = useState(
     matchToEdit.redCardsDetails?.map(rc => ({ ...rc, minute: String(rc.minute) })) || []
   );
+
+  const isCupMatch = useMemo(() => {
+    const cupTypes = ['CdF', 'CO', 'CG', 'CR'];
+    return cupTypes.includes(matchToEdit.matchType || '');
+  }, [matchToEdit.matchType]);
+
+  const isDraw = useMemo(() => {
+    const sh = Number(scoreHome);
+    const sa = Number(scoreAway);
+    return !isNaN(sh) && !isNaN(sa) && sh === sa;
+  }, [scoreHome, scoreAway]);
+
+  const showPenalties = isCupMatch && isDraw;
 
   const sortedPlayers = useMemo(() => {
     return [...allPlayers].sort((a, b) => {
@@ -49,6 +64,8 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
     setOpponent(matchToEdit.opponent || '');
     setScoreHome(matchToEdit.scoreHome ?? '');
     setScoreAway(matchToEdit.scoreAway ?? '');
+    setScoreHomePenalties(matchToEdit.scoreHomePenalties ?? '');
+    setScoreAwayPenalties(matchToEdit.scoreAwayPenalties ?? '');
     setLocation(matchToEdit.location);
     setLocalScorers(
       matchToEdit.scorers?.map(s => ({ ...s, minute: String(s.minute) })) || []
@@ -71,6 +88,8 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
       opponent,
       scoreHome: scoreHome === '' ? undefined : Number(scoreHome),
       scoreAway: scoreAway === '' ? undefined : Number(scoreAway),
+      scoreHomePenalties: showPenalties && scoreHomePenalties !== '' ? Number(scoreHomePenalties) : undefined,
+      scoreAwayPenalties: showPenalties && scoreAwayPenalties !== '' ? Number(scoreAwayPenalties) : undefined,
       location,
       scorers: localScorers
         .filter(s => s.playerId && s.minute !== '')
@@ -161,6 +180,37 @@ export const MatchEditForm: React.FC<MatchEditFormProps> = ({
               />
             </div>
           </div>
+
+          {showPenalties && (
+            <div className="grid grid-cols-2 gap-4 p-4 border-t border-dashed mt-4">
+                <h4 className="col-span-2 text-sm font-medium text-gray-800 mb-2">Tirs au but</h4>
+              <div>
+                <label htmlFor="match-scoreHomePenalties" className="block text-sm font-medium text-gray-700 mb-1">T.A.B Domicile</label>
+                <input
+                  type="number"
+                  id="match-scoreHomePenalties"
+                  value={scoreHomePenalties}
+                  onChange={(e) => setScoreHomePenalties(e.target.value === '' ? '' : Number(e.target.value))}
+                  min="0"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label htmlFor="match-scoreAwayPenalties" className="block text-sm font-medium text-gray-700 mb-1">T.A.B Extérieur</label>
+                <input
+                  type="number"
+                  id="match-scoreAwayPenalties"
+                  value={scoreAwayPenalties}
+                  onChange={(e) => setScoreAwayPenalties(e.target.value === '' ? '' : Number(e.target.value))}
+                  min="0"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+          )}
+
           <div>
             <label htmlFor="match-location" className="block text-sm font-medium text-gray-700 mb-1">Lieu</label>
             <select

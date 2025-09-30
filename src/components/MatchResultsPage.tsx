@@ -128,6 +128,8 @@ export const MatchResultsPage: React.FC<MatchResultsPageProps> = ({
           opponent: refPerf.opponent,
           scoreHome: refPerf.scoreHome,
           scoreAway: refPerf.scoreAway,
+          scoreHomePenalties: refPerf.scoreHomePenalties,
+          scoreAwayPenalties: refPerf.scoreAwayPenalties,
           location: refPerf.location,
           scorers: refPerf.scorers || [],
           assisters: refPerf.assisters || [],
